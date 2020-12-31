@@ -10,3 +10,6 @@ test-coverage:
 
 lint:
 	golangci-lint run
+
+generate-toc:
+	doctoc README.md
