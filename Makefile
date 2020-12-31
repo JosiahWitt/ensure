@@ -1,6 +1,6 @@
 generate-mocks:
-	rm -r tests/mocks
-	mockgen -destination tests/mocks/mock_ensurepkg/mock_ensurepkg.go -source ensurepkg/ensurepkg.go T
+	@rm -r tests/mocks &> /dev/null || true
+	mockgen -destination tests/mocks/mock_ensurepkg/mock_ensurepkg.go -source ./ensurepkg/ensurepkg.go T
 
 test:
 	go test ./...
