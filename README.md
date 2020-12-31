@@ -10,12 +10,11 @@ A balanced test framework for Go 1.13+.
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Install](#install)
 - [About](#about)
 - [Overview](#overview)
 - [Examples](#examples)
-  - [Basic testing](#basic-testing)
+  - [Basic Testing](#basic-testing)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
