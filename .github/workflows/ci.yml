@@ -20,7 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          go install github.com/golang/mock/mockgen@v1.4.4
+          go get github.com/golang/mock/mockgen@v1.4.4
 
       - name: Generate mocks
         run: make generate-mocks
