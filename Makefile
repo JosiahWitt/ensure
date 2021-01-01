@@ -1,5 +1,6 @@
 install-tools:
 	go get github.com/golang/mock/mockgen@v1.4.4
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.34.1
 
 generate-mocks:
 	@rm -r tests/mocks &> /dev/null || true
