@@ -56,6 +56,6 @@ jobs:
         run: make generate-mocks
 
       - name: Lint
-        run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          golangci-lint run
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.34.1
