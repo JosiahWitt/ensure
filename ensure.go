@@ -7,16 +7,21 @@
 // This provides easy test refactoring, while still being able to access the underlying types via the ensurepkg package.
 //
 // For example:
-//  func TestMyFunction(t *testing.T) {
+//  func TestBasicExample(t *testing.T) {
 //   ensure := ensure.New(t)
 //   ...
 //
-//   t.Run("my subtest", func(t *testing.T) {
-//	   ensure := ensure.New(t) // This is using the shadowed version of ensure, and can easily be refactored
+//   // Methods can be called on ensure, for example, Run:
+//   ensure.Run("my subtest", func(ensure ensurepkg.Ensure) {
 //     ...
 //
-//     ensure("abc").Equals("abc") // To ensure a value is correct, use ensure as a function
-//     ensure.Fail() // Methods can be called directly on ensure
+//   	 // To ensure a value is correct, use ensure as a function:
+//   	 ensure("abc").Equals("abc")
+//   	 ensure(produceError()).IsError(expectedError)
+//   	 ensure(true).IsTrue()
+//   	 ensure(false).IsFalse()
+//
+//   	 ensure.Fail()
 //   })
 //  }
 package ensure
