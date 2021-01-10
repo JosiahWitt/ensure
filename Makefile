@@ -9,7 +9,7 @@ test:
 	go test ./...
 
 test-coverage:
-	go test ./... -coverprofile=/tmp/ensure.coverage && go tool cover -html=/tmp/ensure.coverage
+	go test ./... -coverprofile=/tmp/ensure.coverage && go tool cover -html=/tmp/ensure.coverage -o=tests/coverage.html
 
 lint:
 	golangci-lint run
