@@ -2,7 +2,9 @@ package ensurepkg
 
 import (
 	"errors"
+	"fmt"
 
+	"github.com/JosiahWitt/erk"
 	"github.com/go-test/deep"
 )
 
@@ -69,7 +71,9 @@ func (c Chain) IsError(expected error) {
 	}
 
 	if !errors.Is(actual, expected) {
-		c.t.Errorf("Got \"%v\", expected \"%v\"", actual, expected)
+		actualOutput := buildActualErrorOutput(actual)
+		expectedOutput := buildExpectedErrorOutput(expected)
+		c.t.Errorf("\nGot:      %s\nExpected: %s", actualOutput, expectedOutput)
 	}
 }
 
@@ -78,4 +82,32 @@ func (c Chain) IsError(expected error) {
 func (c Chain) IsNotError() {
 	c.t.Helper()
 	c.IsError(nil)
+}
+
+func buildActualErrorOutput(actual error) string {
+	actualErk, isActualErk := actual.(erk.Erkable) //nolint:errorlint // Want to output the top level error
+	if !isActualErk {
+		return fmt.Sprintf("%v", actual)
+	}
+
+	return fmt.Sprintf(
+		"{KIND: \"%s\", MESSAGE: \"%s\", PARAMS: %+v}",
+		erk.GetKindString(actualErk),
+		actualErk.Error(),
+		actualErk.Params(),
+	)
+}
+
+func buildExpectedErrorOutput(expected error) string {
+	expectedErk, isExpectedErk := expected.(erk.Erkable) //nolint:errorlint // Want to output the top level error
+	if !isExpectedErk {
+		return fmt.Sprintf("%v", expected)
+	}
+
+	return fmt.Sprintf(
+		"{KIND: \"%s\", RAW MESSAGE: \"%s\", PARAMS: %+v}",
+		erk.GetKindString(expectedErk),
+		expectedErk.ExportRawMessage(),
+		expectedErk.Params(),
+	)
 }
