@@ -15,6 +15,7 @@ A balanced test framework for Go 1.13+.
 - [Overview](#overview)
 - [Examples](#examples)
   - [Basic Testing](#basic-testing)
+  - [Table Driven Testing](#table-driven-testing)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -41,6 +42,7 @@ ensure := ensure.New(t)
 
 Then, `ensure` can be used as a function to asset a value is correct, using the pattern `ensure(<actual>).<Method>(<expected>)`. Methods can also be called on `ensure`, using the pattern `ensure.<Method>()`.
 
+
 ## Examples
 
 ### Basic Testing
@@ -63,3 +65,33 @@ func TestBasicExample(t *testing.T) {
   })
 }
 ```
+
+### Table Driven Testing
+```go
+func TestTableDrivenExample(t *testing.T) {
+  ensure := ensure.New(t)
+
+  table := []struct {
+    Name    string
+    Input   string
+    IsEmpty bool
+  }{
+    {
+      Name:    "with non empty input",
+      Input:   "my string",
+      IsEmpty: false,
+    },
+    {
+      Name:    "with empty input",
+      Input:   "",
+      IsEmpty: true,
+    },
+  }
+
+  ensure.RunTableByIndex(table, func(ensure Ensure, i int) {
+    entry := table[i]
+
+    isEmpty := strs.IsEmpty(entry.Input)
+    ensure(isEmpty).Equals(entry.IsEmpty)
+  })
+}
