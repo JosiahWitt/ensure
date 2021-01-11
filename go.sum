@@ -1,7 +1,10 @@
+github.com/JosiahWitt/erk v0.5.5 h1:VTTL+wEvXdwO3pTj3h65Ytem/hvzYxcZp73ghBvPC8s=
+github.com/JosiahWitt/erk v0.5.5/go.mod h1:OiLS68mTg6Aa3Olx2CHoe3Dg38Uy8MsJzHawpT8aEfQ=
 github.com/go-test/deep v1.0.7 h1:/VSMRlnY/JSyqxQUzQLKVMAskpY/NZKFA5j2P+0pP2M=
 github.com/go-test/deep v1.0.7/go.mod h1:QV8Hv/iy04NyLBxAdO9njL0iVPN1S4d/A3NVv1V36o8=
 github.com/golang/mock v1.4.4-0.20201210203420-1fe605df5e5f h1:MLvv5971uvT7rpNezhMbyMSFRm/cEY4K6VgGYP2TuBs=
 github.com/golang/mock v1.4.4-0.20201210203420-1fe605df5e5f/go.mod h1:CWnOUgYIOo4TcNZ0wHX3YZCqsaM1I1Jvs6v3mP3KVu8=
+github.com/matryer/is v1.2.0/go.mod h1:2fLPjFQM9rhQ15aVEtbuwhJinnOqrmgXPNdZsdwlWXA=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/mod v0.3.0/go.mod h1:s0Qsj1ACt9ePp/hMypM3fl4fZqREWJwdYDEqhRiZZUA=

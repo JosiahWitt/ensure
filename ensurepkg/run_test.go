@@ -15,22 +15,20 @@ func TestEnsureRun(t *testing.T) {
 	mockT.EXPECT().Helper().Times(2)
 
 	const name = "my test name"
-	providedT := &testing.T{}
+	providedTestingInput := &testing.T{}
 
 	mockT.EXPECT().Run(name, gomock.Any()).
 		Do(func(name string, fn func(t *testing.T)) {
-			fn(providedT)
+			fn(providedTestingInput)
 		})
 
 	var actualParam ensurepkg.Ensure
-	fn := func(ensure ensurepkg.Ensure) {
-		actualParam = ensure
-	}
-
 	ensure := ensure.New(mockT)
-	ensure.Run(name, fn)
+	ensure.Run(name, func(ensure ensurepkg.Ensure) {
+		actualParam = ensure
+	})
 
-	if actualParam == nil || actualParam.T() != providedT {
-		t.Errorf("Expected providedT to be wrapped by ensure")
+	if actualParam == nil || actualParam.T() != providedTestingInput {
+		t.Errorf("Expected providedTestingInput to be wrapped by ensure")
 	}
 }
