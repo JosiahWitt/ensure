@@ -2,10 +2,12 @@ package ensurepkg_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/tests/mocks/mock_ensurepkg"
+	"github.com/JosiahWitt/erk"
 	"github.com/golang/mock/gomock"
 )
 
@@ -193,6 +195,8 @@ func TestChainEquals(t *testing.T) {
 }
 
 func TestChainIsError(t *testing.T) {
+	const errorFormat = "\nGot:      %s\nExpected: %s"
+
 	t.Run("when equal error by reference", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockT := mock_ensurepkg.NewMockT(ctrl)
@@ -244,7 +248,8 @@ func TestChainIsError(t *testing.T) {
 
 		err1 := errors.New("my error")
 		err2 := errors.New("my error")
-		mockT.EXPECT().Errorf("Got \"%v\", expected \"%v\"", err1, err2).After(
+
+		mockT.EXPECT().Errorf(errorFormat, err1.Error(), err2.Error()).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -258,7 +263,7 @@ func TestChainIsError(t *testing.T) {
 
 		err1 := TestError{Message: "error message 1"}
 		err2 := TestError{Message: "error message 2"}
-		mockT.EXPECT().Errorf("Got \"%v\", expected \"%v\"", err1, err2).After(
+		mockT.EXPECT().Errorf(errorFormat, err1.Error(), err2.Error()).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -271,7 +276,7 @@ func TestChainIsError(t *testing.T) {
 		mockT := mock_ensurepkg.NewMockT(ctrl)
 
 		err := errors.New("my error")
-		mockT.EXPECT().Errorf("Got \"%v\", expected \"%v\"", err, nil).After(
+		mockT.EXPECT().Errorf(errorFormat, err.Error(), "<nil>").After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -284,12 +289,93 @@ func TestChainIsError(t *testing.T) {
 		mockT := mock_ensurepkg.NewMockT(ctrl)
 
 		err := errors.New("my error")
-		mockT.EXPECT().Errorf("Got \"%v\", expected \"%v\"", nil, err).After(
+		mockT.EXPECT().Errorf(errorFormat, "<nil>", err.Error()).After(
 			mockT.EXPECT().Helper(),
 		)
 
 		ensure := ensure.New(mockT)
 		ensure(nil).IsError(err)
+	})
+
+	t.Run("when not equal: erk errors: different kinds", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+
+		type kind1 struct{ erk.DefaultKind }
+		type kind2 struct{ erk.DefaultKind }
+
+		expectedError := erk.New(kind1{}, "expected {{.a}}")
+		actualError := erk.NewWith(kind2{}, "actual {{.a}}", erk.Params{"a": "hi"})
+		mockT.EXPECT().Errorf(
+			errorFormat,
+			fmt.Sprintf("{KIND: \"%s\", MESSAGE: \"actual hi\", PARAMS: map[a:hi]}", erk.GetKindString(actualError)),
+			fmt.Sprintf("{KIND: \"%s\", RAW MESSAGE: \"expected {{.a}}\", PARAMS: map[]}", erk.GetKindString(expectedError)),
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(actualError).IsError(expectedError)
+	})
+
+	t.Run("when not equal: erk errors: same kind", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+
+		type kind1 struct{ erk.DefaultKind }
+
+		expectedError := erk.New(kind1{}, "expected {{.a}}")
+		actualError := erk.NewWith(kind1{}, "actual {{.a}}", erk.Params{"a": "hi"})
+		mockT.EXPECT().Errorf(
+			errorFormat,
+			fmt.Sprintf("{KIND: \"%s\", MESSAGE: \"actual hi\", PARAMS: map[a:hi]}", erk.GetKindString(actualError)),
+			fmt.Sprintf("{KIND: \"%s\", RAW MESSAGE: \"expected {{.a}}\", PARAMS: map[]}", erk.GetKindString(expectedError)),
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(actualError).IsError(expectedError)
+	})
+
+	t.Run("when not equal: erk errors: only expected is erk error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+
+		type kind1 struct{ erk.DefaultKind }
+
+		expectedError := erk.New(kind1{}, "expected {{.a}}")
+		actualError := errors.New("actual")
+		mockT.EXPECT().Errorf(
+			errorFormat,
+			actualError.Error(),
+			fmt.Sprintf("{KIND: \"%s\", RAW MESSAGE: \"expected {{.a}}\", PARAMS: map[]}", erk.GetKindString(expectedError)),
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(actualError).IsError(expectedError)
+	})
+
+	t.Run("when not equal: erk errors: only actual is erk error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+
+		type kind1 struct{ erk.DefaultKind }
+
+		expectedError := errors.New("expected")
+		actualError := erk.NewWith(kind1{}, "actual {{.a}}", erk.Params{"a": "hi"})
+		mockT.EXPECT().Errorf(
+			errorFormat,
+			fmt.Sprintf("{KIND: \"%s\", MESSAGE: \"actual hi\", PARAMS: map[a:hi]}", erk.GetKindString(actualError)),
+			expectedError.Error(),
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(actualError).IsError(expectedError)
 	})
 }
 
@@ -308,7 +394,7 @@ func TestChainIsNotError(t *testing.T) {
 		mockT := mock_ensurepkg.NewMockT(ctrl)
 
 		err := errors.New("my error")
-		mockT.EXPECT().Errorf("Got \"%v\", expected \"%v\"", err, nil).After(
+		mockT.EXPECT().Errorf("\nGot:      %s\nExpected: %s", err.Error(), "<nil>").After(
 			mockT.EXPECT().Helper().Times(2),
 		)
 
