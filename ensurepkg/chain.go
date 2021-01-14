@@ -67,7 +67,7 @@ func (c Chain) Equals(expected interface{}) {
 			errors += "\n - " + result
 		}
 
-		c.t.Errorf(errors)
+		c.t.Errorf("\n%s\n\nActual:   %+v\nExpected: %+v", errors, c.actual, expected)
 	}
 }
 
