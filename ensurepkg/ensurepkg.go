@@ -32,7 +32,7 @@ type Chain struct {
 // New should NOT be called directly.
 // Instead use `ensure := ensure.New(t)` to allow for easy test refactoring.
 func New(t T) Ensure {
-	const validWrapperFilePathSuffix = "ensure/ensure.go"
+	const validWrapperFilePathSuffix = "/ensure.go"
 
 	_, callerFilePath, callerLineNumber, ok := runtime.Caller(1)
 	if !ok {
