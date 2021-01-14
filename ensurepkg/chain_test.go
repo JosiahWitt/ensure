@@ -310,7 +310,7 @@ func TestChainEquals(t *testing.T) {
 }
 
 func TestChainIsError(t *testing.T) {
-	const errorFormat = "\nGot:      %s\nExpected: %s"
+	const errorFormat = "\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s"
 
 	t.Run("when equal error by reference", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
@@ -509,7 +509,7 @@ func TestChainIsNotError(t *testing.T) {
 		mockT := mock_ensurepkg.NewMockT(ctrl)
 
 		err := errors.New("my error")
-		mockT.EXPECT().Errorf("\nGot:      %s\nExpected: %s", err.Error(), "<nil>").After(
+		mockT.EXPECT().Errorf("\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s", err.Error(), "<nil>").After(
 			mockT.EXPECT().Helper().Times(2),
 		)
 

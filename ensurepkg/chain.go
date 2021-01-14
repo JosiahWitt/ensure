@@ -90,7 +90,7 @@ func (c Chain) IsError(expected error) {
 	if !errors.Is(actual, expected) {
 		actualOutput := buildActualErrorOutput(actual)
 		expectedOutput := buildExpectedErrorOutput(expected)
-		c.t.Errorf("\nGot:      %s\nExpected: %s", actualOutput, expectedOutput)
+		c.t.Errorf("\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s", actualOutput, expectedOutput)
 	}
 }
 
