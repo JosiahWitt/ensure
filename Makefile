@@ -2,8 +2,8 @@ install-tools:
 	go get github.com/golang/mock/mockgen@v1.4.4
 
 generate-mocks:
-	@rm -r tests/mocks &> /dev/null || true
-	mockgen -destination tests/mocks/mock_ensurepkg/mock_ensurepkg.go -source ./ensurepkg/ensurepkg.go T
+	@rm -r internal/mocks &> /dev/null || true
+	mockgen -destination internal/mocks/mock_ensurepkg/mock_ensurepkg.go -source ./ensurepkg/ensurepkg.go T
 
 test:
 	go test ./...
