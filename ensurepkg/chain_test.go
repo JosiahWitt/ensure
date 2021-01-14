@@ -84,6 +84,8 @@ func TestChainIsFalse(t *testing.T) {
 }
 
 func TestChainEquals(t *testing.T) {
+	const errorMessageFormat = "\n%s\n\nActual:   %+v\nExpected: %+v"
+
 	type Message struct {
 		Body string
 	}
@@ -123,10 +125,58 @@ func TestChainEquals(t *testing.T) {
 		ensure(nil).Equals(nil)
 	})
 
+	t.Run("when nil pointer equals nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		var nilPtr *string
+
+		ensure := ensure.New(mockT)
+		ensure(nilPtr).Equals(nil)
+	})
+
+	t.Run("when nil map equals empty map", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		var nilMap map[string]string
+
+		ensure := ensure.New(mockT)
+		ensure(nilMap).Equals(map[string]string{})
+	})
+
+	t.Run("when nil slice equals empty slice", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		var nilMap []string
+
+		ensure := ensure.New(mockT)
+		ensure(nilMap).Equals([]string{})
+	})
+
+	t.Run("when nil array equals empty array", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		var nilMap [2]string
+
+		ensure := ensure.New(mockT)
+		ensure(nilMap).Equals([2]string{})
+	})
+
 	t.Run("when one field is not equal", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockT := mock_ensurepkg.NewMockT(ctrl)
-		mockT.EXPECT().Errorf("Actual does not equal expected:\n - Name: John != Sam").After(
+		mockT.EXPECT().Errorf(errorMessageFormat,
+			"Actual does not equal expected:\n - Name: John != Sam",
+			Person{Name: "John", Email: "john@test"},
+			Person{Name: "Sam", Email: "john@test"},
+		).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -137,7 +187,11 @@ func TestChainEquals(t *testing.T) {
 	t.Run("when not equal: expected is nil", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockT := mock_ensurepkg.NewMockT(ctrl)
-		mockT.EXPECT().Errorf("Actual does not equal expected:\n - {John john@test  []} != <nil pointer>").After(
+		mockT.EXPECT().Errorf(errorMessageFormat,
+			"Actual does not equal expected:\n - {John john@test  []} != <nil pointer>",
+			Person{Name: "John", Email: "john@test"},
+			nil,
+		).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -148,7 +202,11 @@ func TestChainEquals(t *testing.T) {
 	t.Run("when not equal: actual is nil", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockT := mock_ensurepkg.NewMockT(ctrl)
-		mockT.EXPECT().Errorf("Actual does not equal expected:\n - <nil pointer> != {John john@test  []}").After(
+		mockT.EXPECT().Errorf(errorMessageFormat,
+			"Actual does not equal expected:\n - <nil pointer> != {John john@test  []}",
+			nil,
+			Person{Name: "John", Email: "john@test"},
+		).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -159,7 +217,11 @@ func TestChainEquals(t *testing.T) {
 	t.Run("when unexported field is not equal", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockT := mock_ensurepkg.NewMockT(ctrl)
-		mockT.EXPECT().Errorf("Actual does not equal expected:\n - ssn: 123456789 != 123456780").After(
+		mockT.EXPECT().Errorf(errorMessageFormat,
+			"Actual does not equal expected:\n - ssn: 123456789 != 123456780",
+			Person{Name: "John", Email: "john@test", ssn: "123456789"},
+			Person{Name: "John", Email: "john@test", ssn: "123456780"},
+		).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -170,7 +232,25 @@ func TestChainEquals(t *testing.T) {
 	t.Run("when two fields are not equal", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockT := mock_ensurepkg.NewMockT(ctrl)
-		mockT.EXPECT().Errorf("Actual does not equal expected:\n - Name: John != Sam\n - Messages.slice[1].Body: Hello != Greetings").After(
+		mockT.EXPECT().Errorf(errorMessageFormat,
+			"Actual does not equal expected:\n - Name: John != Sam\n - Messages.slice[1].Body: Hello != Greetings",
+			Person{
+				Name:  "John",
+				Email: "john@test",
+				Messages: []Message{
+					{Body: "Hi"},
+					{Body: "Hello"},
+				},
+			},
+			Person{
+				Name:  "Sam",
+				Email: "john@test",
+				Messages: []Message{
+					{Body: "Hi"},
+					{Body: "Greetings"},
+				},
+			},
+		).After(
 			mockT.EXPECT().Helper(),
 		)
 

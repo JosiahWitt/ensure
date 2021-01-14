@@ -3,6 +3,7 @@ package ensurepkg
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/JosiahWitt/erk"
 	"github.com/go-test/deep"
@@ -43,7 +44,22 @@ func (c Chain) IsFalse() {
 func (c Chain) Equals(expected interface{}) {
 	c.t.Helper()
 
+	// If we expect nil, return early if actual is nil or if it is a nil pointer
+	if expected == nil {
+		if c.actual == nil {
+			return
+		}
+
+		actualReflection := reflect.ValueOf(c.actual)
+		isActualNilPointer := actualReflection.Kind() == reflect.Ptr && actualReflection.IsNil()
+		if isActualNilPointer {
+			return
+		}
+	}
+
 	deep.CompareUnexportedFields = true
+	deep.NilMapsAreEmpty = true
+	deep.NilSlicesAreEmpty = true
 	results := deep.Equal(c.actual, expected)
 	if len(results) > 0 {
 		errors := "Actual does not equal expected:"
@@ -51,7 +67,7 @@ func (c Chain) Equals(expected interface{}) {
 			errors += "\n - " + result
 		}
 
-		c.t.Errorf(errors)
+		c.t.Errorf("\n%s\n\nActual:   %+v\nExpected: %+v", errors, c.actual, expected)
 	}
 }
 
