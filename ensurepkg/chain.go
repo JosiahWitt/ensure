@@ -39,22 +39,23 @@ func (c Chain) IsFalse() {
 	}
 }
 
+// IsNil ensures the actual value is nil or a nil pointer.
+func (c Chain) IsNil() {
+	c.t.Helper()
+
+	if !isNil(c.actual) {
+		c.t.Errorf("Got %+v, expected nil", c.actual)
+	}
+}
+
 // Equals ensures the actual value equals the expected value.
 // Equals uses deep.Equal to print easy to read diffs.
 func (c Chain) Equals(expected interface{}) {
 	c.t.Helper()
 
 	// If we expect nil, return early if actual is nil or if it is a nil pointer
-	if expected == nil {
-		if c.actual == nil {
-			return
-		}
-
-		actualReflection := reflect.ValueOf(c.actual)
-		isActualNilPointer := actualReflection.Kind() == reflect.Ptr && actualReflection.IsNil()
-		if isActualNilPointer {
-			return
-		}
+	if expected == nil && isNil(c.actual) {
+		return
 	}
 
 	deep.CompareUnexportedFields = true
@@ -89,7 +90,7 @@ func (c Chain) IsError(expected error) {
 	if !errors.Is(actual, expected) {
 		actualOutput := buildActualErrorOutput(actual)
 		expectedOutput := buildExpectedErrorOutput(expected)
-		c.t.Errorf("\nGot:      %s\nExpected: %s", actualOutput, expectedOutput)
+		c.t.Errorf("\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s", actualOutput, expectedOutput)
 	}
 }
 
@@ -126,4 +127,14 @@ func buildExpectedErrorOutput(expected error) string {
 		expectedErk.ExportRawMessage(),
 		expectedErk.Params(),
 	)
+}
+
+func isNil(value interface{}) bool {
+	if value == nil {
+		return true
+	}
+
+	reflection := reflect.ValueOf(value)
+	isNilPointer := reflection.Kind() == reflect.Ptr && reflection.IsNil()
+	return isNilPointer
 }

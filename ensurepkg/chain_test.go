@@ -83,6 +83,41 @@ func TestChainIsFalse(t *testing.T) {
 	})
 }
 
+func TestChainIsNil(t *testing.T) {
+	t.Run("when nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		ensure := ensure.New(mockT)
+		ensure(nil).IsNil()
+	})
+
+	t.Run("when nil pointer", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		var nilPtr *string
+
+		ensure := ensure.New(mockT)
+		ensure(nilPtr).IsNil()
+	})
+
+	t.Run("when not nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+
+		const val = "not nil"
+		mockT.EXPECT().Errorf("Got %+v, expected nil", val).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(val).IsNil()
+	})
+}
+
 func TestChainEquals(t *testing.T) {
 	const errorMessageFormat = "\n%s\n\nActual:   %+v\nExpected: %+v"
 
@@ -275,7 +310,7 @@ func TestChainEquals(t *testing.T) {
 }
 
 func TestChainIsError(t *testing.T) {
-	const errorFormat = "\nGot:      %s\nExpected: %s"
+	const errorFormat = "\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s"
 
 	t.Run("when equal error by reference", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
@@ -474,7 +509,7 @@ func TestChainIsNotError(t *testing.T) {
 		mockT := mock_ensurepkg.NewMockT(ctrl)
 
 		err := errors.New("my error")
-		mockT.EXPECT().Errorf("\nGot:      %s\nExpected: %s", err.Error(), "<nil>").After(
+		mockT.EXPECT().Errorf("\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s", err.Error(), "<nil>").After(
 			mockT.EXPECT().Helper().Times(2),
 		)
 
