@@ -123,6 +123,50 @@ func TestChainEquals(t *testing.T) {
 		ensure(nil).Equals(nil)
 	})
 
+	t.Run("when nil pointer equals nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		var nilPtr *string
+
+		ensure := ensure.New(mockT)
+		ensure(nilPtr).Equals(nil)
+	})
+
+	t.Run("when nil map equals empty map", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		var nilMap map[string]string
+
+		ensure := ensure.New(mockT)
+		ensure(nilMap).Equals(map[string]string{})
+	})
+
+	t.Run("when nil slice equals empty slice", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		var nilMap []string
+
+		ensure := ensure.New(mockT)
+		ensure(nilMap).Equals([]string{})
+	})
+
+	t.Run("when nil array equals empty array", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		var nilMap [2]string
+
+		ensure := ensure.New(mockT)
+		ensure(nilMap).Equals([2]string{})
+	})
+
 	t.Run("when one field is not equal", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockT := mock_ensurepkg.NewMockT(ctrl)
