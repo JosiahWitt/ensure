@@ -518,6 +518,106 @@ func TestChainIsNotError(t *testing.T) {
 	})
 }
 
+func TestChainIsEmpty(t *testing.T) {
+	const notEmptyFormat = "Got %+v with length %d, expected it to be empty"
+
+	t.Run("when empty: array", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		ensure := ensure.New(mockT)
+		ensure([0]string{}).IsEmpty()
+	})
+
+	t.Run("when not empty: array", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+
+		mockT.EXPECT().Errorf(notEmptyFormat, [2]string{"1", "2"}, 2).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure([2]string{"1", "2"}).IsEmpty()
+	})
+
+	t.Run("when empty: slice", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		ensure := ensure.New(mockT)
+		ensure([]string{}).IsEmpty()
+	})
+
+	t.Run("when not empty: slice", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+
+		mockT.EXPECT().Errorf(notEmptyFormat, []string{"1"}, 1).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure([]string{"1"}).IsEmpty()
+	})
+
+	t.Run("when empty: string", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		ensure := ensure.New(mockT)
+		ensure("").IsEmpty()
+	})
+
+	t.Run("when not empty: string", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+
+		mockT.EXPECT().Errorf(notEmptyFormat, "not empty", 9).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("not empty").IsEmpty()
+	})
+
+	t.Run("when empty: map", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT.EXPECT().Helper()
+
+		ensure := ensure.New(mockT)
+		ensure(map[string]string{}).IsEmpty()
+	})
+
+	t.Run("when not empty: map", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+
+		mockT.EXPECT().Errorf(notEmptyFormat, map[string]string{"hello": "world"}, 1).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(map[string]string{"hello": "world"}).IsEmpty()
+	})
+
+	t.Run("when not valid type", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_ensurepkg.NewMockT(ctrl)
+
+		mockT.EXPECT().Errorf("Got type %T, expected array, slice, string, or map", 1234).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(1234).IsEmpty()
+	})
+}
+
 type TestError struct {
 	Message string
 }
