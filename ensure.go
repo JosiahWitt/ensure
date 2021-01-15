@@ -30,5 +30,5 @@ import "github.com/JosiahWitt/ensure/ensurepkg"
 
 // New creates an instance of the ensure test framework using the current testing context.
 func New(t ensurepkg.T) ensurepkg.Ensure {
-	return ensurepkg.New(t)
+	return ensurepkg.InternalCreateDoNotCallDirectly(t)
 }
