@@ -40,7 +40,7 @@ func TestNew(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockT := mock_ensurepkg.NewMockT(ctrl)
-		ensurepkg.New(mockT)
+		ensurepkg.InternalCreateDoNotCallDirectly(mockT)
 	})
 }
 

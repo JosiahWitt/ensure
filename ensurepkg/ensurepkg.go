@@ -29,9 +29,9 @@ type Chain struct {
 	actual interface{}
 }
 
-// New should NOT be called directly.
+// InternalCreateDoNotCallDirectly should NOT be called directly.
 // Instead use `ensure := ensure.New(t)` to allow for easy test refactoring.
-func New(t T) Ensure {
+func InternalCreateDoNotCallDirectly(t T) Ensure {
 	const validWrapperFilePathSuffix = "/ensure.go"
 
 	_, callerFilePath, callerLineNumber, ok := runtime.Caller(1)
