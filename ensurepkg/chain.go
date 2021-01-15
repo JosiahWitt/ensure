@@ -101,6 +101,23 @@ func (c Chain) IsNotError() {
 	c.IsError(nil)
 }
 
+// IsEmpty ensures that the actual value is empty.
+// It only supports arrays, slices, strings, or maps.
+func (c Chain) IsEmpty() {
+	c.t.Helper()
+
+	actualReflect := reflect.ValueOf(c.actual)
+	actualReflectKind := actualReflect.Kind()
+	if actualReflectKind != reflect.Array && actualReflectKind != reflect.Slice && actualReflectKind != reflect.String && actualReflectKind != reflect.Map {
+		c.t.Errorf("Got type %T, expected array, slice, string, or map", c.actual)
+		return
+	}
+
+	if actualReflect.Len() > 0 {
+		c.t.Errorf("Got %+v with length %d, expected it to be empty", c.actual, actualReflect.Len())
+	}
+}
+
 func buildActualErrorOutput(actual error) string {
 	actualErk, isActualErk := actual.(erk.Erkable) //nolint:errorlint // Want to output the top level error
 	if !isActualErk {
