@@ -11,8 +11,10 @@ func (e Ensure) Run(name string, fn func(ensure Ensure)) {
 	c.run(name, fn)
 }
 
-func (c Chain) run(name string, fn func(ensure Ensure)) {
+func (c *Chain) run(name string, fn func(ensure Ensure)) {
 	c.t.Helper()
+	c.markRun()
+
 	c.t.Run(name, func(t *testing.T) {
 		ensure := wrap(t)
 		fn(ensure)

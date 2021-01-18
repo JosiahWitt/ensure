@@ -1,5 +1,5 @@
 # ensure
-A balanced test framework for Go 1.13+.
+A balanced test framework for Go 1.14+.
 
 [![Documentation](https://pkg.go.dev/badge/github.com/JosiahWitt/ensure)](https://pkg.go.dev/github.com/JosiahWitt/ensure)
 [![CI](https://github.com/JosiahWitt/ensure/workflows/CI/badge.svg)](https://github.com/JosiahWitt/ensure/actions?query=branch%3Amaster+workflow%3ACI)
@@ -58,10 +58,13 @@ func TestBasicExample(t *testing.T) {
     // To ensure a value is correct, use ensure as a function:
     ensure("abc").Equals("abc")
     ensure(produceError()).IsError(expectedError)
+    ensure(doNotProduceError()).IsNotError()
     ensure(true).IsTrue()
     ensure(false).IsFalse()
+    ensure("").IsEmpty()
 
-    ensure.Fail()
+    // Failing a test directly:
+    ensure.Failf("Something went wrong, and we stop the test immediately")
   })
 }
 ```

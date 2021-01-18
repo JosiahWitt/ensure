@@ -10,48 +10,52 @@ import (
 )
 
 // IsTrue ensures the actual value is the boolean "true".
-func (c Chain) IsTrue() {
+func (c *Chain) IsTrue() {
 	c.t.Helper()
+	c.markRun()
 
 	actual, ok := c.actual.(bool)
 	if !ok {
-		c.t.Errorf("Got type %T, expected boolean", c.actual)
+		c.t.Fatalf("Got type %T, expected boolean", c.actual)
 		return
 	}
 
 	if !actual {
-		c.t.Errorf("Got false, expected true")
+		c.t.Fatalf("Got false, expected true")
 	}
 }
 
 // IsFalse ensures the actual value is the boolean "false".
-func (c Chain) IsFalse() {
+func (c *Chain) IsFalse() {
 	c.t.Helper()
+	c.markRun()
 
 	actual, ok := c.actual.(bool)
 	if !ok {
-		c.t.Errorf("Got type %T, expected boolean", c.actual)
+		c.t.Fatalf("Got type %T, expected boolean", c.actual)
 		return
 	}
 
 	if actual {
-		c.t.Errorf("Got true, expected false")
+		c.t.Fatalf("Got true, expected false")
 	}
 }
 
 // IsNil ensures the actual value is nil or a nil pointer.
-func (c Chain) IsNil() {
+func (c *Chain) IsNil() {
 	c.t.Helper()
+	c.markRun()
 
 	if !isNil(c.actual) {
-		c.t.Errorf("Got %+v, expected nil", c.actual)
+		c.t.Fatalf("Got %+v, expected nil", c.actual)
 	}
 }
 
 // Equals ensures the actual value equals the expected value.
 // Equals uses deep.Equal to print easy to read diffs.
-func (c Chain) Equals(expected interface{}) {
+func (c *Chain) Equals(expected interface{}) {
 	c.t.Helper()
+	c.markRun()
 
 	// If we expect nil, return early if actual is nil or if it is a nil pointer
 	if expected == nil && isNil(c.actual) {
@@ -68,14 +72,15 @@ func (c Chain) Equals(expected interface{}) {
 			errors += "\n - " + result
 		}
 
-		c.t.Errorf("\n%s\n\nActual:   %+v\nExpected: %+v", errors, c.actual, expected)
+		c.t.Fatalf("\n%s\n\nActual:   %+v\nExpected: %+v", errors, c.actual, expected)
 	}
 }
 
 // IsError ensures the actual value equals the expected error.
 // IsError uses errors.Is to support Go 1.13+ error comparisons.
-func (c Chain) IsError(expected error) {
+func (c *Chain) IsError(expected error) {
 	c.t.Helper()
+	c.markRun()
 
 	if c.actual == nil && expected == nil {
 		return
@@ -83,39 +88,44 @@ func (c Chain) IsError(expected error) {
 
 	actual, ok := c.actual.(error)
 	if !ok && c.actual != nil {
-		c.t.Errorf("Got type %T, expected error: \"%v\"", c.actual, expected)
+		c.t.Fatalf("Got type %T, expected error: \"%v\"", c.actual, expected)
 		return
 	}
 
 	if !errors.Is(actual, expected) {
 		actualOutput := buildActualErrorOutput(actual)
 		expectedOutput := buildExpectedErrorOutput(expected)
-		c.t.Errorf("\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s", actualOutput, expectedOutput)
+		c.t.Fatalf("\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s", actualOutput, expectedOutput)
 	}
 }
 
 // IsNotError ensures that the actual value is nil.
 // It is analogous to IsError(nil).
-func (c Chain) IsNotError() {
+func (c *Chain) IsNotError() {
 	c.t.Helper()
 	c.IsError(nil)
 }
 
 // IsEmpty ensures that the actual value is empty.
 // It only supports arrays, slices, strings, or maps.
-func (c Chain) IsEmpty() {
+func (c *Chain) IsEmpty() {
 	c.t.Helper()
+	c.markRun()
 
 	actualReflect := reflect.ValueOf(c.actual)
 	actualReflectKind := actualReflect.Kind()
 	if actualReflectKind != reflect.Array && actualReflectKind != reflect.Slice && actualReflectKind != reflect.String && actualReflectKind != reflect.Map {
-		c.t.Errorf("Got type %T, expected array, slice, string, or map", c.actual)
+		c.t.Fatalf("Got type %T, expected array, slice, string, or map", c.actual)
 		return
 	}
 
 	if actualReflect.Len() > 0 {
-		c.t.Errorf("Got %+v with length %d, expected it to be empty", c.actual, actualReflect.Len())
+		c.t.Fatalf("Got %+v with length %d, expected it to be empty", c.actual, actualReflect.Len())
 	}
+}
+
+func (c *Chain) markRun() {
+	c.wasRun = true
 }
 
 func buildActualErrorOutput(actual error) string {

@@ -3,7 +3,6 @@
 package ensurepkg
 
 import (
-	"fmt"
 	"runtime"
 	"strings"
 	"testing"
@@ -12,21 +11,21 @@ import (
 // T implements a subset of methods on testing.T.
 // More methods may be added to T with a minor ensure release.
 type T interface {
-	Errorf(format string, args ...interface{})
 	Fatalf(format string, args ...interface{})
 	Run(name string, f func(t *testing.T)) bool
-	Fail()
 	Helper()
+	Cleanup(func())
 }
 
 // Ensure the actual value is correct using Chain.
 // Ensure also has methods that can be called directly.
-type Ensure func(actual interface{}) Chain
+type Ensure func(actual interface{}) *Chain
 
 // Chain assetions to the ensure function call.
 type Chain struct {
 	t      T
 	actual interface{}
+	wasRun bool
 }
 
 // InternalCreateDoNotCallDirectly should NOT be called directly.
@@ -34,35 +33,51 @@ type Chain struct {
 func InternalCreateDoNotCallDirectly(t T) Ensure {
 	const validWrapperFilePathSuffix = "/ensure.go"
 
-	_, callerFilePath, callerLineNumber, ok := runtime.Caller(1)
+	_, callerFilePath, _, ok := runtime.Caller(1)
 	if !ok {
-		panic("Can't get caller from runtime")
+		t.Helper()
+		t.Fatalf("Can't get caller from runtime")
 	}
 
 	if !strings.HasSuffix(callerFilePath, validWrapperFilePathSuffix) {
-		panic(fmt.Sprintf("Do not call ensurepkg.New directly. Instead use ensure.New. Called ensurepkg.New from: %v:%v", callerFilePath, callerLineNumber))
+		t.Helper()
+		t.Fatalf("Do not call `ensurepkg.InternalCreateDoNotCallDirectly(t)` directly. Instead use `ensure.New(t)`.")
 	}
 
 	return wrap(t)
 }
 
-// Fail the test directly.
-func (e Ensure) Fail() {
+// Failf fails the test immediately with a formatted message.
+// The formatted message follows the same format as the fmt package.
+func (e Ensure) Failf(format string, args ...interface{}) {
 	c := e(nil)
 	c.t.Helper()
-	c.t.Fail()
+	c.markRun()
+	c.t.Fatalf(format, args...)
 }
 
 // T exposes the test context provided to ensure.New(t).
 func (e Ensure) T() T {
-	return e(nil).t
+	c := e(nil)
+	c.markRun()
+	return c.t
 }
 
 func wrap(t T) Ensure {
-	return func(actual interface{}) Chain {
-		return Chain{
+	return func(actual interface{}) *Chain {
+		c := &Chain{
 			t:      t,
 			actual: actual,
 		}
+
+		t.Helper()
+		t.Cleanup(func() {
+			if !c.wasRun {
+				t.Helper()
+				t.Fatalf("Found ensure(<actual>) without chained assertion.")
+			}
+		})
+
+		return c
 	}
 }

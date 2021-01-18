@@ -33,23 +33,6 @@ func (m *MockT) EXPECT() *MockTMockRecorder {
 	return m.recorder
 }
 
-// Errorf mocks base method
-func (m *MockT) Errorf(format string, args ...interface{}) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{format}
-	for _, a := range args {
-		varargs = append(varargs, a)
-	}
-	m.ctrl.Call(m, "Errorf", varargs...)
-}
-
-// Errorf indicates an expected call of Errorf
-func (mr *MockTMockRecorder) Errorf(format interface{}, args ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{format}, args...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Errorf", reflect.TypeOf((*MockT)(nil).Errorf), varargs...)
-}
-
 // Fatalf mocks base method
 func (m *MockT) Fatalf(format string, args ...interface{}) {
 	m.ctrl.T.Helper()
@@ -81,18 +64,6 @@ func (mr *MockTMockRecorder) Run(name, f interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockT)(nil).Run), name, f)
 }
 
-// Fail mocks base method
-func (m *MockT) Fail() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Fail")
-}
-
-// Fail indicates an expected call of Fail
-func (mr *MockTMockRecorder) Fail() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fail", reflect.TypeOf((*MockT)(nil).Fail))
-}
-
 // Helper mocks base method
 func (m *MockT) Helper() {
 	m.ctrl.T.Helper()
@@ -103,4 +74,16 @@ func (m *MockT) Helper() {
 func (mr *MockTMockRecorder) Helper() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Helper", reflect.TypeOf((*MockT)(nil).Helper))
+}
+
+// Cleanup mocks base method
+func (m *MockT) Cleanup(arg0 func()) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Cleanup", arg0)
+}
+
+// Cleanup indicates an expected call of Cleanup
+func (mr *MockTMockRecorder) Cleanup(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockT)(nil).Cleanup), arg0)
 }

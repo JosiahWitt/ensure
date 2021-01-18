@@ -1,4 +1,4 @@
-// Package ensure is a balanced testing framework.
+// Package ensure is a balanced testing framework for Go 1.14+.
 // It supports modern Go 1.13+ error comparisons (via errors.Is), and provides easy to read diffs (via deep.Equal).
 //
 // Most of the implementation is in the ensurepkg package.
@@ -18,10 +18,13 @@
 //   	 // To ensure a value is correct, use ensure as a function:
 //   	 ensure("abc").Equals("abc")
 //   	 ensure(produceError()).IsError(expectedError)
+//   	 ensure(doNotProduceError()).IsNotError()
 //   	 ensure(true).IsTrue()
 //   	 ensure(false).IsFalse()
+//   	 ensure("").IsEmpty()
 //
-//   	 ensure.Fail()
+//     // Failing a test directly:
+//     ensure.Failf("Something went wrong, and we stop the test immediately")
 //   })
 //  }
 package ensure
