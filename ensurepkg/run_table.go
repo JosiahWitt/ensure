@@ -59,7 +59,10 @@ type tableEntry struct {
 func (e Ensure) RunTableByIndex(table interface{}, fn func(ensure Ensure, i int)) {
 	entries, err := buildTable(table)
 	if err != nil {
-		panic(err.Error())
+		c := e(nil)
+		c.t.Helper()
+		c.markRun()
+		c.t.Fatalf(err.Error())
 	}
 
 	for i, entry := range entries {

@@ -6,15 +6,12 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/internal/mocks/mock_ensurepkg"
 	"github.com/JosiahWitt/erk"
-	"github.com/golang/mock/gomock"
 )
 
 func TestChainIsTrue(t *testing.T) {
 	t.Run("when true", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
@@ -22,10 +19,9 @@ func TestChainIsTrue(t *testing.T) {
 	})
 
 	t.Run("when false", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
-		mockT.EXPECT().Errorf("Got false, expected true").After(
+		mockT.EXPECT().Fatalf("Got false, expected true").After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -34,11 +30,10 @@ func TestChainIsTrue(t *testing.T) {
 	})
 
 	t.Run("when not a boolean", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		const val = "not a boolean"
-		mockT.EXPECT().Errorf("Got type %T, expected boolean", val).After(
+		mockT.EXPECT().Fatalf("Got type %T, expected boolean", val).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -49,8 +44,7 @@ func TestChainIsTrue(t *testing.T) {
 
 func TestChainIsFalse(t *testing.T) {
 	t.Run("when false", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
@@ -58,10 +52,9 @@ func TestChainIsFalse(t *testing.T) {
 	})
 
 	t.Run("when true", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
-		mockT.EXPECT().Errorf("Got true, expected false").After(
+		mockT.EXPECT().Fatalf("Got true, expected false").After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -70,11 +63,10 @@ func TestChainIsFalse(t *testing.T) {
 	})
 
 	t.Run("when not a boolean", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		const val = "not a boolean"
-		mockT.EXPECT().Errorf("Got type %T, expected boolean", val).After(
+		mockT.EXPECT().Fatalf("Got type %T, expected boolean", val).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -85,8 +77,7 @@ func TestChainIsFalse(t *testing.T) {
 
 func TestChainIsNil(t *testing.T) {
 	t.Run("when nil", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
@@ -94,8 +85,7 @@ func TestChainIsNil(t *testing.T) {
 	})
 
 	t.Run("when nil pointer", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		var nilPtr *string
@@ -105,11 +95,10 @@ func TestChainIsNil(t *testing.T) {
 	})
 
 	t.Run("when not nil", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		const val = "not nil"
-		mockT.EXPECT().Errorf("Got %+v, expected nil", val).After(
+		mockT.EXPECT().Fatalf("Got %+v, expected nil", val).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -134,8 +123,7 @@ func TestChainEquals(t *testing.T) {
 	}
 
 	t.Run("when equal", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
@@ -143,8 +131,7 @@ func TestChainEquals(t *testing.T) {
 	})
 
 	t.Run("when unexported field is equal", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
@@ -152,8 +139,7 @@ func TestChainEquals(t *testing.T) {
 	})
 
 	t.Run("when both are nil", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
@@ -161,8 +147,7 @@ func TestChainEquals(t *testing.T) {
 	})
 
 	t.Run("when nil pointer equals nil", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		var nilPtr *string
@@ -172,8 +157,7 @@ func TestChainEquals(t *testing.T) {
 	})
 
 	t.Run("when nil map equals empty map", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		var nilMap map[string]string
@@ -183,8 +167,7 @@ func TestChainEquals(t *testing.T) {
 	})
 
 	t.Run("when nil slice equals empty slice", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		var nilMap []string
@@ -194,8 +177,7 @@ func TestChainEquals(t *testing.T) {
 	})
 
 	t.Run("when nil array equals empty array", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		var nilMap [2]string
@@ -205,9 +187,8 @@ func TestChainEquals(t *testing.T) {
 	})
 
 	t.Run("when one field is not equal", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
-		mockT.EXPECT().Errorf(errorMessageFormat,
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat,
 			"Actual does not equal expected:\n - Name: John != Sam",
 			Person{Name: "John", Email: "john@test"},
 			Person{Name: "Sam", Email: "john@test"},
@@ -220,9 +201,8 @@ func TestChainEquals(t *testing.T) {
 	})
 
 	t.Run("when not equal: expected is nil", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
-		mockT.EXPECT().Errorf(errorMessageFormat,
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat,
 			"Actual does not equal expected:\n - {John john@test  []} != <nil pointer>",
 			Person{Name: "John", Email: "john@test"},
 			nil,
@@ -235,9 +215,8 @@ func TestChainEquals(t *testing.T) {
 	})
 
 	t.Run("when not equal: actual is nil", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
-		mockT.EXPECT().Errorf(errorMessageFormat,
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat,
 			"Actual does not equal expected:\n - <nil pointer> != {John john@test  []}",
 			nil,
 			Person{Name: "John", Email: "john@test"},
@@ -250,9 +229,8 @@ func TestChainEquals(t *testing.T) {
 	})
 
 	t.Run("when unexported field is not equal", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
-		mockT.EXPECT().Errorf(errorMessageFormat,
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat,
 			"Actual does not equal expected:\n - ssn: 123456789 != 123456780",
 			Person{Name: "John", Email: "john@test", ssn: "123456789"},
 			Person{Name: "John", Email: "john@test", ssn: "123456780"},
@@ -265,9 +243,8 @@ func TestChainEquals(t *testing.T) {
 	})
 
 	t.Run("when two fields are not equal", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
-		mockT.EXPECT().Errorf(errorMessageFormat,
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat,
 			"Actual does not equal expected:\n - Name: John != Sam\n - Messages.slice[1].Body: Hello != Greetings",
 			Person{
 				Name:  "John",
@@ -313,8 +290,7 @@ func TestChainIsError(t *testing.T) {
 	const errorFormat = "\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s"
 
 	t.Run("when equal error by reference", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		err := errors.New("my error")
@@ -324,8 +300,7 @@ func TestChainIsError(t *testing.T) {
 	})
 
 	t.Run("when equal error by Is method", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		const errMsg = "my error"
@@ -335,8 +310,7 @@ func TestChainIsError(t *testing.T) {
 	})
 
 	t.Run("when both are nil", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
@@ -344,12 +318,11 @@ func TestChainIsError(t *testing.T) {
 	})
 
 	t.Run("when not error type", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		err := errors.New("my error")
 		const val = "not an error"
-		mockT.EXPECT().Errorf("Got type %T, expected error: \"%v\"", val, err).After(
+		mockT.EXPECT().Fatalf("Got type %T, expected error: \"%v\"", val, err).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -358,13 +331,12 @@ func TestChainIsError(t *testing.T) {
 	})
 
 	t.Run("when not equal: two different errors by reference", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		err1 := errors.New("my error")
 		err2 := errors.New("my error")
 
-		mockT.EXPECT().Errorf(errorFormat, err1.Error(), err2.Error()).After(
+		mockT.EXPECT().Fatalf(errorFormat, err1.Error(), err2.Error()).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -373,12 +345,11 @@ func TestChainIsError(t *testing.T) {
 	})
 
 	t.Run("when not equal: two different errors by Is method", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		err1 := TestError{Message: "error message 1"}
 		err2 := TestError{Message: "error message 2"}
-		mockT.EXPECT().Errorf(errorFormat, err1.Error(), err2.Error()).After(
+		mockT.EXPECT().Fatalf(errorFormat, err1.Error(), err2.Error()).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -387,11 +358,10 @@ func TestChainIsError(t *testing.T) {
 	})
 
 	t.Run("when not equal: expected nil", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		err := errors.New("my error")
-		mockT.EXPECT().Errorf(errorFormat, err.Error(), "<nil>").After(
+		mockT.EXPECT().Fatalf(errorFormat, err.Error(), "<nil>").After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -400,11 +370,10 @@ func TestChainIsError(t *testing.T) {
 	})
 
 	t.Run("when not equal: got nil", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		err := errors.New("my error")
-		mockT.EXPECT().Errorf(errorFormat, "<nil>", err.Error()).After(
+		mockT.EXPECT().Fatalf(errorFormat, "<nil>", err.Error()).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -413,15 +382,14 @@ func TestChainIsError(t *testing.T) {
 	})
 
 	t.Run("when not equal: erk errors: different kinds", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		type kind1 struct{ erk.DefaultKind }
 		type kind2 struct{ erk.DefaultKind }
 
 		expectedError := erk.New(kind1{}, "expected {{.a}}")
 		actualError := erk.NewWith(kind2{}, "actual {{.a}}", erk.Params{"a": "hi"})
-		mockT.EXPECT().Errorf(
+		mockT.EXPECT().Fatalf(
 			errorFormat,
 			fmt.Sprintf("{KIND: \"%s\", MESSAGE: \"actual hi\", PARAMS: map[a:hi]}", erk.GetKindString(actualError)),
 			fmt.Sprintf("{KIND: \"%s\", RAW MESSAGE: \"expected {{.a}}\", PARAMS: map[]}", erk.GetKindString(expectedError)),
@@ -434,14 +402,13 @@ func TestChainIsError(t *testing.T) {
 	})
 
 	t.Run("when not equal: erk errors: same kind", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		type kind1 struct{ erk.DefaultKind }
 
 		expectedError := erk.New(kind1{}, "expected {{.a}}")
 		actualError := erk.NewWith(kind1{}, "actual {{.a}}", erk.Params{"a": "hi"})
-		mockT.EXPECT().Errorf(
+		mockT.EXPECT().Fatalf(
 			errorFormat,
 			fmt.Sprintf("{KIND: \"%s\", MESSAGE: \"actual hi\", PARAMS: map[a:hi]}", erk.GetKindString(actualError)),
 			fmt.Sprintf("{KIND: \"%s\", RAW MESSAGE: \"expected {{.a}}\", PARAMS: map[]}", erk.GetKindString(expectedError)),
@@ -454,14 +421,13 @@ func TestChainIsError(t *testing.T) {
 	})
 
 	t.Run("when not equal: erk errors: only expected is erk error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		type kind1 struct{ erk.DefaultKind }
 
 		expectedError := erk.New(kind1{}, "expected {{.a}}")
 		actualError := errors.New("actual")
-		mockT.EXPECT().Errorf(
+		mockT.EXPECT().Fatalf(
 			errorFormat,
 			actualError.Error(),
 			fmt.Sprintf("{KIND: \"%s\", RAW MESSAGE: \"expected {{.a}}\", PARAMS: map[]}", erk.GetKindString(expectedError)),
@@ -474,14 +440,13 @@ func TestChainIsError(t *testing.T) {
 	})
 
 	t.Run("when not equal: erk errors: only actual is erk error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		type kind1 struct{ erk.DefaultKind }
 
 		expectedError := errors.New("expected")
 		actualError := erk.NewWith(kind1{}, "actual {{.a}}", erk.Params{"a": "hi"})
-		mockT.EXPECT().Errorf(
+		mockT.EXPECT().Fatalf(
 			errorFormat,
 			fmt.Sprintf("{KIND: \"%s\", MESSAGE: \"actual hi\", PARAMS: map[a:hi]}", erk.GetKindString(actualError)),
 			expectedError.Error(),
@@ -496,8 +461,7 @@ func TestChainIsError(t *testing.T) {
 
 func TestChainIsNotError(t *testing.T) {
 	t.Run("when no error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper().Times(2)
 
 		ensure := ensure.New(mockT)
@@ -505,11 +469,10 @@ func TestChainIsNotError(t *testing.T) {
 	})
 
 	t.Run("when error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
 		err := errors.New("my error")
-		mockT.EXPECT().Errorf("\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s", err.Error(), "<nil>").After(
+		mockT.EXPECT().Fatalf("\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s", err.Error(), "<nil>").After(
 			mockT.EXPECT().Helper().Times(2),
 		)
 
@@ -522,8 +485,7 @@ func TestChainIsEmpty(t *testing.T) {
 	const notEmptyFormat = "Got %+v with length %d, expected it to be empty"
 
 	t.Run("when empty: array", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
@@ -531,10 +493,9 @@ func TestChainIsEmpty(t *testing.T) {
 	})
 
 	t.Run("when not empty: array", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
-		mockT.EXPECT().Errorf(notEmptyFormat, [2]string{"1", "2"}, 2).After(
+		mockT.EXPECT().Fatalf(notEmptyFormat, [2]string{"1", "2"}, 2).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -543,8 +504,7 @@ func TestChainIsEmpty(t *testing.T) {
 	})
 
 	t.Run("when empty: slice", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
@@ -552,10 +512,9 @@ func TestChainIsEmpty(t *testing.T) {
 	})
 
 	t.Run("when not empty: slice", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
-		mockT.EXPECT().Errorf(notEmptyFormat, []string{"1"}, 1).After(
+		mockT.EXPECT().Fatalf(notEmptyFormat, []string{"1"}, 1).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -564,8 +523,7 @@ func TestChainIsEmpty(t *testing.T) {
 	})
 
 	t.Run("when empty: string", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
@@ -573,10 +531,9 @@ func TestChainIsEmpty(t *testing.T) {
 	})
 
 	t.Run("when not empty: string", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
-		mockT.EXPECT().Errorf(notEmptyFormat, "not empty", 9).After(
+		mockT.EXPECT().Fatalf(notEmptyFormat, "not empty", 9).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -585,8 +542,7 @@ func TestChainIsEmpty(t *testing.T) {
 	})
 
 	t.Run("when empty: map", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
@@ -594,10 +550,9 @@ func TestChainIsEmpty(t *testing.T) {
 	})
 
 	t.Run("when not empty: map", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
-		mockT.EXPECT().Errorf(notEmptyFormat, map[string]string{"hello": "world"}, 1).After(
+		mockT.EXPECT().Fatalf(notEmptyFormat, map[string]string{"hello": "world"}, 1).After(
 			mockT.EXPECT().Helper(),
 		)
 
@@ -606,10 +561,9 @@ func TestChainIsEmpty(t *testing.T) {
 	})
 
 	t.Run("when not valid type", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		mockT := mock_ensurepkg.NewMockT(ctrl)
+		mockT := setupMockTWithCleanupCheck(t)
 
-		mockT.EXPECT().Errorf("Got type %T, expected array, slice, string, or map", 1234).After(
+		mockT.EXPECT().Fatalf("Got type %T, expected array, slice, string, or map", 1234).After(
 			mockT.EXPECT().Helper(),
 		)
 
