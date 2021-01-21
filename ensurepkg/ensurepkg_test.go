@@ -58,6 +58,24 @@ func TestEnsureT(t *testing.T) {
 	}
 }
 
+func TestEnsureGoMockController(t *testing.T) {
+	mockT := setupMockTWithCleanupCheck(t)
+	mockT.EXPECT().Cleanup(gomock.Any()).AnyTimes() // Setup by GoMock Controller
+	mockT.EXPECT().Helper().AnyTimes()              // Setup by GoMock Controller
+
+	ensure := ensure.New(mockT)
+	firstController := ensure.GoMockController()
+	if firstController == nil {
+		t.Error("firstController == nil")
+	}
+
+	// Memoized across GoMockController() calls
+	secondController := ensure.GoMockController()
+	if firstController != secondController {
+		t.Errorf("firstController != secondController: %p != %p", firstController, secondController)
+	}
+}
+
 func TestEnsureCleanupCheck(t *testing.T) {
 	t.Run("when test was run", func(t *testing.T) {
 		mockT := setupMockT(t)
@@ -74,6 +92,32 @@ func TestEnsureCleanupCheck(t *testing.T) {
 
 		ensure := ensure.New(mockT)
 		ensure(true).IsTrue()
+		cleanupFn()
+	})
+
+	t.Run("GoMock controller is finished", func(t *testing.T) {
+		mockT := setupMockT(t)
+
+		var cleanupFn func()
+		gomock.InOrder(
+			mockT.EXPECT().Helper(),
+			mockT.EXPECT().Cleanup(gomock.Any()).Do(func(fn func()) {
+				cleanupFn = fn
+			}),
+		)
+
+		mockT.EXPECT().Helper().AnyTimes()
+		mockT.EXPECT().Cleanup(gomock.Any()).AnyTimes()
+
+		ensure := ensure.New(mockT)
+		ctrl := ensure.GoMockController()
+
+		// SomeMethod is never "called", and should be noticed during cleanup
+		exampleType := &exampleTypeWithMethod{}
+		ctrl.RecordCall(exampleType, "SomeMethod", true)
+
+		mockT.EXPECT().Errorf(gomock.Any(), gomock.Any()).AnyTimes().MinTimes(1)
+		mockT.EXPECT().Fatalf(gomock.Any(), gomock.Any()).AnyTimes().MinTimes(1)
 		cleanupFn()
 	})
 
@@ -118,3 +162,7 @@ func setupMockTWithCleanupCheck(t *testing.T) *mock_ensurepkg.MockT {
 
 	return mockT
 }
+
+type exampleTypeWithMethod struct{}
+
+func (*exampleTypeWithMethod) SomeMethod(param bool) {}

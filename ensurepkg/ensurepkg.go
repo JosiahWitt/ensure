@@ -6,11 +6,14 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/golang/mock/gomock"
 )
 
 // T implements a subset of methods on testing.T.
 // More methods may be added to T with a minor ensure release.
 type T interface {
+	Errorf(format string, args ...interface{})
 	Fatalf(format string, args ...interface{})
 	Run(name string, f func(t *testing.T)) bool
 	Helper()
@@ -26,6 +29,12 @@ type Chain struct {
 	t      T
 	actual interface{}
 	wasRun bool
+
+	memoized *memoized
+}
+
+type memoized struct {
+	goMockController *gomock.Controller
 }
 
 // InternalCreateDoNotCallDirectly should NOT be called directly.
@@ -63,15 +72,30 @@ func (e Ensure) T() T {
 	return c.t
 }
 
+// GoMockController exposes a GoMock Controller scoped to the current test context.
+// Learn more about GoMock here: https://github.com/golang/mock
+func (e Ensure) GoMockController() *gomock.Controller {
+	c := e(nil)
+	c.markRun()
+	return c.gomockController()
+}
+
 func wrap(t T) Ensure {
+	memoized := &memoized{}
+
 	return func(actual interface{}) *Chain {
 		c := &Chain{
-			t:      t,
-			actual: actual,
+			t:        t,
+			actual:   actual,
+			memoized: memoized,
 		}
 
 		t.Helper()
 		t.Cleanup(func() {
+			if c.memoized.goMockController != nil {
+				c.memoized.goMockController.Finish()
+			}
+
 			if !c.wasRun {
 				t.Helper()
 				t.Fatalf("Found ensure(<actual>) without chained assertion.")
@@ -80,4 +104,13 @@ func wrap(t T) Ensure {
 
 		return c
 	}
+}
+
+func (c *Chain) gomockController() *gomock.Controller {
+	if c.memoized.goMockController != nil {
+		return c.memoized.goMockController
+	}
+
+	c.memoized.goMockController = gomock.NewController(c.t)
+	return c.memoized.goMockController
 }

@@ -33,6 +33,23 @@ func (m *MockT) EXPECT() *MockTMockRecorder {
 	return m.recorder
 }
 
+// Errorf mocks base method
+func (m *MockT) Errorf(format string, args ...interface{}) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{format}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Errorf", varargs...)
+}
+
+// Errorf indicates an expected call of Errorf
+func (mr *MockTMockRecorder) Errorf(format interface{}, args ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{format}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Errorf", reflect.TypeOf((*MockT)(nil).Errorf), varargs...)
+}
+
 // Fatalf mocks base method
 func (m *MockT) Fatalf(format string, args ...interface{}) {
 	m.ctrl.T.Helper()

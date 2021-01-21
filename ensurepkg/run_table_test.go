@@ -9,11 +9,57 @@ import (
 )
 
 func TestEnsureRunTableByIndex(t *testing.T) {
+	type (
+		// All examples have at least two valid mocks, to ensure other mocks are filled in on error
+
+		TwoValidMocks struct {
+			Valid1 *ExampleMockValid
+			Valid2 *ExampleMockValid
+		}
+
+		OneMockMissingNEWMethod struct {
+			Valid1  *ExampleMockValid
+			Invalid *struct{ Nothing bool }
+			Valid2  *ExampleMockValid
+		}
+
+		OneMockNEWMethodZeroParams struct {
+			Valid1  *ExampleMockValid
+			Invalid *ExampleMockNEWMethodZeroParams
+			Valid2  *ExampleMockValid
+		}
+
+		OneMockNEWMethodIncorrectParam struct {
+			Valid1  *ExampleMockValid
+			Invalid *ExampleMockNEWMethodIncorrectParam
+			Valid2  *ExampleMockValid
+		}
+
+		OneMockNEWMethodZeroReturns struct {
+			Valid1  *ExampleMockValid
+			Invalid *ExampleMockNEWMethodZeroReturns
+			Valid2  *ExampleMockValid
+		}
+
+		OneMockNEWMethodIncorrectReturn struct {
+			Valid1  *ExampleMockValid
+			Invalid *ExampleMockNEWMethodIncorrectReturn
+			Valid2  *ExampleMockValid
+		}
+
+		OneMockNotPointer struct {
+			Valid1  *ExampleMockValid
+			Invalid ExampleMockValid
+			Valid2  *ExampleMockValid
+		}
+	)
+
 	table := []struct {
 		Name                 string
 		ExpectedNames        []string
 		ExpectedFatalMessage string
 		Table                interface{}
+		CheckEntry           func(t *testing.T, rawEntry interface{})
 	}{
 		{
 			Name:          "with valid table: slice",
@@ -168,6 +214,262 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 				},
 			},
 		},
+
+		{
+			Name:          "with mocks: when valid",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name  string
+				Mocks *TwoValidMocks
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name  string
+					Mocks *TwoValidMocks
+				})
+
+				for _, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+				}
+			},
+		},
+
+		{
+			Name:                 "with mocks: when not pointer to mock struct",
+			ExpectedFatalMessage: "Mocks field should be a pointer to a struct, got ensurepkg_test.TwoValidMocks",
+			Table: []struct {
+				Name  string
+				Mocks TwoValidMocks
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+		},
+
+		{
+			Name:                 "with mocks: when pointer to non struct",
+			ExpectedFatalMessage: "Mocks field should be a pointer to a struct, got *string",
+			Table: []struct {
+				Name  string
+				Mocks *string
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+		},
+
+		{
+			Name:          "with mocks: when missing NEW method",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name  string
+				Mocks *OneMockMissingNEWMethod
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name  string
+					Mocks *OneMockMissingNEWMethod
+				})
+
+				for i, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+
+					if entry.Mocks.Invalid != nil {
+						t.Errorf("table[%d].Mocks.Invalid != nil", i)
+					}
+				}
+			},
+		},
+
+		{
+			Name:          "with mocks: when NEW method has zero params",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name  string
+				Mocks *OneMockNEWMethodZeroParams
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name  string
+					Mocks *OneMockNEWMethodZeroParams
+				})
+
+				for i, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+
+					if entry.Mocks.Invalid != nil {
+						t.Errorf("table[%d].Mocks.Invalid != nil", i)
+					}
+				}
+			},
+		},
+
+		{
+			Name:          "with mocks: when NEW method has incorrect param",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name  string
+				Mocks *OneMockNEWMethodIncorrectParam
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name  string
+					Mocks *OneMockNEWMethodIncorrectParam
+				})
+
+				for i, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+
+					if entry.Mocks.Invalid != nil {
+						t.Errorf("table[%d].Mocks.Invalid != nil", i)
+					}
+				}
+			},
+		},
+
+		{
+			Name:          "with mocks: when NEW method has zero returns",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name  string
+				Mocks *OneMockNEWMethodZeroReturns
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name  string
+					Mocks *OneMockNEWMethodZeroReturns
+				})
+
+				for i, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+
+					if entry.Mocks.Invalid != nil {
+						t.Errorf("table[%d].Mocks.Invalid != nil", i)
+					}
+				}
+			},
+		},
+
+		{
+			Name:          "with mocks: when NEW method has incorrect return",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name  string
+				Mocks *OneMockNEWMethodIncorrectReturn
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name  string
+					Mocks *OneMockNEWMethodIncorrectReturn
+				})
+
+				for i, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+
+					if entry.Mocks.Invalid != nil {
+						t.Errorf("table[%d].Mocks.Invalid != nil", i)
+					}
+				}
+			},
+		},
+
+		{
+			Name:          "with mocks: when mock is not a pointer",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name  string
+				Mocks *OneMockNotPointer
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name  string
+					Mocks *OneMockNotPointer
+				})
+
+				for _, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+					isTrue(t, !entry.Mocks.Invalid.WasInitialized)                                        // Ensure not initialized
+				}
+			},
+		},
 	}
 
 	for _, entry := range table {
@@ -235,6 +537,49 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 					t.Fatalf("actualParams[%d].i != %d", i, i)
 				}
 			}
+
+			if entry.CheckEntry != nil {
+				entry.CheckEntry(t, entry.Table)
+			}
 		})
 	}
 }
+
+func isTrue(t *testing.T, value bool) {
+	t.Helper()
+
+	if !value {
+		t.Errorf("value is not true")
+	}
+}
+
+type ExampleMockValid struct {
+	WasInitialized   bool
+	GoMockController *gomock.Controller
+}
+
+func (m *ExampleMockValid) NEW(ctrl *gomock.Controller) *ExampleMockValid {
+	if ctrl == nil {
+		panic("GoMock control is nil")
+	}
+
+	return &ExampleMockValid{WasInitialized: true, GoMockController: ctrl}
+}
+
+type ExampleMockNEWMethodZeroParams struct{}
+
+func (m *ExampleMockNEWMethodZeroParams) NEW() *ExampleMockNEWMethodZeroParams { return nil }
+
+type ExampleMockNEWMethodIncorrectParam struct{}
+
+func (m *ExampleMockNEWMethodIncorrectParam) NEW(notGoMockCtrl string) *ExampleMockNEWMethodIncorrectParam {
+	return nil
+}
+
+type ExampleMockNEWMethodZeroReturns struct{}
+
+func (m *ExampleMockNEWMethodZeroReturns) NEW(ctrl *gomock.Controller) {}
+
+type ExampleMockNEWMethodIncorrectReturn struct{}
+
+func (m *ExampleMockNEWMethodIncorrectReturn) NEW(ctrl *gomock.Controller) string { return "" }
