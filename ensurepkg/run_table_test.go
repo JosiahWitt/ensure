@@ -215,6 +215,8 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 			},
 		},
 
+		// ********** Mocks field ********** //
+
 		{
 			Name:          "with mocks: when valid",
 			ExpectedNames: []string{"name 1", "name 2"},
@@ -470,6 +472,153 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 				}
 			},
 		},
+
+		// ********** SetupMocks field ********** //
+
+		{
+			Name:          "with mocks: with valid SetupMocks function",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name       string
+				Mocks      *TwoValidMocks
+				SetupMocks func(*TwoValidMocks)
+			}{
+				{
+					Name: "name 1",
+					SetupMocks: func(tvm *TwoValidMocks) {
+						tvm.Valid1.CustomField = "updated name 1"
+					},
+				},
+				{
+					Name: "name 2",
+					SetupMocks: func(tvm *TwoValidMocks) {
+						tvm.Valid1.CustomField = "updated name 2"
+					},
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name       string
+					Mocks      *TwoValidMocks
+					SetupMocks func(*TwoValidMocks)
+				})
+
+				for _, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController)
+
+					isTrue(t, entry.Mocks.Valid1.CustomField == "updated "+entry.Name)
+				}
+			},
+		},
+
+		{
+			Name:          "with mocks: with SetupMocks function not present for one",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name       string
+				Mocks      *TwoValidMocks
+				SetupMocks func(*TwoValidMocks)
+			}{
+				{
+					Name: "name 1",
+					SetupMocks: func(tvm *TwoValidMocks) {
+						tvm.Valid1.CustomField = "updated name 1"
+					},
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name       string
+					Mocks      *TwoValidMocks
+					SetupMocks func(*TwoValidMocks)
+				})
+
+				isTrue(t, table[0].Mocks.Valid1.CustomField == "updated name 1")
+				isTrue(t, table[1].Mocks.Valid1.CustomField == "")
+			},
+		},
+
+		{
+			Name:                 "with mocks: SetupMocks without Mocks",
+			ExpectedFatalMessage: "SetupMocks field requires the Mocks field",
+			Table: []struct {
+				Name       string
+				SetupMocks func(*TwoValidMocks)
+			}{
+				{
+					Name:       "name 1",
+					SetupMocks: func(*TwoValidMocks) {},
+				},
+				{
+					Name:       "name 2",
+					SetupMocks: func(*TwoValidMocks) {},
+				},
+			},
+		},
+
+		{
+			Name:                 "with mocks: SetupMocks with no param",
+			ExpectedFatalMessage: "\nSetupMocks has this method signature:\n\tfunc()\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
+			Table: []struct {
+				Name       string
+				Mocks      *TwoValidMocks
+				SetupMocks func()
+			}{
+				{
+					Name:       "name 1",
+					SetupMocks: func() {},
+				},
+				{
+					Name:       "name 2",
+					SetupMocks: func() {},
+				},
+			},
+		},
+
+		{
+			Name:                 "with mocks: SetupMocks with invalid param",
+			ExpectedFatalMessage: "\nSetupMocks has this method signature:\n\tfunc(*ensurepkg_test.OneMockNotPointer)\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
+			Table: []struct {
+				Name       string
+				Mocks      *TwoValidMocks
+				SetupMocks func(*OneMockNotPointer)
+			}{
+				{
+					Name:       "name 1",
+					SetupMocks: func(*OneMockNotPointer) {},
+				},
+				{
+					Name:       "name 2",
+					SetupMocks: func(*OneMockNotPointer) {},
+				},
+			},
+		},
+
+		{
+			Name:                 "with mocks: SetupMocks with a return",
+			ExpectedFatalMessage: "\nSetupMocks has this method signature:\n\tfunc(*ensurepkg_test.TwoValidMocks) error\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
+			Table: []struct {
+				Name       string
+				Mocks      *TwoValidMocks
+				SetupMocks func(*TwoValidMocks) error
+			}{
+				{
+					Name:       "name 1",
+					SetupMocks: func(*TwoValidMocks) error { return nil },
+				},
+				{
+					Name:       "name 2",
+					SetupMocks: func(*TwoValidMocks) error { return nil },
+				},
+			},
+		},
 	}
 
 	for _, entry := range table {
@@ -556,6 +705,7 @@ func isTrue(t *testing.T, value bool) {
 type ExampleMockValid struct {
 	WasInitialized   bool
 	GoMockController *gomock.Controller
+	CustomField      string
 }
 
 func (m *ExampleMockValid) NEW(ctrl *gomock.Controller) *ExampleMockValid {
