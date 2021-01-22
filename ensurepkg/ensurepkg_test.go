@@ -69,11 +69,11 @@ func TestEnsureGoMockController(t *testing.T) {
 		t.Error("firstController == nil")
 	}
 
-	// TODO: Memoize across GoMockController() calls
-	// secondController := ensure.GoMockController()
-	// if firstController != secondController {
-	// 	t.Errorf("firstController != secondController: %p != %p", firstController, secondController)
-	// }
+	// Memoized across GoMockController() calls
+	secondController := ensure.GoMockController()
+	if firstController != secondController {
+		t.Errorf("firstController != secondController: %p != %p", firstController, secondController)
+	}
 }
 
 func TestEnsureCleanupCheck(t *testing.T) {

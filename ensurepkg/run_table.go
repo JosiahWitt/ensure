@@ -222,7 +222,7 @@ func (entry *tableEntry) prepareMocksStruct() error {
 		mockEntries = append(mockEntries, mockEntry)
 	}
 
-	// At this point, everything should be correct, so we can blindly execute
+	// At this point, everything should be correct, so we can blindly execute without worrying about types
 	entry.mockSetup = func(c *Chain) {
 		gomockCtrl := reflect.ValueOf(c.gomockController())
 

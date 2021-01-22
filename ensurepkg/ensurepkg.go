@@ -30,7 +30,11 @@ type Chain struct {
 	actual interface{}
 	wasRun bool
 
-	memoizedGoMockController *gomock.Controller
+	memoized *memoized
+}
+
+type memoized struct {
+	goMockController *gomock.Controller
 }
 
 // InternalCreateDoNotCallDirectly should NOT be called directly.
@@ -77,16 +81,19 @@ func (e Ensure) GoMockController() *gomock.Controller {
 }
 
 func wrap(t T) Ensure {
+	memoized := &memoized{}
+
 	return func(actual interface{}) *Chain {
 		c := &Chain{
-			t:      t,
-			actual: actual,
+			t:        t,
+			actual:   actual,
+			memoized: memoized,
 		}
 
 		t.Helper()
 		t.Cleanup(func() {
-			if c.memoizedGoMockController != nil {
-				c.memoizedGoMockController.Finish()
+			if c.memoized.goMockController != nil {
+				c.memoized.goMockController.Finish()
 			}
 
 			if !c.wasRun {
@@ -100,10 +107,10 @@ func wrap(t T) Ensure {
 }
 
 func (c *Chain) gomockController() *gomock.Controller {
-	if c.memoizedGoMockController != nil {
-		return c.memoizedGoMockController
+	if c.memoized.goMockController != nil {
+		return c.memoized.goMockController
 	}
 
-	c.memoizedGoMockController = gomock.NewController(c.t)
-	return c.memoizedGoMockController
+	c.memoized.goMockController = gomock.NewController(c.t)
+	return c.memoized.goMockController
 }
