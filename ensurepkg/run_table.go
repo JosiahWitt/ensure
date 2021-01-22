@@ -15,11 +15,16 @@ type (
 )
 
 var (
-	errInvalidTableType      = erk.New(erkTableInvalid{}, "Expected a slice or array for the table, got {{type .table}}")
-	errInvalidEntryType      = erk.New(erkTableInvalid{}, "Expected entry in table to be a struct, got {{type .entry}}")
-	errMissingNameField      = erk.New(erkTableInvalid{}, "Name field does not exist on struct in table")
-	errInvalidNameFieldType  = erk.New(erkTableInvalid{}, "Name field in struct in table is not a string")
-	errMocksNotStructPointer = erk.New(erkTableInvalid{}, "Mocks field should be a pointer to a struct, got {{type .mocksField}}")
+	errInvalidTableType     = erk.New(erkTableInvalid{}, "Expected a slice or array for the table, got {{type .table}}")
+	errInvalidEntryType     = erk.New(erkTableInvalid{}, "Expected entry in table to be a struct, got {{type .entry}}")
+	errMissingNameField     = erk.New(erkTableInvalid{}, "Name field does not exist on struct in table")
+	errInvalidNameFieldType = erk.New(erkTableInvalid{}, "Name field in struct in table is not a string")
+
+	errMocksNotStructPointer      = erk.New(erkTableInvalid{}, "Mocks field should be a pointer to a struct, got {{type .mocksField}}")
+	errSetupMocksWithoutMocks     = erk.New(erkTableInvalid{}, "SetupMocks field requires the Mocks field")
+	errSetupMocksInvalidSignature = erk.New(erkTableInvalid{},
+		"\nSetupMocks has this method signature:\n\t{{type .actualSetupMocks}}\nExpected:\n\tfunc({{type .expectedMockParam}})",
+	)
 
 	errEntriesInvalid     = erk.New(erkEntriesGroup{}, "Errors encountered while building table:")
 	errEntryMissingName   = erk.New(erkEntryInvalid{}, "table[{{.index}}]: Name not set for item")
@@ -30,8 +35,8 @@ type tableEntry struct {
 	index int
 	name  string
 
-	rawEntry  reflect.Value
-	mockSetup func(c *Chain)
+	rawEntry   reflect.Value
+	setupFuncs []func(c *Chain)
 }
 
 // RunTableByIndex runs the table which is a slice (or array) of structs.
@@ -81,7 +86,10 @@ func (e Ensure) RunTableByIndex(table interface{}, fn func(ensure Ensure, i int)
 			c.t.Helper()
 			c.markRun()
 
-			entry.mockSetup(c)
+			for _, setupFunc := range entry.setupFuncs {
+				setupFunc(c)
+			}
+
 			fn(ensure, entry.index)
 		})
 	}
@@ -137,8 +145,7 @@ func buildTableEntry(rawEntry reflect.Value) (*tableEntry, error) {
 	}
 
 	entry := &tableEntry{
-		rawEntry:  rawEntry,
-		mockSetup: func(c *Chain) {}, // Initialize so it is always safe to call
+		rawEntry: rawEntry,
 	}
 
 	name, err := entry.extractTableEntryName()
@@ -179,7 +186,11 @@ func (entry *tableEntry) fieldByName(name string) (reflect.Value, bool) {
 }
 
 func (entry *tableEntry) prepareMocks() error {
-	return entry.prepareMocksStruct()
+	if err := entry.prepareMocksStruct(); err != nil {
+		return err
+	}
+
+	return entry.prepareSetupMocks()
 }
 
 func (entry *tableEntry) prepareMocksStruct() error {
@@ -223,14 +234,44 @@ func (entry *tableEntry) prepareMocksStruct() error {
 	}
 
 	// At this point, everything should be correct, so we can blindly execute without worrying about types
-	entry.mockSetup = func(c *Chain) {
+	entry.setupFuncs = append(entry.setupFuncs, func(c *Chain) {
 		gomockCtrl := reflect.ValueOf(c.gomockController())
 
 		for _, mockEntry := range mockEntries {
 			returns := mockEntry.MethodByName("NEW").Call([]reflect.Value{gomockCtrl})
 			mockEntry.Set(returns[0])
 		}
+	})
+
+	return nil
+}
+
+func (entry *tableEntry) prepareSetupMocks() error {
+	setupMocks, ok := entry.fieldByName("SetupMocks")
+	if !ok {
+		return nil
 	}
+
+	mocks, ok := entry.fieldByName("Mocks")
+	if !ok {
+		return errSetupMocksWithoutMocks
+	}
+
+	if setupMocks.IsNil() {
+		return nil
+	}
+
+	if setupMocks.Type().NumIn() != 1 || setupMocks.Type().In(0) != mocks.Type() || setupMocks.Type().NumOut() != 0 {
+		return erk.WithParams(errSetupMocksInvalidSignature, erk.Params{
+			"expectedMockParam": mocks.Interface(),
+			"actualSetupMocks":  setupMocks.Interface(),
+		})
+	}
+
+	// At this point, everything should be correct, so we can blindly execute without worrying about types
+	entry.setupFuncs = append(entry.setupFuncs, func(c *Chain) {
+		setupMocks.Call([]reflect.Value{mocks})
+	})
 
 	return nil
 }
