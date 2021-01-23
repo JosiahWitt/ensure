@@ -10,47 +10,50 @@ import (
 
 func TestEnsureRunTableByIndex(t *testing.T) {
 	type (
-		// All examples have at least two valid mocks, to ensure other mocks are filled in on error
-
 		TwoValidMocks struct {
-			Valid1 *ExampleMockValid
-			Valid2 *ExampleMockValid
+			Valid1 *ExampleMockValid1
+			Valid2 *ExampleMockValid2
 		}
 
 		OneMockMissingNEWMethod struct {
-			Valid1  *ExampleMockValid
+			Valid1  *ExampleMockValid1
 			Invalid *struct{ Nothing bool }
-			Valid2  *ExampleMockValid
+			Valid2  *ExampleMockValid2
 		}
 
 		OneMockNEWMethodZeroParams struct {
-			Valid1  *ExampleMockValid
+			Valid1  *ExampleMockValid1
 			Invalid *ExampleMockNEWMethodZeroParams
-			Valid2  *ExampleMockValid
+			Valid2  *ExampleMockValid2
 		}
 
 		OneMockNEWMethodIncorrectParam struct {
-			Valid1  *ExampleMockValid
+			Valid1  *ExampleMockValid1
 			Invalid *ExampleMockNEWMethodIncorrectParam
-			Valid2  *ExampleMockValid
+			Valid2  *ExampleMockValid2
 		}
 
 		OneMockNEWMethodZeroReturns struct {
-			Valid1  *ExampleMockValid
+			Valid1  *ExampleMockValid1
 			Invalid *ExampleMockNEWMethodZeroReturns
-			Valid2  *ExampleMockValid
+			Valid2  *ExampleMockValid2
 		}
 
 		OneMockNEWMethodIncorrectReturn struct {
-			Valid1  *ExampleMockValid
+			Valid1  *ExampleMockValid1
 			Invalid *ExampleMockNEWMethodIncorrectReturn
-			Valid2  *ExampleMockValid
+			Valid2  *ExampleMockValid2
 		}
 
 		OneMockNotPointer struct {
-			Valid1  *ExampleMockValid
-			Invalid ExampleMockValid
-			Valid2  *ExampleMockValid
+			Valid1  *ExampleMockValid1
+			Invalid ExampleMockValid1
+			Valid2  *ExampleMockValid2
+		}
+
+		DuplicateMocks struct {
+			Valid1          *ExampleMockValid1
+			Valid1Duplicate *ExampleMockValid1
 		}
 	)
 
@@ -279,8 +282,9 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 		},
 
 		{
-			Name:          "with mocks: when missing NEW method",
-			ExpectedNames: []string{"name 1", "name 2"},
+			Name: "with mocks: when missing NEW method",
+			ExpectedFatalMessage: "\nMocks.Invalid is missing the NEW method. Expected:\n\tfunc(*gomock.Controller) *struct { Nothing bool }" +
+				"\nPlease ensure you generated the mocks using the `ensure generate mocks` command.",
 			Table: []struct {
 				Name  string
 				Mocks *OneMockMissingNEWMethod
@@ -292,28 +296,11 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 					Name: "name 2",
 				},
 			},
-
-			CheckEntry: func(t *testing.T, rawTable interface{}) {
-				table := rawTable.([]struct {
-					Name  string
-					Mocks *OneMockMissingNEWMethod
-				})
-
-				for i, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
-
-					if entry.Mocks.Invalid != nil {
-						t.Errorf("table[%d].Mocks.Invalid != nil", i)
-					}
-				}
-			},
 		},
 
 		{
-			Name:          "with mocks: when NEW method has zero params",
-			ExpectedNames: []string{"name 1", "name 2"},
+			Name:                 "with mocks: when NEW method has zero params",
+			ExpectedFatalMessage: "\nMocks.Invalid.NEW has this method signature:\n\tfunc() *ensurepkg_test.ExampleMockNEWMethodZeroParams\nExpected:\n\tfunc(*gomock.Controller) *ensurepkg_test.ExampleMockNEWMethodZeroParams",
 			Table: []struct {
 				Name  string
 				Mocks *OneMockNEWMethodZeroParams
@@ -325,28 +312,11 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 					Name: "name 2",
 				},
 			},
-
-			CheckEntry: func(t *testing.T, rawTable interface{}) {
-				table := rawTable.([]struct {
-					Name  string
-					Mocks *OneMockNEWMethodZeroParams
-				})
-
-				for i, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
-
-					if entry.Mocks.Invalid != nil {
-						t.Errorf("table[%d].Mocks.Invalid != nil", i)
-					}
-				}
-			},
 		},
 
 		{
-			Name:          "with mocks: when NEW method has incorrect param",
-			ExpectedNames: []string{"name 1", "name 2"},
+			Name:                 "with mocks: when NEW method has incorrect param",
+			ExpectedFatalMessage: "\nMocks.Invalid.NEW has this method signature:\n\tfunc(string) *ensurepkg_test.ExampleMockNEWMethodIncorrectParam\nExpected:\n\tfunc(*gomock.Controller) *ensurepkg_test.ExampleMockNEWMethodIncorrectParam",
 			Table: []struct {
 				Name  string
 				Mocks *OneMockNEWMethodIncorrectParam
@@ -358,28 +328,11 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 					Name: "name 2",
 				},
 			},
-
-			CheckEntry: func(t *testing.T, rawTable interface{}) {
-				table := rawTable.([]struct {
-					Name  string
-					Mocks *OneMockNEWMethodIncorrectParam
-				})
-
-				for i, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
-
-					if entry.Mocks.Invalid != nil {
-						t.Errorf("table[%d].Mocks.Invalid != nil", i)
-					}
-				}
-			},
 		},
 
 		{
-			Name:          "with mocks: when NEW method has zero returns",
-			ExpectedNames: []string{"name 1", "name 2"},
+			Name:                 "with mocks: when NEW method has zero returns",
+			ExpectedFatalMessage: "\nMocks.Invalid.NEW has this method signature:\n\tfunc(*gomock.Controller)\nExpected:\n\tfunc(*gomock.Controller) *ensurepkg_test.ExampleMockNEWMethodZeroReturns",
 			Table: []struct {
 				Name  string
 				Mocks *OneMockNEWMethodZeroReturns
@@ -391,28 +344,11 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 					Name: "name 2",
 				},
 			},
-
-			CheckEntry: func(t *testing.T, rawTable interface{}) {
-				table := rawTable.([]struct {
-					Name  string
-					Mocks *OneMockNEWMethodZeroReturns
-				})
-
-				for i, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
-
-					if entry.Mocks.Invalid != nil {
-						t.Errorf("table[%d].Mocks.Invalid != nil", i)
-					}
-				}
-			},
 		},
 
 		{
-			Name:          "with mocks: when NEW method has incorrect return",
-			ExpectedNames: []string{"name 1", "name 2"},
+			Name:                 "with mocks: when NEW method has incorrect return",
+			ExpectedFatalMessage: "\nMocks.Invalid.NEW has this method signature:\n\tfunc(*gomock.Controller) string\nExpected:\n\tfunc(*gomock.Controller) *ensurepkg_test.ExampleMockNEWMethodIncorrectReturn",
 			Table: []struct {
 				Name  string
 				Mocks *OneMockNEWMethodIncorrectReturn
@@ -424,28 +360,11 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 					Name: "name 2",
 				},
 			},
-
-			CheckEntry: func(t *testing.T, rawTable interface{}) {
-				table := rawTable.([]struct {
-					Name  string
-					Mocks *OneMockNEWMethodIncorrectReturn
-				})
-
-				for i, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
-
-					if entry.Mocks.Invalid != nil {
-						t.Errorf("table[%d].Mocks.Invalid != nil", i)
-					}
-				}
-			},
 		},
 
 		{
-			Name:          "with mocks: when mock is not a pointer",
-			ExpectedNames: []string{"name 1", "name 2"},
+			Name:                 "with mocks: when mock is not a pointer",
+			ExpectedFatalMessage: "Mocks.Invalid should be a pointer to a struct, got ensurepkg_test.ExampleMockValid1",
 			Table: []struct {
 				Name  string
 				Mocks *OneMockNotPointer
@@ -457,19 +376,21 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 					Name: "name 2",
 				},
 			},
+		},
 
-			CheckEntry: func(t *testing.T, rawTable interface{}) {
-				table := rawTable.([]struct {
-					Name  string
-					Mocks *OneMockNotPointer
-				})
-
-				for _, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
-					isTrue(t, !entry.Mocks.Invalid.WasInitialized)                                        // Ensure not initialized
-				}
+		{
+			Name:                 "with mocks: with duplicate mock",
+			ExpectedFatalMessage: "Found multiple mocks with type '*ensurepkg_test.ExampleMockValid1'; only one mock of each type is allowed",
+			Table: []struct {
+				Name  string
+				Mocks *DuplicateMocks
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
 			},
 		},
 
@@ -507,7 +428,7 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 				for _, entry := range table {
 					isTrue(t, entry.Mocks.Valid1.WasInitialized)
 					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
 
 					isTrue(t, entry.Mocks.Valid1.CustomField == "updated "+entry.Name)
 				}
@@ -565,7 +486,7 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 
 		{
 			Name:                 "with mocks: SetupMocks with no param",
-			ExpectedFatalMessage: "\nSetupMocks has this method signature:\n\tfunc()\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
+			ExpectedFatalMessage: "\nSetupMocks has this function signature:\n\tfunc()\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
 			Table: []struct {
 				Name       string
 				Mocks      *TwoValidMocks
@@ -584,7 +505,7 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 
 		{
 			Name:                 "with mocks: SetupMocks with invalid param",
-			ExpectedFatalMessage: "\nSetupMocks has this method signature:\n\tfunc(*ensurepkg_test.OneMockNotPointer)\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
+			ExpectedFatalMessage: "\nSetupMocks has this function signature:\n\tfunc(*ensurepkg_test.OneMockNotPointer)\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
 			Table: []struct {
 				Name       string
 				Mocks      *TwoValidMocks
@@ -603,7 +524,7 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 
 		{
 			Name:                 "with mocks: SetupMocks with a return",
-			ExpectedFatalMessage: "\nSetupMocks has this method signature:\n\tfunc(*ensurepkg_test.TwoValidMocks) error\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
+			ExpectedFatalMessage: "\nSetupMocks has this function signature:\n\tfunc(*ensurepkg_test.TwoValidMocks) error\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
 			Table: []struct {
 				Name       string
 				Mocks      *TwoValidMocks
@@ -702,18 +623,32 @@ func isTrue(t *testing.T, value bool) {
 	}
 }
 
-type ExampleMockValid struct {
+type ExampleMockValid1 struct {
 	WasInitialized   bool
 	GoMockController *gomock.Controller
 	CustomField      string
 }
 
-func (m *ExampleMockValid) NEW(ctrl *gomock.Controller) *ExampleMockValid {
+func (m *ExampleMockValid1) NEW(ctrl *gomock.Controller) *ExampleMockValid1 {
 	if ctrl == nil {
-		panic("GoMock control is nil")
+		panic("GoMock controller is nil")
 	}
 
-	return &ExampleMockValid{WasInitialized: true, GoMockController: ctrl}
+	return &ExampleMockValid1{WasInitialized: true, GoMockController: ctrl}
+}
+
+type ExampleMockValid2 struct {
+	WasInitialized   bool
+	GoMockController *gomock.Controller
+	CustomField      string
+}
+
+func (m *ExampleMockValid2) NEW(ctrl *gomock.Controller) *ExampleMockValid2 {
+	if ctrl == nil {
+		panic("GoMock controller is nil")
+	}
+
+	return &ExampleMockValid2{WasInitialized: true, GoMockController: ctrl}
 }
 
 type ExampleMockNEWMethodZeroParams struct{}
