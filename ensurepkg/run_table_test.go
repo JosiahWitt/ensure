@@ -86,6 +86,14 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 		}
 	)
 
+	checkTwoValidMocks := func(t *testing.T, tvm *TwoValidMocks) {
+		t.Helper()
+
+		isTrue(t, tvm.Valid1.WasInitialized)
+		isTrue(t, tvm.Valid2.WasInitialized)
+		isTrue(t, tvm.Valid1.GoMockController == tvm.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+	}
+
 	table := []struct {
 		Name                 string
 		ExpectedNames        []string
@@ -271,9 +279,7 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 				})
 
 				for _, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+					checkTwoValidMocks(t, entry.Mocks)
 				}
 			},
 		},
@@ -455,10 +461,7 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 				})
 
 				for _, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
-
+					checkTwoValidMocks(t, entry.Mocks)
 					isTrue(t, entry.Mocks.Valid1.CustomField == "updated "+entry.Name)
 				}
 			},
@@ -596,10 +599,7 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 				})
 
 				for _, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
-
+					checkTwoValidMocks(t, entry.Mocks)
 					isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
 				}
 			},
@@ -629,9 +629,7 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 				})
 
 				for _, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+					checkTwoValidMocks(t, entry.Mocks)
 
 					isTrue(t, entry.Subject.Adder1.Add(1, 2) == 3)
 					isTrue(t, entry.Subject.Adder2.Add(1, 2) == 3)
@@ -698,9 +696,7 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 				})
 
 				for _, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+					checkTwoValidMocks(t, entry.Mocks)
 
 					isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
 					isTrue(t, entry.Subject.ExtraField == "")
@@ -732,9 +728,7 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 				})
 
 				for _, entry := range table {
-					isTrue(t, entry.Mocks.Valid1.WasInitialized)
-					isTrue(t, entry.Mocks.Valid2.WasInitialized)
-					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+					checkTwoValidMocks(t, entry.Mocks)
 
 					isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
 					isTrue(t, entry.Subject.UnmockedInterface == nil)
