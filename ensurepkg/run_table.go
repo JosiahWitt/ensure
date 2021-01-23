@@ -2,6 +2,8 @@ package ensurepkg
 
 import (
 	"reflect"
+	"sort"
+	"strings"
 
 	"github.com/JosiahWitt/erk"
 	"github.com/JosiahWitt/erk/erg"
@@ -34,6 +36,11 @@ var (
 	errSetupMocksWithoutMocks     = erk.New(erkTableInvalid{}, "SetupMocks field requires the Mocks field")
 	errSetupMocksInvalidSignature = erk.New(erkTableInvalid{},
 		"\nSetupMocks has this function signature:\n\t{{type .actualSetupMocks}}\nExpected:\n\tfunc({{type .expectedMockParam}})",
+	)
+
+	errSubjectNotStructPointer           = erk.New(erkTableInvalid{}, "Subject field should be a pointer to a struct, got {{type .subjectField}}")
+	errSubjectFieldMatchingMultipleMocks = erk.New(erkTableInvalid{},
+		"Subject.{{.subjectFieldName}} matches multiple mocks; only one mock should exist for each interface: {{.matchedMockTypes}}",
 	)
 
 	errEntriesInvalid     = erk.New(erkEntriesGroup{}, "Errors encountered while building table:")
@@ -203,7 +210,11 @@ func (entry *tableEntry) prepareMocks() error {
 		return err
 	}
 
-	return entry.prepareSetupMocks()
+	if err := entry.prepareSetupMocks(); err != nil {
+		return err
+	}
+
+	return entry.prepareSubjectStruct()
 }
 
 func (entry *tableEntry) prepareMocksStruct() error {
@@ -310,6 +321,62 @@ func (entry *tableEntry) prepareSetupMocks() error {
 	entry.setupFuncs = append(entry.setupFuncs, func(c *Chain) {
 		setupMocks.Call([]reflect.Value{mocks})
 	})
+
+	return nil
+}
+
+func (entry *tableEntry) prepareSubjectStruct() error {
+	entrySubject, ok := entry.fieldByName("Subject")
+	if !ok {
+		return nil
+	}
+
+	if entrySubject.Kind() != reflect.Ptr || entrySubject.Type().Elem().Kind() != reflect.Struct {
+		return erk.WithParams(errSubjectNotStructPointer, erk.Params{"subjectField": entrySubject.Interface()})
+	}
+
+	// Create new Subject struct
+	entrySubject.Set(reflect.New(entrySubject.Type().Elem()))
+
+	// Ensure everything is correct during preparation, so we can report errors early
+	for i := 0; i < entrySubject.Elem().NumField(); i++ {
+		subjectEntry := entrySubject.Elem().Field(i)
+		subjectFieldName := entrySubject.Elem().Type().Field(i).Name
+
+		if subjectEntry.Kind() != reflect.Interface {
+			continue
+		}
+
+		var interfaceMatches []reflect.Type
+		for mockType := range entry.mocks {
+			if mockType.Implements(subjectEntry.Type()) {
+				interfaceMatches = append(interfaceMatches, mockType)
+			}
+		}
+
+		if len(interfaceMatches) == 0 {
+			continue
+		}
+
+		if len(interfaceMatches) > 1 {
+			matchedMockTypes := []string{}
+			for _, interfaceMatch := range interfaceMatches {
+				matchedMockTypes = append(matchedMockTypes, interfaceMatch.String())
+			}
+			sort.Strings(matchedMockTypes)
+
+			return erk.WithParams(errSubjectFieldMatchingMultipleMocks, erk.Params{
+				"subjectFieldName": subjectFieldName,
+				"matchedMockTypes": strings.Join(matchedMockTypes, ", "),
+			})
+		}
+
+		// At this point, everything should be correct, so we can blindly execute without worrying about types
+		interfaceMatch := interfaceMatches[0]
+		entry.setupFuncs = append(entry.setupFuncs, func(c *Chain) {
+			subjectEntry.Set(entry.mocks[interfaceMatch])
+		})
+	}
 
 	return nil
 }

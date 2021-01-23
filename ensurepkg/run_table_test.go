@@ -55,6 +55,35 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 			Valid1          *ExampleMockValid1
 			Valid1Duplicate *ExampleMockValid1
 		}
+
+		// ***** Subject testing ***** //
+
+		IntAdder interface {
+			Add(a, b int) int
+		}
+
+		AdderSubject struct {
+			Adder IntAdder
+		}
+
+		AdderSubjectWithDuplicate struct {
+			Adder1 IntAdder
+			Adder2 IntAdder
+		}
+
+		AdderSubjectWithExtraField struct {
+			Adder      IntAdder
+			ExtraField string
+		}
+
+		AdderSubjectWithUnmockedInterface struct {
+			Adder             IntAdder
+			UnmockedInterface interface{ Multiply(a, b int) int }
+		}
+
+		SubjectMatchingMultipleMocks struct {
+			Subber interface{ Sub(a, b int) int }
+		}
 	)
 
 	table := []struct {
@@ -540,6 +569,195 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 				},
 			},
 		},
+
+		// ********** Subject field ********** //
+
+		{
+			Name:          "with mocks: when Subject is valid",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name    string
+				Mocks   *TwoValidMocks
+				Subject *AdderSubject
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name    string
+					Mocks   *TwoValidMocks
+					Subject *AdderSubject
+				})
+
+				for _, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+
+					isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
+				}
+			},
+		},
+
+		{
+			Name:          "with mocks: when Subject has duplicate interfaces",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name    string
+				Mocks   *TwoValidMocks
+				Subject *AdderSubjectWithDuplicate
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name    string
+					Mocks   *TwoValidMocks
+					Subject *AdderSubjectWithDuplicate
+				})
+
+				for _, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+
+					isTrue(t, entry.Subject.Adder1.Add(1, 2) == 3)
+					isTrue(t, entry.Subject.Adder2.Add(1, 2) == 3)
+					isTrue(t, entry.Subject.Adder1 == entry.Subject.Adder2) // Should point to the same mock
+				}
+			},
+		},
+
+		{
+			Name:                 "with mocks: when Subject is not pointer to struct",
+			ExpectedFatalMessage: "Subject field should be a pointer to a struct, got ensurepkg_test.AdderSubject",
+			Table: []struct {
+				Name    string
+				Mocks   *TwoValidMocks
+				Subject AdderSubject
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+		},
+
+		{
+			Name:                 "with mocks: when Subject is pointer to non struct",
+			ExpectedFatalMessage: "Subject field should be a pointer to a struct, got *string",
+			Table: []struct {
+				Name    string
+				Mocks   *TwoValidMocks
+				Subject *string
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+		},
+
+		{
+			Name:          "with mocks: when Subject contains a non-interface field",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name    string
+				Mocks   *TwoValidMocks
+				Subject *AdderSubjectWithExtraField
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name    string
+					Mocks   *TwoValidMocks
+					Subject *AdderSubjectWithExtraField
+				})
+
+				for _, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+
+					isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
+					isTrue(t, entry.Subject.ExtraField == "")
+				}
+			},
+		},
+
+		{
+			Name:          "with mocks: when Subject contains a non-mocked interface",
+			ExpectedNames: []string{"name 1", "name 2"},
+			Table: []struct {
+				Name    string
+				Mocks   *TwoValidMocks
+				Subject *AdderSubjectWithUnmockedInterface
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+
+			CheckEntry: func(t *testing.T, rawTable interface{}) {
+				table := rawTable.([]struct {
+					Name    string
+					Mocks   *TwoValidMocks
+					Subject *AdderSubjectWithUnmockedInterface
+				})
+
+				for _, entry := range table {
+					isTrue(t, entry.Mocks.Valid1.WasInitialized)
+					isTrue(t, entry.Mocks.Valid2.WasInitialized)
+					isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+
+					isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
+					isTrue(t, entry.Subject.UnmockedInterface == nil)
+				}
+			},
+		},
+
+		{
+			Name:                 "with mocks: when Subject entry matches multiple mocks",
+			ExpectedFatalMessage: "Subject.Subber matches multiple mocks; only one mock should exist for each interface: *ensurepkg_test.ExampleMockValid1, *ensurepkg_test.ExampleMockValid2",
+			Table: []struct {
+				Name    string
+				Mocks   *TwoValidMocks
+				Subject *SubjectMatchingMultipleMocks
+			}{
+				{
+					Name: "name 1",
+				},
+				{
+					Name: "name 2",
+				},
+			},
+		},
 	}
 
 	for _, entry := range table {
@@ -637,6 +855,14 @@ func (m *ExampleMockValid1) NEW(ctrl *gomock.Controller) *ExampleMockValid1 {
 	return &ExampleMockValid1{WasInitialized: true, GoMockController: ctrl}
 }
 
+func (m *ExampleMockValid1) Add(a, b int) int {
+	return a + b
+}
+
+func (m *ExampleMockValid1) Sub(a, b int) int {
+	return a - b
+}
+
 type ExampleMockValid2 struct {
 	WasInitialized   bool
 	GoMockController *gomock.Controller
@@ -649,6 +875,10 @@ func (m *ExampleMockValid2) NEW(ctrl *gomock.Controller) *ExampleMockValid2 {
 	}
 
 	return &ExampleMockValid2{WasInitialized: true, GoMockController: ctrl}
+}
+
+func (m *ExampleMockValid2) Sub(a, b int) int {
+	return a - b
 }
 
 type ExampleMockNEWMethodZeroParams struct{}
