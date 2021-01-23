@@ -21,9 +21,19 @@ var (
 	errInvalidNameFieldType = erk.New(erkTableInvalid{}, "Name field in struct in table is not a string")
 
 	errMocksNotStructPointer      = erk.New(erkTableInvalid{}, "Mocks field should be a pointer to a struct, got {{type .mocksField}}")
+	errMocksEntryNotStructPointer = erk.New(erkTableInvalid{}, "Mocks.{{.mocksFieldName}} should be a pointer to a struct, got {{type .mockEntry}}")
+	errMocksNEWMissing            = erk.New(erkTableInvalid{},
+		"\nMocks.{{.mocksFieldName}} is missing the NEW method. Expected:\n\tfunc(*gomock.Controller) {{type .expectedReturn}}"+
+			"\nPlease ensure you generated the mocks using the `ensure generate mocks` command.",
+	)
+	errMocksNEWInvalidSignature = erk.New(erkTableInvalid{},
+		"\nMocks.{{.mocksFieldName}}.NEW has this method signature:\n\t{{type .actualMethod}}\nExpected:\n\tfunc(*gomock.Controller) {{type .expectedReturn}}",
+	)
+	errMocksDuplicatesFound = erk.New(erkTableInvalid{}, "Found multiple mocks with type '{{type .duplicate}}'; only one mock of each type is allowed")
+
 	errSetupMocksWithoutMocks     = erk.New(erkTableInvalid{}, "SetupMocks field requires the Mocks field")
 	errSetupMocksInvalidSignature = erk.New(erkTableInvalid{},
-		"\nSetupMocks has this method signature:\n\t{{type .actualSetupMocks}}\nExpected:\n\tfunc({{type .expectedMockParam}})",
+		"\nSetupMocks has this function signature:\n\t{{type .actualSetupMocks}}\nExpected:\n\tfunc({{type .expectedMockParam}})",
 	)
 
 	errEntriesInvalid     = erk.New(erkEntriesGroup{}, "Errors encountered while building table:")
@@ -37,6 +47,8 @@ type tableEntry struct {
 
 	rawEntry   reflect.Value
 	setupFuncs []func(c *Chain)
+
+	mocks map[reflect.Type]reflect.Value
 }
 
 // RunTableByIndex runs the table which is a slice (or array) of structs.
@@ -146,6 +158,7 @@ func buildTableEntry(rawEntry reflect.Value) (*tableEntry, error) {
 
 	entry := &tableEntry{
 		rawEntry: rawEntry,
+		mocks:    make(map[reflect.Type]reflect.Value),
 	}
 
 	name, err := entry.extractTableEntryName()
@@ -206,41 +219,66 @@ func (entry *tableEntry) prepareMocksStruct() error {
 	// Create new Mocks struct
 	entryMocks.Set(reflect.New(entryMocks.Type().Elem()))
 
-	// Ensure everything is correct during preparation, so we can report errors early
-	mockEntries := []reflect.Value{}
-	controllerType := reflect.TypeOf(&gomock.Controller{})
 	for i := 0; i < entryMocks.Elem().NumField(); i++ {
 		mockEntry := entryMocks.Elem().Field(i)
+		mockFieldName := entryMocks.Elem().Type().Field(i).Name
 
-		// Mocks should have a NEW method, to allow creating the mock
-		newMethod := mockEntry.MethodByName("NEW")
-		zeroValue := reflect.Value{}
-		if newMethod == zeroValue {
-			continue
+		if err := entry.prepareMock(mockFieldName, mockEntry); err != nil {
+			return err
 		}
-
-		// NEW signature should be:
-		//  func (m *MockXYZ) NEW(ctrl *gomock.Controller) *MockXYZ { ... }
-		newMethodType := newMethod.Type()
-		if newMethodType.NumIn() != 1 || newMethodType.In(0) != controllerType {
-			continue
-		}
-
-		if newMethodType.NumOut() != 1 || newMethodType.Out(0) != mockEntry.Type() {
-			continue
-		}
-
-		mockEntries = append(mockEntries, mockEntry)
 	}
+
+	return nil
+}
+
+func (entry *tableEntry) prepareMock(mockFieldName string, mockEntry reflect.Value) error {
+	if mockEntry.Kind() != reflect.Ptr {
+		return erk.WithParams(errMocksEntryNotStructPointer, erk.Params{
+			"mocksFieldName": mockFieldName,
+			"mockEntry":      mockEntry.Interface(),
+		})
+	}
+
+	// Mocks should have a NEW method, to allow creating the mock
+	newMethod := mockEntry.MethodByName("NEW")
+	zeroValue := reflect.Value{}
+	if newMethod == zeroValue {
+		return erk.WithParams(errMocksNEWMissing, erk.Params{
+			"mocksFieldName": mockFieldName,
+			"expectedReturn": mockEntry.Interface(),
+		})
+	}
+
+	// NEW signature should be:
+	//  func (m *MockXYZ) NEW(ctrl *gomock.Controller) *MockXYZ { ... }
+	newMethodType := newMethod.Type()
+	controllerType := reflect.TypeOf(&gomock.Controller{})
+	isInvalidParam := newMethodType.NumIn() != 1 || newMethodType.In(0) != controllerType
+	isInvalidReturn := newMethodType.NumOut() != 1 || newMethodType.Out(0) != mockEntry.Type()
+	if isInvalidParam || isInvalidReturn {
+		return erk.WithParams(errMocksNEWInvalidSignature, erk.Params{
+			"mocksFieldName": mockFieldName,
+			"actualMethod":   newMethod.Interface(),
+			"expectedReturn": mockEntry.Interface(),
+		})
+	}
+
+	// Save placeholder for mock entry
+	if _, alreadyExists := entry.mocks[mockEntry.Type()]; alreadyExists {
+		return erk.WithParams(errMocksDuplicatesFound, erk.Params{
+			"duplicate": mockEntry.Interface(),
+		})
+	}
+	entry.mocks[mockEntry.Type()] = reflect.Value{}
 
 	// At this point, everything should be correct, so we can blindly execute without worrying about types
 	entry.setupFuncs = append(entry.setupFuncs, func(c *Chain) {
 		gomockCtrl := reflect.ValueOf(c.gomockController())
+		returns := newMethod.Call([]reflect.Value{gomockCtrl})
 
-		for _, mockEntry := range mockEntries {
-			returns := mockEntry.MethodByName("NEW").Call([]reflect.Value{gomockCtrl})
-			mockEntry.Set(returns[0])
-		}
+		mockInstance := returns[0]
+		mockEntry.Set(mockInstance)
+		entry.mocks[mockEntry.Type()] = mockInstance
 	})
 
 	return nil
