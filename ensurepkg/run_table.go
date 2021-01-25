@@ -99,6 +99,9 @@ type tableEntry struct {
 //    isEmpty := strs.IsEmpty(entry.Input)
 //    ensure(isEmpty).Equals(entry.IsEmpty)
 //  })
+//
+// Support for mocks is also included.
+// Please see the README for an example.
 func (e Ensure) RunTableByIndex(table interface{}, fn func(ensure Ensure, i int)) {
 	entries, err := buildTable(table)
 	if err != nil {
