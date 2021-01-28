@@ -1,6 +1,5 @@
 generate-mocks:
-	@rm -r internal/mocks > /dev/null 2>&1 || true
-	mockgen -destination internal/mocks/io/mock_fs/mock_fs.go bursavich.dev/fs-shim/io/fs ReadFileFS
+	go run main.go generate mocks
 
 test:
 	go test ./...
