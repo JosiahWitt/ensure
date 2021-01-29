@@ -5,35 +5,36 @@
 package mock_fswrite
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	os "os"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockFSWriteIface is a mock of FSWriteIface interface
+// MockFSWriteIface is a mock of FSWriteIface interface.
 type MockFSWriteIface struct {
 	ctrl     *gomock.Controller
 	recorder *MockFSWriteIfaceMockRecorder
 }
 
-// MockFSWriteIfaceMockRecorder is the mock recorder for MockFSWriteIface
+// MockFSWriteIfaceMockRecorder is the mock recorder for MockFSWriteIface.
 type MockFSWriteIfaceMockRecorder struct {
 	mock *MockFSWriteIface
 }
 
-// NewMockFSWriteIface creates a new mock instance
+// NewMockFSWriteIface creates a new mock instance.
 func NewMockFSWriteIface(ctrl *gomock.Controller) *MockFSWriteIface {
 	mock := &MockFSWriteIface{ctrl: ctrl}
 	mock.recorder = &MockFSWriteIfaceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockFSWriteIface) EXPECT() *MockFSWriteIfaceMockRecorder {
 	return m.recorder
 }
 
-// MkdirAll mocks base method
+// MkdirAll mocks base method.
 func (m *MockFSWriteIface) MkdirAll(arg0 string, arg1 os.FileMode) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MkdirAll", arg0, arg1)
@@ -41,13 +42,13 @@ func (m *MockFSWriteIface) MkdirAll(arg0 string, arg1 os.FileMode) error {
 	return ret0
 }
 
-// MkdirAll indicates an expected call of MkdirAll
+// MkdirAll indicates an expected call of MkdirAll.
 func (mr *MockFSWriteIfaceMockRecorder) MkdirAll(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MkdirAll", reflect.TypeOf((*MockFSWriteIface)(nil).MkdirAll), arg0, arg1)
 }
 
-// WriteFile mocks base method
+// WriteFile mocks base method.
 func (m *MockFSWriteIface) WriteFile(arg0, arg1 string, arg2 os.FileMode) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WriteFile", arg0, arg1, arg2)
@@ -55,7 +56,7 @@ func (m *MockFSWriteIface) WriteFile(arg0, arg1 string, arg2 os.FileMode) error 
 	return ret0
 }
 
-// WriteFile indicates an expected call of WriteFile
+// WriteFile indicates an expected call of WriteFile.
 func (mr *MockFSWriteIfaceMockRecorder) WriteFile(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteFile", reflect.TypeOf((*MockFSWriteIface)(nil).WriteFile), arg0, arg1, arg2)
