@@ -56,3 +56,40 @@ jobs:
         with:
           version: v1.34.1
           working-directory: cmd/ensure
+
+
+  regression-test:
+    name: Regression Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.14, 1.15]
+
+    steps:
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - name: Install tools
+        run: make install-tools
+
+      - name: Generate Mocks
+        run: make generate-mocks
+
+      - name: Git diff
+        run: git diff
+
+      - name: Verify mocks are up-to-date
+        run: |
+          git status --porcelain | grep mocks/ || true
+
+          if [[ $(git status --porcelain | grep mocks/ 2> /dev/null) ]]; then
+            echo "❌ Please run `make generate-mocks`";
+            exit 1;
+          else
+            echo "✅ `make generate-mocks` was run";
+          fi
