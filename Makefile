@@ -1,5 +1,5 @@
 install-tools:
-	go get github.com/golang/mock/mockgen@v1.4.4
+	go get github.com/golang/mock/mockgen
 
 generate-mocks:
 	@rm -r internal/mocks > /dev/null 2>&1 || true
