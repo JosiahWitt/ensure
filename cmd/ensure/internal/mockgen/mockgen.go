@@ -23,9 +23,15 @@ type (
 )
 
 var (
-	ErrMissingMockConfig   = erk.New(ErkInvalidConfig{}, "Missing `mocks` config in .ensure.yml file. For example:\n\n"+ensurefile.ExampleFile)
-	ErrMissingPackageMocks = erk.New(ErkInvalidConfig{},
+	ErrMissingMockConfig = erk.New(ErkInvalidConfig{}, "Missing `mocks` config in .ensure.yml file. For example:\n\n"+ensurefile.ExampleFile)
+	ErrMissingPackages   = erk.New(ErkInvalidConfig{},
 		"No mocks to generate. Please add some to `mocks.packages` in .ensure.yml file. For example:\n\n"+ensurefile.ExampleFile,
+	)
+	ErrDuplicatePackagePath = erk.New(ErkInvalidConfig{}, "Found duplicate package path: {{.packagePath}}. Package paths must be unique.")
+
+	ErrMissingPackagePath       = erk.New(ErkInvalidConfig{}, "Missing `path` key for package.")
+	ErrMissingPackageInterfaces = erk.New(ErkInvalidConfig{},
+		"Package '{{.packagePath}}' has no interfaces to generate. Please add them using the `interfaces` key.",
 	)
 
 	ErrMockGenFailed = erk.New(ErkMockGenError{}, "Could not run mockgen successfully: {{.err}}")
@@ -61,9 +67,22 @@ func (g *Generator) GenerateMocks(config *ensurefile.Config) error {
 
 	packages := config.Mocks.Packages
 	if len(packages) < 1 {
-		return ErrMissingPackageMocks
+		return ErrMissingPackages
 	}
 
+	// Ensure no duplicate package paths, since the last one would overwrite the first
+	packagePaths := map[string]bool{}
+	for _, pkg := range packages {
+		if _, ok := packagePaths[pkg.Path]; ok {
+			return erk.WithParams(ErrDuplicatePackagePath, erk.Params{
+				"packagePath": pkg.Path,
+			})
+		}
+
+		packagePaths[pkg.Path] = true
+	}
+
+	fmt.Println("Generating mocks:") //nolint:forbidigo // Print header
 	for _, pkg := range packages {
 		if err := g.generateMock(config, pkg); err != nil {
 			return err // TODO: group errors
@@ -74,12 +93,26 @@ func (g *Generator) GenerateMocks(config *ensurefile.Config) error {
 }
 
 func (g *Generator) generateMock(config *ensurefile.Config, pkg *ensurefile.Package) error {
-	// TODO: Separate generation from writing, and remove/recreate directories before writing
+	//nolint:forbidigo // Print the mock currently being generated
+	fmt.Printf(" - Generating: %s:%s\n", pkg.Path, strings.Join(pkg.Interfaces, ","))
 
-	rootDestination := filepath.Join(config.RootPath, config.Mocks.PrimaryDestination)
+	if pkg.Path == "" {
+		return ErrMissingPackagePath
+	}
+
+	if len(pkg.Interfaces) < 1 {
+		return erk.WithParams(ErrMissingPackageInterfaces, erk.Params{
+			"packagePath": pkg.Path,
+		})
+	}
+
+	mockDestination, err := computeMockDestination(config, pkg)
+	if err != nil {
+		return err
+	}
 
 	result, err := g.CmdRun.Exec(&runcmd.ExecParams{
-		PWD: config.RootPath,
+		PWD: mockDestination.PWD,
 		CMD: "mockgen", // TODO: Allow overriding
 		Args: []string{
 			pkg.Path,
@@ -92,11 +125,9 @@ func (g *Generator) generateMock(config *ensurefile.Config, pkg *ensurefile.Pack
 
 	result += createNEWMethods(pkg.Interfaces)
 
-	originalPackageName := filepath.Base(pkg.Path)
-	mockPackageName := "mock_" + originalPackageName
-	mockFilePath := filepath.Join(rootDestination, filepath.Dir(pkg.Path), mockPackageName, mockPackageName+".go")
-
+	mockFilePath := mockDestination.fullPath()
 	mockDirPath := filepath.Dir(mockFilePath)
+
 	if err := g.FSWrite.MkdirAll(mockDirPath, 0775); err != nil {
 		return erk.WrapWith(ErrUnableToCreateDir, err, erk.Params{
 			"path": mockDirPath,
