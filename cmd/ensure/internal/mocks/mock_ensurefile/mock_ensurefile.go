@@ -5,35 +5,36 @@
 package mock_ensurefile
 
 import (
+	reflect "reflect"
+
 	ensurefile "github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockLoaderIface is a mock of LoaderIface interface
+// MockLoaderIface is a mock of LoaderIface interface.
 type MockLoaderIface struct {
 	ctrl     *gomock.Controller
 	recorder *MockLoaderIfaceMockRecorder
 }
 
-// MockLoaderIfaceMockRecorder is the mock recorder for MockLoaderIface
+// MockLoaderIfaceMockRecorder is the mock recorder for MockLoaderIface.
 type MockLoaderIfaceMockRecorder struct {
 	mock *MockLoaderIface
 }
 
-// NewMockLoaderIface creates a new mock instance
+// NewMockLoaderIface creates a new mock instance.
 func NewMockLoaderIface(ctrl *gomock.Controller) *MockLoaderIface {
 	mock := &MockLoaderIface{ctrl: ctrl}
 	mock.recorder = &MockLoaderIfaceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockLoaderIface) EXPECT() *MockLoaderIfaceMockRecorder {
 	return m.recorder
 }
 
-// LoadConfig mocks base method
+// LoadConfig mocks base method.
 func (m *MockLoaderIface) LoadConfig(arg0 string) (*ensurefile.Config, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoadConfig", arg0)
@@ -42,7 +43,7 @@ func (m *MockLoaderIface) LoadConfig(arg0 string) (*ensurefile.Config, error) {
 	return ret0, ret1
 }
 
-// LoadConfig indicates an expected call of LoadConfig
+// LoadConfig indicates an expected call of LoadConfig.
 func (mr *MockLoaderIfaceMockRecorder) LoadConfig(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadConfig", reflect.TypeOf((*MockLoaderIface)(nil).LoadConfig), arg0)

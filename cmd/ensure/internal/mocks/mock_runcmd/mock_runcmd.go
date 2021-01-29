@@ -5,35 +5,36 @@
 package mock_runcmd
 
 import (
+	reflect "reflect"
+
 	runcmd "github.com/JosiahWitt/ensure/cmd/ensure/internal/runcmd"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockRunnerIface is a mock of RunnerIface interface
+// MockRunnerIface is a mock of RunnerIface interface.
 type MockRunnerIface struct {
 	ctrl     *gomock.Controller
 	recorder *MockRunnerIfaceMockRecorder
 }
 
-// MockRunnerIfaceMockRecorder is the mock recorder for MockRunnerIface
+// MockRunnerIfaceMockRecorder is the mock recorder for MockRunnerIface.
 type MockRunnerIfaceMockRecorder struct {
 	mock *MockRunnerIface
 }
 
-// NewMockRunnerIface creates a new mock instance
+// NewMockRunnerIface creates a new mock instance.
 func NewMockRunnerIface(ctrl *gomock.Controller) *MockRunnerIface {
 	mock := &MockRunnerIface{ctrl: ctrl}
 	mock.recorder = &MockRunnerIfaceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockRunnerIface) EXPECT() *MockRunnerIfaceMockRecorder {
 	return m.recorder
 }
 
-// Exec mocks base method
+// Exec mocks base method.
 func (m *MockRunnerIface) Exec(arg0 *runcmd.ExecParams) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Exec", arg0)
@@ -42,7 +43,7 @@ func (m *MockRunnerIface) Exec(arg0 *runcmd.ExecParams) (string, error) {
 	return ret0, ret1
 }
 
-// Exec indicates an expected call of Exec
+// Exec indicates an expected call of Exec.
 func (mr *MockRunnerIfaceMockRecorder) Exec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockRunnerIface)(nil).Exec), arg0)

@@ -5,35 +5,48 @@
 package mock_ensurepkg
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 	testing "testing"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockT is a mock of T interface
+// MockT is a mock of T interface.
 type MockT struct {
 	ctrl     *gomock.Controller
 	recorder *MockTMockRecorder
 }
 
-// MockTMockRecorder is the mock recorder for MockT
+// MockTMockRecorder is the mock recorder for MockT.
 type MockTMockRecorder struct {
 	mock *MockT
 }
 
-// NewMockT creates a new mock instance
+// NewMockT creates a new mock instance.
 func NewMockT(ctrl *gomock.Controller) *MockT {
 	mock := &MockT{ctrl: ctrl}
 	mock.recorder = &MockTMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockT) EXPECT() *MockTMockRecorder {
 	return m.recorder
 }
 
-// Errorf mocks base method
+// Cleanup mocks base method.
+func (m *MockT) Cleanup(arg0 func()) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Cleanup", arg0)
+}
+
+// Cleanup indicates an expected call of Cleanup.
+func (mr *MockTMockRecorder) Cleanup(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockT)(nil).Cleanup), arg0)
+}
+
+// Errorf mocks base method.
 func (m *MockT) Errorf(format string, args ...interface{}) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{format}
@@ -43,14 +56,14 @@ func (m *MockT) Errorf(format string, args ...interface{}) {
 	m.ctrl.Call(m, "Errorf", varargs...)
 }
 
-// Errorf indicates an expected call of Errorf
+// Errorf indicates an expected call of Errorf.
 func (mr *MockTMockRecorder) Errorf(format interface{}, args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{format}, args...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Errorf", reflect.TypeOf((*MockT)(nil).Errorf), varargs...)
 }
 
-// Fatalf mocks base method
+// Fatalf mocks base method.
 func (m *MockT) Fatalf(format string, args ...interface{}) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{format}
@@ -60,14 +73,26 @@ func (m *MockT) Fatalf(format string, args ...interface{}) {
 	m.ctrl.Call(m, "Fatalf", varargs...)
 }
 
-// Fatalf indicates an expected call of Fatalf
+// Fatalf indicates an expected call of Fatalf.
 func (mr *MockTMockRecorder) Fatalf(format interface{}, args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{format}, args...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatalf", reflect.TypeOf((*MockT)(nil).Fatalf), varargs...)
 }
 
-// Run mocks base method
+// Helper mocks base method.
+func (m *MockT) Helper() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Helper")
+}
+
+// Helper indicates an expected call of Helper.
+func (mr *MockTMockRecorder) Helper() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Helper", reflect.TypeOf((*MockT)(nil).Helper))
+}
+
+// Run mocks base method.
 func (m *MockT) Run(name string, f func(*testing.T)) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Run", name, f)
@@ -75,32 +100,8 @@ func (m *MockT) Run(name string, f func(*testing.T)) bool {
 	return ret0
 }
 
-// Run indicates an expected call of Run
+// Run indicates an expected call of Run.
 func (mr *MockTMockRecorder) Run(name, f interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockT)(nil).Run), name, f)
-}
-
-// Helper mocks base method
-func (m *MockT) Helper() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Helper")
-}
-
-// Helper indicates an expected call of Helper
-func (mr *MockTMockRecorder) Helper() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Helper", reflect.TypeOf((*MockT)(nil).Helper))
-}
-
-// Cleanup mocks base method
-func (m *MockT) Cleanup(arg0 func()) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Cleanup", arg0)
-}
-
-// Cleanup indicates an expected call of Cleanup
-func (mr *MockTMockRecorder) Cleanup(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockT)(nil).Cleanup), arg0)
 }

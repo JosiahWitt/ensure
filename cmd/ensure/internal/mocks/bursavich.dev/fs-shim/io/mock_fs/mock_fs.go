@@ -5,35 +5,36 @@
 package mock_fs
 
 import (
+	reflect "reflect"
+
 	fs "bursavich.dev/fs-shim/io/fs"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockReadFileFS is a mock of ReadFileFS interface
+// MockReadFileFS is a mock of ReadFileFS interface.
 type MockReadFileFS struct {
 	ctrl     *gomock.Controller
 	recorder *MockReadFileFSMockRecorder
 }
 
-// MockReadFileFSMockRecorder is the mock recorder for MockReadFileFS
+// MockReadFileFSMockRecorder is the mock recorder for MockReadFileFS.
 type MockReadFileFSMockRecorder struct {
 	mock *MockReadFileFS
 }
 
-// NewMockReadFileFS creates a new mock instance
+// NewMockReadFileFS creates a new mock instance.
 func NewMockReadFileFS(ctrl *gomock.Controller) *MockReadFileFS {
 	mock := &MockReadFileFS{ctrl: ctrl}
 	mock.recorder = &MockReadFileFSMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockReadFileFS) EXPECT() *MockReadFileFSMockRecorder {
 	return m.recorder
 }
 
-// Open mocks base method
+// Open mocks base method.
 func (m *MockReadFileFS) Open(arg0 string) (fs.File, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Open", arg0)
@@ -42,13 +43,13 @@ func (m *MockReadFileFS) Open(arg0 string) (fs.File, error) {
 	return ret0, ret1
 }
 
-// Open indicates an expected call of Open
+// Open indicates an expected call of Open.
 func (mr *MockReadFileFSMockRecorder) Open(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Open", reflect.TypeOf((*MockReadFileFS)(nil).Open), arg0)
 }
 
-// ReadFile mocks base method
+// ReadFile mocks base method.
 func (m *MockReadFileFS) ReadFile(arg0 string) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReadFile", arg0)
@@ -57,7 +58,7 @@ func (m *MockReadFileFS) ReadFile(arg0 string) ([]byte, error) {
 	return ret0, ret1
 }
 
-// ReadFile indicates an expected call of ReadFile
+// ReadFile indicates an expected call of ReadFile.
 func (mr *MockReadFileFSMockRecorder) ReadFile(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadFile", reflect.TypeOf((*MockReadFileFS)(nil).ReadFile), arg0)
