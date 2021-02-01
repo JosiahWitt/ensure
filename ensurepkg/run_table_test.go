@@ -383,7 +383,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name: "when missing NEW method",
-				ExpectedFatalMessage: "\nMocks.Invalid is missing the NEW method. Expected:\n\tfunc(*gomock.Controller) *struct { Nothing bool }" +
+				ExpectedFatalMessage: "\nMocks.Invalid is missing the NEW method. Expected:\n\tfunc (*struct { Nothing bool }) NEW(*gomock.Controller) *struct { Nothing bool }" +
 					"\nPlease ensure you generated the mocks using the `ensure generate mocks` command.",
 				Table: []struct {
 					Name  string
