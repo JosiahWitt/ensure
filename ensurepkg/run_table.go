@@ -25,7 +25,7 @@ var (
 	errMocksNotStructPointer      = erk.New(erkTableInvalid{}, "Mocks field should be a pointer to a struct, got {{type .mocksField}}")
 	errMocksEntryNotStructPointer = erk.New(erkTableInvalid{}, "Mocks.{{.mocksFieldName}} should be a pointer to a struct, got {{type .mockEntry}}")
 	errMocksNEWMissing            = erk.New(erkTableInvalid{},
-		"\nMocks.{{.mocksFieldName}} is missing the NEW method. Expected:\n\tfunc(*gomock.Controller) {{type .expectedReturn}}"+
+		"\nMocks.{{.mocksFieldName}} is missing the NEW method. Expected:\n\tfunc ({{type .expectedReturn}}) NEW(*gomock.Controller) {{type .expectedReturn}}"+
 			"\nPlease ensure you generated the mocks using the `ensure generate mocks` command.",
 	)
 	errMocksNEWInvalidSignature = erk.New(erkTableInvalid{},
