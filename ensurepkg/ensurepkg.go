@@ -13,6 +13,7 @@ import (
 // T implements a subset of methods on testing.T.
 // More methods may be added to T with a minor ensure release.
 type T interface {
+	Logf(format string, args ...interface{})
 	Errorf(format string, args ...interface{})
 	Fatalf(format string, args ...interface{})
 	Run(name string, f func(t *testing.T)) bool
