@@ -19,15 +19,12 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Test
-        run: |
-          go test -race -coverprofile=coverage.txt -covermode=atomic ./...
-          (cd cmd/ensure; go test -race -coverprofile=coverage.txt -covermode=atomic ./...)
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload to codecov
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.txt,cmd/ensure/coverage.txt
 
 
   lint:
@@ -46,16 +43,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v1
 
-      - name: Lint Package
+      - name: Lint
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.34.1
-
-      - name: Lint Command
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: v1.34.1
-          working-directory: cmd/ensure
 
 
   regression-test:

@@ -33,8 +33,13 @@ $ go get github.com/JosiahWitt/ensure
 
 ### CLI
 ```bash
-$ go get github.com/JosiahWitt/ensure/cmd/ensure
+# Before Go 1.16
+$ go get github.com/JosiahWitt/ensure-cli/cmd/ensure
 $ go get github.com/golang/mock/mockgen
+
+# After Go 1.16
+$ go install github.com/JosiahWitt/ensure-cli/cmd/ensure
+$ go install github.com/golang/mock/mockgen
 ```
 
 Note: [`mockgen`](https://github.com/golang/mock) is required to generate mocks.
@@ -59,6 +64,7 @@ Then, `ensure` can be used as a function to asset a value is correct, using the 
 
 ## Configuring the CLI
 The `ensure` CLI is configured using a `.ensure.yml` file which is located in the root of your Go Module (next to the `go.mod` file).
+Source code for the `ensure` CLI is located in the [`ensure-cli` repo](https://github.com/JosiahWitt/ensure-cli).
 
 Here is an example `.ensure.yml` file:
 
