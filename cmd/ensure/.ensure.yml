@@ -1,0 +1,16 @@
+mocks:
+  packages:
+    - path: bursavich.dev/fs-shim/io/fs
+      interfaces: [ReadFileFS]
+
+    - path: github.com/JosiahWitt/ensure/cmd/ensure/internal/runcmd
+      interfaces: [RunnerIface]
+
+    - path: github.com/JosiahWitt/ensure/cmd/ensure/internal/fswrite
+      interfaces: [FSWriteIface]
+
+    - path: github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile
+      interfaces: [LoaderIface]
+
+    - path: github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen
+      interfaces: [GeneratorIface]
