@@ -1,6 +1,7 @@
 package ensurepkg_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
@@ -17,6 +18,7 @@ type runTableTestEntry struct {
 	Name                 string
 	ExpectedNames        []string
 	ExpectedFatalMessage string
+	ExpectedWarnings     []string
 	Table                interface{}
 	CheckEntry           func(t *testing.T, rawEntry interface{})
 }
@@ -45,6 +47,22 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 		t.Run(entry.Name, func(t *testing.T) {
 			mockT := setupMockT(t)
 			expectedTableSize := len(entry.ExpectedNames)
+
+			if len(entry.ExpectedWarnings) > 0 {
+				gomock.InOrder(
+					mockT.EXPECT().Helper(),
+					mockT.EXPECT().Cleanup(gomock.Any()),
+					mockT.EXPECT().Helper(),
+					mockT.EXPECT().Logf(
+						"\n\n⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n\n"+
+							"WARNINGS:\n - %s\n\n"+
+							"These may or may not be the cause of a problem. If you recently changed an interface, make sure to rerun `ensure generate mocks`.\n\n"+
+							"⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n\n",
+
+						strings.Join(entry.ExpectedWarnings, "\n - "),
+					),
+				)
+			}
 
 			mockT.EXPECT().Helper().Times(3 * expectedTableSize) // 3 = RunTableByIndex + run + before Cleanup call
 			mockT.EXPECT().Cleanup(gomock.Any()).Times(expectedTableSize)
@@ -648,12 +666,25 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 
 func (runTableTests) subjectField() runTableTestEntryGroup {
 	type (
+		OneValidMock struct {
+			Valid1 *ExampleMockValid1
+		}
+
 		IntAdder interface {
 			Add(a, b int) int
 		}
 
+		IntMultiplier interface {
+			Multiply(a, b int) int
+		}
+
 		AdderSubject struct {
 			Adder IntAdder
+		}
+
+		MultiInterfaceSubject struct {
+			Adder      IntAdder
+			Multiplier IntMultiplier
 		}
 
 		AdderSubjectWithDuplicate struct {
@@ -668,7 +699,7 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 
 		AdderSubjectWithUnmockedInterface struct {
 			Adder             IntAdder
-			UnmockedInterface interface{ Multiply(a, b int) int }
+			UnmockedInterface IntMultiplier
 		}
 
 		SubjectMatchingMultipleMocks struct {
@@ -682,6 +713,219 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 			{
 				Name:          "when valid",
 				ExpectedNames: []string{"name 1", "name 2"},
+				Table: []struct {
+					Name    string
+					Mocks   *OneValidMock
+					Subject *AdderSubject
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name    string
+						Mocks   *OneValidMock
+						Subject *AdderSubject
+					})
+
+					for _, entry := range table {
+						isTrue(t, entry.Mocks.Valid1.WasInitialized)
+						isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
+					}
+				},
+			},
+
+			{
+				Name:          "when valid with no mocks",
+				ExpectedNames: []string{"name 1", "name 2"},
+				ExpectedWarnings: []string{
+					"No mocks matched 'ensurepkg_test.IntAdder', the interface for Subject.Adder",
+					"No mocks matched 'ensurepkg_test.IntMultiplier', the interface for Subject.Multiplier",
+				},
+				Table: []struct {
+					Name    string
+					Subject *MultiInterfaceSubject
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name    string
+						Subject *MultiInterfaceSubject
+					})
+
+					for _, entry := range table {
+						isTrue(t, entry.Subject != nil)
+					}
+				},
+			},
+
+			{
+				Name:          "when duplicate interfaces",
+				ExpectedNames: []string{"name 1", "name 2"},
+				Table: []struct {
+					Name    string
+					Mocks   *OneValidMock
+					Subject *AdderSubjectWithDuplicate
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name    string
+						Mocks   *OneValidMock
+						Subject *AdderSubjectWithDuplicate
+					})
+
+					for _, entry := range table {
+						isTrue(t, entry.Mocks.Valid1.WasInitialized)
+
+						isTrue(t, entry.Subject.Adder1.Add(1, 2) == 3)
+						isTrue(t, entry.Subject.Adder2.Add(1, 2) == 3)
+						isTrue(t, entry.Subject.Adder1 == entry.Subject.Adder2) // Should point to the same mock
+					}
+				},
+			},
+
+			{
+				Name:                 "when not pointer to struct",
+				ExpectedFatalMessage: "Subject field should be a pointer to a struct, got ensurepkg_test.AdderSubject",
+				Table: []struct {
+					Name    string
+					Mocks   *OneValidMock
+					Subject AdderSubject
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+			},
+
+			{
+				Name:                 "when pointer to non struct",
+				ExpectedFatalMessage: "Subject field should be a pointer to a struct, got *string",
+				Table: []struct {
+					Name    string
+					Mocks   *OneValidMock
+					Subject *string
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+			},
+
+			{
+				Name:          "when field contains a non-interface field",
+				ExpectedNames: []string{"name 1", "name 2"},
+				Table: []struct {
+					Name    string
+					Mocks   *OneValidMock
+					Subject *AdderSubjectWithExtraField
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name    string
+						Mocks   *OneValidMock
+						Subject *AdderSubjectWithExtraField
+					})
+
+					for _, entry := range table {
+						isTrue(t, entry.Mocks.Valid1.WasInitialized)
+
+						isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
+						isTrue(t, entry.Subject.ExtraField == "")
+					}
+				},
+			},
+
+			{
+				Name:             "when field contains a non-mocked interface",
+				ExpectedNames:    []string{"name 1", "name 2"},
+				ExpectedWarnings: []string{"No mocks matched 'ensurepkg_test.IntMultiplier', the interface for Subject.UnmockedInterface"},
+				Table: []struct {
+					Name    string
+					Mocks   *OneValidMock
+					Subject *AdderSubjectWithUnmockedInterface
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name    string
+						Mocks   *OneValidMock
+						Subject *AdderSubjectWithUnmockedInterface
+					})
+
+					for _, entry := range table {
+						isTrue(t, entry.Mocks.Valid1.WasInitialized)
+
+						isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
+						isTrue(t, entry.Subject.UnmockedInterface == nil)
+					}
+				},
+			},
+
+			{
+				Name:                 "when entry matches multiple mocks",
+				ExpectedFatalMessage: "Subject.Subber matches multiple mocks; only one mock should exist for each interface: *ensurepkg_test.ExampleMockValid1, *ensurepkg_test.ExampleMockValid2",
+				Table: []struct {
+					Name    string
+					Mocks   *TwoValidMocks
+					Subject *SubjectMatchingMultipleMocks
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+			},
+
+			{
+				Name:          "when mock is unused",
+				ExpectedNames: []string{"name 1", "name 2"},
+				ExpectedWarnings: []string{
+					"Mocks.Valid2 (type *ensurepkg_test.ExampleMockValid2) did not match any interfaces in the Subject",
+				},
 				Table: []struct {
 					Name    string
 					Mocks   *TwoValidMocks
@@ -706,154 +950,6 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 						entry.Mocks.check(t)
 						isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
 					}
-				},
-			},
-
-			{
-				Name:          "when duplicate interfaces",
-				ExpectedNames: []string{"name 1", "name 2"},
-				Table: []struct {
-					Name    string
-					Mocks   *TwoValidMocks
-					Subject *AdderSubjectWithDuplicate
-				}{
-					{
-						Name: "name 1",
-					},
-					{
-						Name: "name 2",
-					},
-				},
-
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
-					table := rawTable.([]struct {
-						Name    string
-						Mocks   *TwoValidMocks
-						Subject *AdderSubjectWithDuplicate
-					})
-
-					for _, entry := range table {
-						entry.Mocks.check(t)
-
-						isTrue(t, entry.Subject.Adder1.Add(1, 2) == 3)
-						isTrue(t, entry.Subject.Adder2.Add(1, 2) == 3)
-						isTrue(t, entry.Subject.Adder1 == entry.Subject.Adder2) // Should point to the same mock
-					}
-				},
-			},
-
-			{
-				Name:                 "when not pointer to struct",
-				ExpectedFatalMessage: "Subject field should be a pointer to a struct, got ensurepkg_test.AdderSubject",
-				Table: []struct {
-					Name    string
-					Mocks   *TwoValidMocks
-					Subject AdderSubject
-				}{
-					{
-						Name: "name 1",
-					},
-					{
-						Name: "name 2",
-					},
-				},
-			},
-
-			{
-				Name:                 "when pointer to non struct",
-				ExpectedFatalMessage: "Subject field should be a pointer to a struct, got *string",
-				Table: []struct {
-					Name    string
-					Mocks   *TwoValidMocks
-					Subject *string
-				}{
-					{
-						Name: "name 1",
-					},
-					{
-						Name: "name 2",
-					},
-				},
-			},
-
-			{
-				Name:          "when field contains a non-interface field",
-				ExpectedNames: []string{"name 1", "name 2"},
-				Table: []struct {
-					Name    string
-					Mocks   *TwoValidMocks
-					Subject *AdderSubjectWithExtraField
-				}{
-					{
-						Name: "name 1",
-					},
-					{
-						Name: "name 2",
-					},
-				},
-
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
-					table := rawTable.([]struct {
-						Name    string
-						Mocks   *TwoValidMocks
-						Subject *AdderSubjectWithExtraField
-					})
-
-					for _, entry := range table {
-						entry.Mocks.check(t)
-
-						isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
-						isTrue(t, entry.Subject.ExtraField == "")
-					}
-				},
-			},
-
-			{
-				Name:          "when field contains a non-mocked interface",
-				ExpectedNames: []string{"name 1", "name 2"},
-				Table: []struct {
-					Name    string
-					Mocks   *TwoValidMocks
-					Subject *AdderSubjectWithUnmockedInterface
-				}{
-					{
-						Name: "name 1",
-					},
-					{
-						Name: "name 2",
-					},
-				},
-
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
-					table := rawTable.([]struct {
-						Name    string
-						Mocks   *TwoValidMocks
-						Subject *AdderSubjectWithUnmockedInterface
-					})
-
-					for _, entry := range table {
-						entry.Mocks.check(t)
-
-						isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
-						isTrue(t, entry.Subject.UnmockedInterface == nil)
-					}
-				},
-			},
-
-			{
-				Name:                 "when entry matches multiple mocks",
-				ExpectedFatalMessage: "Subject.Subber matches multiple mocks; only one mock should exist for each interface: *ensurepkg_test.ExampleMockValid1, *ensurepkg_test.ExampleMockValid2",
-				Table: []struct {
-					Name    string
-					Mocks   *TwoValidMocks
-					Subject *SubjectMatchingMultipleMocks
-				}{
-					{
-						Name: "name 1",
-					},
-					{
-						Name: "name 2",
-					},
 				},
 			},
 		},

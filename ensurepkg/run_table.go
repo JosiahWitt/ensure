@@ -1,6 +1,7 @@
 package ensurepkg
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 	"strings"
@@ -48,6 +49,11 @@ var (
 	errEntryDuplicateName = erk.New(erkEntryInvalid{}, "table[{{.index}}]: duplicate Name found; first occurrence was table[{{.firstIndex}}].Name: {{.name}}")
 )
 
+type tableEntryMock struct {
+	fieldName string
+	value     reflect.Value
+}
+
 type tableEntry struct {
 	index int
 	name  string
@@ -55,7 +61,14 @@ type tableEntry struct {
 	rawEntry   reflect.Value
 	setupFuncs []func(c *Chain)
 
-	mocks map[reflect.Type]reflect.Value
+	mocks map[reflect.Type]*tableEntryMock
+
+	// These should be the same for every entry.
+	//
+	// TODO: Refactor this file so it does more single time pre-computation,
+	// and allows raising issues on the table level.
+	// See: https://github.com/JosiahWitt/ensure/issues/23
+	tableLevelWarnings []string
 }
 
 // RunTableByIndex runs the table which is a slice (or array) of structs.
@@ -95,6 +108,22 @@ func (e Ensure) RunTableByIndex(table interface{}, fn func(ensure Ensure, i int)
 		c.t.Fatalf(err.Error())
 	}
 
+	if len(entries) > 0 && len(entries[0].tableLevelWarnings) > 0 {
+		warnings := strings.Join(entries[0].tableLevelWarnings, "\n - ")
+
+		c := e(nil)
+		c.markRun()
+		c.t.Helper()
+		c.t.Logf(
+			"\n\n⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n\n"+
+				"WARNINGS:\n - %s\n\n"+
+				"These may or may not be the cause of a problem. If you recently changed an interface, make sure to rerun `ensure generate mocks`.\n\n"+
+				"⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n\n",
+
+			warnings,
+		)
+	}
+
 	for _, entry := range entries {
 		entry := entry // Pin range variable
 
@@ -115,15 +144,15 @@ func (e Ensure) RunTableByIndex(table interface{}, fn func(ensure Ensure, i int)
 }
 
 func buildTable(table interface{}) ([]*tableEntry, error) {
-	val := reflect.ValueOf(table)
-	if val.Kind() != reflect.Array && val.Kind() != reflect.Slice {
+	tableReflect := reflect.ValueOf(table)
+	if tableReflect.Kind() != reflect.Array && tableReflect.Kind() != reflect.Slice {
 		return nil, erk.WithParam(errInvalidTableType, "table", table)
 	}
 
-	entries := make([]*tableEntry, 0, val.Len())
+	entries := make([]*tableEntry, 0, tableReflect.Len())
 	errGroup := erg.NewAs(errEntriesInvalid)
-	for i := 0; i < val.Len(); i++ {
-		entry, err := buildTableEntry(val.Index(i))
+	for i := 0; i < tableReflect.Len(); i++ {
+		entry, err := buildTableEntry(tableReflect.Index(i))
 		if err != nil {
 			if erk.IsKind(err, erkEntryInvalid{}) {
 				errGroup = erg.Append(errGroup, erk.WithParam(err, "index", i))
@@ -165,7 +194,7 @@ func buildTableEntry(rawEntry reflect.Value) (*tableEntry, error) {
 
 	entry := &tableEntry{
 		rawEntry: rawEntry,
-		mocks:    make(map[reflect.Type]reflect.Value),
+		mocks:    make(map[reflect.Type]*tableEntryMock),
 	}
 
 	name, err := entry.extractTableEntryName()
@@ -280,7 +309,9 @@ func (entry *tableEntry) prepareMock(mockFieldName string, mockEntry reflect.Val
 			"duplicate": mockEntry.Interface(),
 		})
 	}
-	entry.mocks[mockEntry.Type()] = reflect.Value{}
+	entry.mocks[mockEntry.Type()] = &tableEntryMock{
+		fieldName: mockFieldName,
+	}
 
 	// At this point, everything should be correct, so we can blindly execute without worrying about types
 	entry.setupFuncs = append(entry.setupFuncs, func(c *Chain) {
@@ -289,7 +320,7 @@ func (entry *tableEntry) prepareMock(mockFieldName string, mockEntry reflect.Val
 
 		mockInstance := returns[0]
 		mockEntry.Set(mockInstance)
-		entry.mocks[mockEntry.Type()] = mockInstance
+		entry.mocks[mockEntry.Type()].value = mockInstance
 	})
 
 	return nil
@@ -325,6 +356,7 @@ func (entry *tableEntry) prepareSetupMocks() error {
 	return nil
 }
 
+//nolint:funlen // TODO: Refactor (https://github.com/JosiahWitt/ensure/issues/23)
 func (entry *tableEntry) prepareSubjectStruct() error {
 	entrySubject, ok := entry.fieldByName("Subject")
 	if !ok {
@@ -339,6 +371,7 @@ func (entry *tableEntry) prepareSubjectStruct() error {
 	entrySubject.Set(reflect.New(entrySubject.Type().Elem()))
 
 	// Ensure everything is correct during preparation, so we can report errors early
+	matchedMocks := map[reflect.Type]bool{}
 	for i := 0; i < entrySubject.Elem().NumField(); i++ {
 		subjectEntry := entrySubject.Elem().Field(i)
 		subjectFieldName := entrySubject.Elem().Type().Field(i).Name
@@ -351,10 +384,19 @@ func (entry *tableEntry) prepareSubjectStruct() error {
 		for mockType := range entry.mocks {
 			if mockType.Implements(subjectEntry.Type()) {
 				interfaceMatches = append(interfaceMatches, mockType)
+				matchedMocks[mockType] = true
 			}
 		}
 
 		if len(interfaceMatches) == 0 {
+			entry.tableLevelWarnings = append(entry.tableLevelWarnings,
+				fmt.Sprintf(
+					"No mocks matched '%s', the interface for Subject.%s",
+					subjectEntry.Type().String(),
+					subjectFieldName,
+				),
+			)
+
 			continue
 		}
 
@@ -374,8 +416,21 @@ func (entry *tableEntry) prepareSubjectStruct() error {
 		// At this point, everything should be correct, so we can blindly execute without worrying about types
 		interfaceMatch := interfaceMatches[0]
 		entry.setupFuncs = append(entry.setupFuncs, func(c *Chain) {
-			subjectEntry.Set(entry.mocks[interfaceMatch])
+			subjectEntry.Set(entry.mocks[interfaceMatch].value)
 		})
+	}
+
+	// Add warnings for unused mocks
+	for mockType, mock := range entry.mocks {
+		if _, ok := matchedMocks[mockType]; !ok {
+			entry.tableLevelWarnings = append(entry.tableLevelWarnings,
+				fmt.Sprintf(
+					"Mocks.%s (type %s) did not match any interfaces in the Subject",
+					mock.fieldName,
+					mockType.String(),
+				),
+			)
+		}
 	}
 
 	return nil
