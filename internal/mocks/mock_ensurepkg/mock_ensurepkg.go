@@ -92,6 +92,23 @@ func (mr *MockTMockRecorder) Helper() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Helper", reflect.TypeOf((*MockT)(nil).Helper))
 }
 
+// Logf mocks base method.
+func (m *MockT) Logf(format string, args ...interface{}) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{format}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Logf", varargs...)
+}
+
+// Logf indicates an expected call of Logf.
+func (mr *MockTMockRecorder) Logf(format interface{}, args ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{format}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logf", reflect.TypeOf((*MockT)(nil).Logf), varargs...)
+}
+
 // Run mocks base method.
 func (m *MockT) Run(name string, f func(*testing.T)) bool {
 	m.ctrl.T.Helper()
