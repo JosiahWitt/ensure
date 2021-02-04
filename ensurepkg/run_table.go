@@ -50,9 +50,12 @@ var (
 	errEntryDuplicateName = erk.New(erkEntryInvalid{}, "table[{{.index}}]: duplicate Name found; first occurrence was table[{{.firstIndex}}].Name: {{.name}}")
 )
 
+type tableEntryMockTag string
+
 type tableEntryMock struct {
 	fieldName string
 	value     reflect.Value
+	tag       tableEntryMockTag
 }
 
 type tableEntry struct {
@@ -296,6 +299,8 @@ func (entry *tableEntry) fillMocksStruct(entryMocks reflect.Value) error {
 		if err := entry.prepareMock(mockFieldName, mockEntry); err != nil {
 			return err
 		}
+
+		entry.mocks[mockEntry.Type()].tag = tableEntryMockTag(mockEntryType.Tag.Get("ensure"))
 	}
 
 	return nil
@@ -457,7 +462,7 @@ func (entry *tableEntry) prepareSubjectStruct() error {
 
 	// Add warnings for unused mocks
 	for mockType, mock := range entry.mocks {
-		if _, ok := matchedMocks[mockType]; !ok {
+		if _, ok := matchedMocks[mockType]; !ok && !mock.tag.isIgnoreUnused() {
 			entry.tableLevelWarnings = append(entry.tableLevelWarnings,
 				fmt.Sprintf(
 					"Mocks.%s (type %s) did not match any interfaces in the Subject",
@@ -469,4 +474,8 @@ func (entry *tableEntry) prepareSubjectStruct() error {
 	}
 
 	return nil
+}
+
+func (tag tableEntryMockTag) isIgnoreUnused() bool {
+	return tag == "ignoreunused"
 }

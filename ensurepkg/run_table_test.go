@@ -819,6 +819,12 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 			Valid1 *ExampleMockValid1
 		}
 
+		ValidMocksWithIgnoreUnusedTag struct {
+			Valid1 *ExampleMockValid1
+			Valid2 *ExampleMockValid2 `ensure:"ignoreunused"`
+			Valid3 *ExampleMockNEWMethodZeroParams
+		}
+
 		IntAdder interface {
 			Add(a, b int) int
 		}
@@ -1098,6 +1104,41 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 					for _, entry := range table {
 						entry.Mocks.check(t)
 						isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
+					}
+				},
+			},
+
+			{
+				Name:          "when mock is unused but has ignoreunused tag",
+				ExpectedNames: []string{"name 1", "name 2"},
+				ExpectedWarnings: []string{
+					// Only mock without ignoreunused tag is logged
+					"Mocks.Valid3 (type *ensurepkg_test.ExampleMockNEWMethodZeroParams) did not match any interfaces in the Subject",
+				},
+				Table: []struct {
+					Name    string
+					Mocks   *ValidMocksWithIgnoreUnusedTag
+					Subject *AdderSubject
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name    string
+						Mocks   *ValidMocksWithIgnoreUnusedTag
+						Subject *AdderSubject
+					})
+
+					for _, entry := range table {
+						checkTwoValidMocks(t, entry.Mocks.Valid1, entry.Mocks.Valid2)
+						isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
+						isTrue(t, entry.Mocks.Valid3.WasInitialized)
 					}
 				},
 			},
