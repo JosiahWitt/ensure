@@ -315,6 +315,12 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 			Valid2 *ExampleMockValid2
 		}
 
+		OneMockNEWMethodZeroParams struct {
+			Valid1     *ExampleMockValid1
+			ZeroParams *ExampleMockNEWMethodZeroParams
+			Valid2     *ExampleMockValid2
+		}
+
 		BrokenEmbedable struct {
 			Valid1 ExampleMockValid2 // Not a pointer
 		}
@@ -330,9 +336,9 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 			Valid2  *ExampleMockValid2
 		}
 
-		OneMockNEWMethodZeroParams struct {
+		OneMockNEWMethodExtraParam struct {
 			Valid1  *ExampleMockValid1
-			Invalid *ExampleMockNEWMethodZeroParams
+			Invalid *ExampleMockNEWMethodExtraParam
 			Valid2  *ExampleMockValid2
 		}
 
@@ -451,6 +457,34 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 			},
 
 			{
+				Name:          "when valid with NEW method with no params",
+				ExpectedNames: []string{"name 1", "name 2"},
+				Table: []struct {
+					Name  string
+					Mocks *OneMockNEWMethodZeroParams
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name  string
+						Mocks *OneMockNEWMethodZeroParams
+					})
+
+					for _, entry := range table {
+						checkTwoValidMocks(t, entry.Mocks.Valid1, entry.Mocks.Valid2)
+						isTrue(t, entry.Mocks.ZeroParams.WasInitialized)
+					}
+				},
+			},
+
+			{
 				Name:                 "when embedded field is not struct",
 				ExpectedFatalMessage: "Mocks.Embedable should be an embedded struct with no pointers, got *ensurepkg_test.Embedable",
 				Table: []struct {
@@ -532,11 +566,11 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 			},
 
 			{
-				Name:                 "when NEW method has zero params",
-				ExpectedFatalMessage: "\nMocks.Invalid.NEW has this method signature:\n\tfunc() *ensurepkg_test.ExampleMockNEWMethodZeroParams\nExpected:\n\tfunc(*gomock.Controller) *ensurepkg_test.ExampleMockNEWMethodZeroParams",
+				Name:                 "when NEW method has an extra param",
+				ExpectedFatalMessage: "\nMocks.Invalid.NEW has this method signature:\n\tfunc(*gomock.Controller, string) *ensurepkg_test.ExampleMockNEWMethodExtraParam\nExpected:\n\tfunc(*gomock.Controller) *ensurepkg_test.ExampleMockNEWMethodExtraParam",
 				Table: []struct {
 					Name  string
-					Mocks *OneMockNEWMethodZeroParams
+					Mocks *OneMockNEWMethodExtraParam
 				}{
 					{
 						Name: "name 1",
@@ -1137,9 +1171,19 @@ func (m *ExampleMockValid2) Sub(a, b int) int {
 	return a - b
 }
 
-type ExampleMockNEWMethodZeroParams struct{}
+type ExampleMockNEWMethodZeroParams struct {
+	WasInitialized bool
+}
 
-func (m *ExampleMockNEWMethodZeroParams) NEW() *ExampleMockNEWMethodZeroParams { return nil }
+func (m *ExampleMockNEWMethodZeroParams) NEW() *ExampleMockNEWMethodZeroParams {
+	return &ExampleMockNEWMethodZeroParams{WasInitialized: true}
+}
+
+type ExampleMockNEWMethodExtraParam struct{}
+
+func (m *ExampleMockNEWMethodExtraParam) NEW(ctrl *gomock.Controller, extra string) *ExampleMockNEWMethodExtraParam {
+	return nil
+}
 
 type ExampleMockNEWMethodIncorrectParam struct{}
 

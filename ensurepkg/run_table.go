@@ -323,7 +323,7 @@ func (entry *tableEntry) prepareMock(mockFieldName string, mockEntry reflect.Val
 	//  func (m *MockXYZ) NEW(ctrl *gomock.Controller) *MockXYZ { ... }
 	newMethodType := newMethod.Type()
 	controllerType := reflect.TypeOf(&gomock.Controller{})
-	isInvalidParam := newMethodType.NumIn() != 1 || newMethodType.In(0) != controllerType
+	isInvalidParam := newMethodType.NumIn() > 1 || (newMethodType.NumIn() == 1 && newMethodType.In(0) != controllerType)
 	isInvalidReturn := newMethodType.NumOut() != 1 || newMethodType.Out(0) != mockEntry.Type()
 	if isInvalidParam || isInvalidReturn {
 		return erk.WithParams(errMocksNEWInvalidSignature, erk.Params{
@@ -346,8 +346,13 @@ func (entry *tableEntry) prepareMock(mockFieldName string, mockEntry reflect.Val
 	// At this point, everything should be correct, so we can blindly execute without worrying about types
 	entry.setupFuncs = append(entry.setupFuncs, func(c *Chain) {
 		gomockCtrl := reflect.ValueOf(c.gomockController())
-		returns := newMethod.Call([]reflect.Value{gomockCtrl})
 
+		input := []reflect.Value{}
+		if newMethodType.NumIn() == 1 {
+			input = append(input, gomockCtrl)
+		}
+
+		returns := newMethod.Call(input)
 		mockInstance := returns[0]
 		mockEntry.Set(mockInstance)
 		entry.mocks[mockEntry.Type()].value = mockInstance
