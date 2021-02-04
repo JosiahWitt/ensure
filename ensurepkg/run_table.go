@@ -25,6 +25,7 @@ var (
 
 	errMocksNotStructPointer      = erk.New(erkTableInvalid{}, "Mocks field should be a pointer to a struct, got {{type .mocksField}}")
 	errMocksEntryNotStructPointer = erk.New(erkTableInvalid{}, "Mocks.{{.mocksFieldName}} should be a pointer to a struct, got {{type .mockEntry}}")
+	errMocksEmbeddedNotStruct     = erk.New(erkTableInvalid{}, "Mocks.{{.mocksFieldName}} should be an embedded struct with no pointers, got {{type .mockEntry}}")
 	errMocksNEWMissing            = erk.New(erkTableInvalid{},
 		"\nMocks.{{.mocksFieldName}} is missing the NEW method. Expected:\n\tfunc ({{type .expectedReturn}}) NEW(*gomock.Controller) {{type .expectedReturn}}"+
 			"\nPlease ensure you generated the mocks using the `ensure generate mocks` command.",
@@ -262,9 +263,35 @@ func (entry *tableEntry) prepareMocksStruct() error {
 	// Create new Mocks struct
 	entryMocks.Set(reflect.New(entryMocks.Type().Elem()))
 
-	for i := 0; i < entryMocks.Elem().NumField(); i++ {
-		mockEntry := entryMocks.Elem().Field(i)
-		mockFieldName := entryMocks.Elem().Type().Field(i).Name
+	return entry.fillMocksStruct(entryMocks.Elem())
+}
+
+func (entry *tableEntry) fillMocksStruct(entryMocks reflect.Value) error {
+	for i := 0; i < entryMocks.NumField(); i++ {
+		mockEntry := entryMocks.Field(i)
+		mockEntryType := entryMocks.Type().Field(i)
+		mockFieldName := mockEntryType.Name
+
+		// Skip unexported fields
+		if mockEntryType.PkgPath != "" {
+			continue
+		}
+
+		// Support embedded structs
+		if mockEntryType.Anonymous {
+			if mockEntry.Kind() != reflect.Struct {
+				return erk.WithParams(errMocksEmbeddedNotStruct, erk.Params{
+					"mocksFieldName": mockFieldName,
+					"mockEntry":      mockEntry.Interface(),
+				})
+			}
+
+			if err := entry.fillMocksStruct(mockEntry); err != nil {
+				return err
+			}
+
+			continue
+		}
 
 		if err := entry.prepareMock(mockFieldName, mockEntry); err != nil {
 			return err

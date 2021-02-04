@@ -295,6 +295,35 @@ func (runTableTests) general() runTableTestEntryGroup {
 
 func (runTableTests) mocksField() runTableTestEntryGroup {
 	type (
+		TwoValidMocksWithUnexported struct {
+			Valid1      *ExampleMockValid1
+			notExported string //nolint:structcheck,unused // Present for the test
+			Valid2      *ExampleMockValid2
+		}
+
+		Embedable struct {
+			Valid1 *ExampleMockValid1
+		}
+
+		TwoValidMocksWithEmbedded struct {
+			Embedable
+			Valid2 *ExampleMockValid2
+		}
+
+		TwoValidMocksWithEmbeddedPtr struct {
+			*Embedable
+			Valid2 *ExampleMockValid2
+		}
+
+		BrokenEmbedable struct {
+			Valid1 ExampleMockValid2 // Not a pointer
+		}
+
+		BrokenEmbedded struct {
+			BrokenEmbedable
+			Valid2 *ExampleMockValid2
+		}
+
 		OneMockMissingNEWMethod struct {
 			Valid1  *ExampleMockValid1
 			Invalid *struct{ Nothing bool }
@@ -364,6 +393,92 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 					for _, entry := range table {
 						entry.Mocks.check(t)
 					}
+				},
+			},
+
+			{
+				Name:          "when valid with unexported field",
+				ExpectedNames: []string{"name 1", "name 2"},
+				Table: []struct {
+					Name  string
+					Mocks *TwoValidMocksWithUnexported
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name  string
+						Mocks *TwoValidMocksWithUnexported
+					})
+
+					for _, entry := range table {
+						checkTwoValidMocks(t, entry.Mocks.Valid1, entry.Mocks.Valid2)
+					}
+				},
+			},
+
+			{
+				Name:          "when valid with embedded field",
+				ExpectedNames: []string{"name 1", "name 2"},
+				Table: []struct {
+					Name  string
+					Mocks *TwoValidMocksWithEmbedded
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name  string
+						Mocks *TwoValidMocksWithEmbedded
+					})
+
+					for _, entry := range table {
+						checkTwoValidMocks(t, entry.Mocks.Valid1, entry.Mocks.Valid2)
+					}
+				},
+			},
+
+			{
+				Name:                 "when embedded field is not struct",
+				ExpectedFatalMessage: "Mocks.Embedable should be an embedded struct with no pointers, got *ensurepkg_test.Embedable",
+				Table: []struct {
+					Name  string
+					Mocks *TwoValidMocksWithEmbeddedPtr
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
+				},
+			},
+
+			{
+				Name:                 "when embedded field has error",
+				ExpectedFatalMessage: "Mocks.Valid1 should be a pointer to a struct, got ensurepkg_test.ExampleMockValid2",
+				Table: []struct {
+					Name  string
+					Mocks *BrokenEmbedded
+				}{
+					{
+						Name: "name 1",
+					},
+					{
+						Name: "name 2",
+					},
 				},
 			},
 
@@ -971,10 +1086,15 @@ type TwoValidMocks struct {
 
 func (tvm *TwoValidMocks) check(t *testing.T) {
 	t.Helper()
+	checkTwoValidMocks(t, tvm.Valid1, tvm.Valid2)
+}
 
-	isTrue(t, tvm.Valid1.WasInitialized)
-	isTrue(t, tvm.Valid2.WasInitialized)
-	isTrue(t, tvm.Valid1.GoMockController == tvm.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+func checkTwoValidMocks(t *testing.T, valid1 *ExampleMockValid1, valid2 *ExampleMockValid2) {
+	t.Helper()
+
+	isTrue(t, valid1.WasInitialized)
+	isTrue(t, valid2.WasInitialized)
+	isTrue(t, valid1.GoMockController == valid2.GoMockController) // Ensure GoMock Controller is memoized
 }
 
 type ExampleMockValid1 struct {
