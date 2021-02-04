@@ -418,9 +418,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 					})
 
 					for _, entry := range table {
-						isTrue(t, entry.Mocks.Valid1.WasInitialized)
-						isTrue(t, entry.Mocks.Valid2.WasInitialized)
-						isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+						checkTwoValidMocks(t, entry.Mocks.Valid1, entry.Mocks.Valid2)
 					}
 				},
 			},
@@ -447,9 +445,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 					})
 
 					for _, entry := range table {
-						isTrue(t, entry.Mocks.Valid1.WasInitialized)
-						isTrue(t, entry.Mocks.Valid2.WasInitialized)
-						isTrue(t, entry.Mocks.Valid1.GoMockController == entry.Mocks.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+						checkTwoValidMocks(t, entry.Mocks.Valid1, entry.Mocks.Valid2)
 					}
 				},
 			},
@@ -1090,10 +1086,15 @@ type TwoValidMocks struct {
 
 func (tvm *TwoValidMocks) check(t *testing.T) {
 	t.Helper()
+	checkTwoValidMocks(t, tvm.Valid1, tvm.Valid2)
+}
 
-	isTrue(t, tvm.Valid1.WasInitialized)
-	isTrue(t, tvm.Valid2.WasInitialized)
-	isTrue(t, tvm.Valid1.GoMockController == tvm.Valid2.GoMockController) // Ensure GoMock Controller is memoized
+func checkTwoValidMocks(t *testing.T, valid1 *ExampleMockValid1, valid2 *ExampleMockValid2) {
+	t.Helper()
+
+	isTrue(t, valid1.WasInitialized)
+	isTrue(t, valid2.WasInitialized)
+	isTrue(t, valid1.GoMockController == valid2.GoMockController) // Ensure GoMock Controller is memoized
 }
 
 type ExampleMockValid1 struct {
