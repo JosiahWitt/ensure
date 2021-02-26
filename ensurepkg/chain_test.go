@@ -136,6 +136,14 @@ func TestChainEquals(t *testing.T) {
 		ensure(nil).Equals(nil)
 	})
 
+	t.Run("when strings are equal", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Helper()
+
+		ensure := ensure.New(mockT)
+		ensure("abc").Equals("abc")
+	})
+
 	t.Run("when nil pointer equals nil", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
@@ -273,6 +281,58 @@ func TestChainEquals(t *testing.T) {
 					{Body: "Greetings"},
 				},
 			})
+	})
+
+	t.Run("when strings not equal: expected empty string", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n - abc != ",
+			`  "abc"`,
+			"  (empty string)",
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("abc").Equals("")
+	})
+
+	t.Run("when strings not equal: actual empty string", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n -  != abc",
+			"  (empty string)",
+			`  "abc"`,
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("").Equals("abc")
+	})
+
+	t.Run("when strings not equal: expected contains double quotes, newlines, and tabs", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n - abc\n\"xyz\"\n\tqwerty != abc",
+			`  "abc\n\"xyz\"\n\tqwerty"`, // Formatted with quotes and escaped control characters
+			`  "abc"`,
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("abc\n\"xyz\"\n\tqwerty").Equals("abc")
+	})
+
+	t.Run("when strings not equal: actual contains double quotes, newlines, and tabs", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n - abc != abc\n\"xyz\"\n\tqwerty",
+			`  "abc"`,
+			`  "abc\n\"xyz\"\n\tqwerty"`, // Formatted with quotes and escaped control characters
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("abc").Equals("abc\n\"xyz\"\n\tqwerty")
 	})
 }
 

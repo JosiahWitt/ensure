@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/JosiahWitt/erk"
 	"github.com/go-test/deep"
@@ -169,5 +170,21 @@ func isNil(value interface{}) bool {
 }
 
 func prettyFormat(value interface{}) string {
-	return text.Indent(pretty.Sprint(value), "  ")
+	return text.Indent(prettyFormatValue(value), "  ")
+}
+
+func prettyFormatValue(value interface{}) string {
+	if str, ok := value.(string); ok {
+		return prettyFormatString(str)
+	}
+
+	return pretty.Sprint(value)
+}
+
+func prettyFormatString(str string) string {
+	if str == "" {
+		return "(empty string)"
+	}
+
+	return strconv.Quote(str)
 }
