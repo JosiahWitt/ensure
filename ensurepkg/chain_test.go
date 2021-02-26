@@ -7,6 +7,8 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/erk"
+	"github.com/kr/pretty"
+	"github.com/kr/text"
 )
 
 func TestChainIsTrue(t *testing.T) {
@@ -108,26 +110,14 @@ func TestChainIsNil(t *testing.T) {
 }
 
 func TestChainEquals(t *testing.T) {
-	const errorMessageFormat = "\n%s\n\nActual:   %+v\nExpected: %+v"
-
-	type Message struct {
-		Body string
-	}
-
-	type Person struct {
-		Name  string
-		Email string
-		ssn   string
-
-		Messages []Message
-	}
+	const errorMessageFormat = "\n%s\n\nACTUAL:\n%s\n\nEXPECTED:\n%s"
 
 	t.Run("when equal", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
-		ensure(Person{Name: "John", Email: "john@test"}).Equals(Person{Name: "John", Email: "john@test"})
+		ensure(ExamplePerson{Name: "John", Email: "john@test"}).Equals(ExamplePerson{Name: "John", Email: "john@test"})
 	})
 
 	t.Run("when unexported field is equal", func(t *testing.T) {
@@ -135,7 +125,7 @@ func TestChainEquals(t *testing.T) {
 		mockT.EXPECT().Helper()
 
 		ensure := ensure.New(mockT)
-		ensure(Person{Name: "John", Email: "john@test", ssn: "123456789"}).Equals(Person{Name: "John", Email: "john@test", ssn: "123456789"})
+		ensure(ExamplePerson{Name: "John", Email: "john@test", ssn: "123456789"}).Equals(ExamplePerson{Name: "John", Email: "john@test", ssn: "123456789"})
 	})
 
 	t.Run("when both are nil", func(t *testing.T) {
@@ -144,6 +134,14 @@ func TestChainEquals(t *testing.T) {
 
 		ensure := ensure.New(mockT)
 		ensure(nil).Equals(nil)
+	})
+
+	t.Run("when strings are equal", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Helper()
+
+		ensure := ensure.New(mockT)
+		ensure("abc").Equals("abc")
 	})
 
 	t.Run("when nil pointer equals nil", func(t *testing.T) {
@@ -190,99 +188,151 @@ func TestChainEquals(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Fatalf(errorMessageFormat,
 			"Actual does not equal expected:\n - Name: John != Sam",
-			Person{Name: "John", Email: "john@test"},
-			Person{Name: "Sam", Email: "john@test"},
+			ExamplePerson{Name: "John", Email: "john@test"}.ExpectedOutput(),
+			ExamplePerson{Name: "Sam", Email: "john@test"}.ExpectedOutput(),
 		).After(
 			mockT.EXPECT().Helper(),
 		)
 
 		ensure := ensure.New(mockT)
-		ensure(Person{Name: "John", Email: "john@test"}).Equals(Person{Name: "Sam", Email: "john@test"})
+		ensure(ExamplePerson{Name: "John", Email: "john@test"}).Equals(ExamplePerson{Name: "Sam", Email: "john@test"})
 	})
 
 	t.Run("when not equal: expected is nil", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Fatalf(errorMessageFormat,
 			"Actual does not equal expected:\n - {John john@test  []} != <nil pointer>",
-			Person{Name: "John", Email: "john@test"},
-			nil,
+			ExamplePerson{Name: "John", Email: "john@test"}.ExpectedOutput(),
+			"  nil",
 		).After(
 			mockT.EXPECT().Helper(),
 		)
 
 		ensure := ensure.New(mockT)
-		ensure(Person{Name: "John", Email: "john@test"}).Equals(nil)
+		ensure(ExamplePerson{Name: "John", Email: "john@test"}).Equals(nil)
 	})
 
 	t.Run("when not equal: actual is nil", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Fatalf(errorMessageFormat,
 			"Actual does not equal expected:\n - <nil pointer> != {John john@test  []}",
-			nil,
-			Person{Name: "John", Email: "john@test"},
+			"  nil",
+			ExamplePerson{Name: "John", Email: "john@test"}.ExpectedOutput(),
 		).After(
 			mockT.EXPECT().Helper(),
 		)
 
 		ensure := ensure.New(mockT)
-		ensure(nil).Equals(Person{Name: "John", Email: "john@test"})
+		ensure(nil).Equals(ExamplePerson{Name: "John", Email: "john@test"})
 	})
 
 	t.Run("when unexported field is not equal", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Fatalf(errorMessageFormat,
 			"Actual does not equal expected:\n - ssn: 123456789 != 123456780",
-			Person{Name: "John", Email: "john@test", ssn: "123456789"},
-			Person{Name: "John", Email: "john@test", ssn: "123456780"},
+			ExamplePerson{Name: "John", Email: "john@test", ssn: "123456789"}.ExpectedOutput(),
+			ExamplePerson{Name: "John", Email: "john@test", ssn: "123456780"}.ExpectedOutput(),
 		).After(
 			mockT.EXPECT().Helper(),
 		)
 
 		ensure := ensure.New(mockT)
-		ensure(Person{Name: "John", Email: "john@test", ssn: "123456789"}).Equals(Person{Name: "John", Email: "john@test", ssn: "123456780"})
+		ensure(ExamplePerson{Name: "John", Email: "john@test", ssn: "123456789"}).Equals(ExamplePerson{Name: "John", Email: "john@test", ssn: "123456780"})
 	})
 
 	t.Run("when two fields are not equal", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Fatalf(errorMessageFormat,
 			"Actual does not equal expected:\n - Name: John != Sam\n - Messages.slice[1].Body: Hello != Greetings",
-			Person{
+			ExamplePerson{
 				Name:  "John",
 				Email: "john@test",
-				Messages: []Message{
+				Messages: []ExampleMessage{
 					{Body: "Hi"},
 					{Body: "Hello"},
 				},
-			},
-			Person{
+			}.ExpectedOutput(),
+			ExamplePerson{
 				Name:  "Sam",
 				Email: "john@test",
-				Messages: []Message{
+				Messages: []ExampleMessage{
 					{Body: "Hi"},
 					{Body: "Greetings"},
 				},
-			},
+			}.ExpectedOutput(),
 		).After(
 			mockT.EXPECT().Helper(),
 		)
 
 		ensure := ensure.New(mockT)
-		ensure(Person{
+		ensure(ExamplePerson{
 			Name:  "John",
 			Email: "john@test",
-			Messages: []Message{
+			Messages: []ExampleMessage{
 				{Body: "Hi"},
 				{Body: "Hello"},
 			},
 		}).
-			Equals(Person{
+			Equals(ExamplePerson{
 				Name:  "Sam",
 				Email: "john@test",
-				Messages: []Message{
+				Messages: []ExampleMessage{
 					{Body: "Hi"},
 					{Body: "Greetings"},
 				},
 			})
+	})
+
+	t.Run("when strings not equal: expected empty string", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n - abc != ",
+			`  "abc"`,
+			"  (empty string)",
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("abc").Equals("")
+	})
+
+	t.Run("when strings not equal: actual empty string", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n -  != abc",
+			"  (empty string)",
+			`  "abc"`,
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("").Equals("abc")
+	})
+
+	t.Run("when strings not equal: expected contains double quotes, newlines, and tabs", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n - abc\n\"xyz\"\n\tqwerty != abc",
+			`  "abc\n\"xyz\"\n\tqwerty"`, // Formatted with quotes and escaped control characters
+			`  "abc"`,
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("abc\n\"xyz\"\n\tqwerty").Equals("abc")
+	})
+
+	t.Run("when strings not equal: actual contains double quotes, newlines, and tabs", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n - abc != abc\n\"xyz\"\n\tqwerty",
+			`  "abc"`,
+			`  "abc\n\"xyz\"\n\tqwerty"`, // Formatted with quotes and escaped control characters
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("abc").Equals("abc\n\"xyz\"\n\tqwerty")
 	})
 }
 
@@ -587,4 +637,20 @@ func (t TestError) Is(err error) bool {
 
 func (t TestError) Error() string {
 	return t.Message
+}
+
+type ExampleMessage struct {
+	Body string
+}
+
+type ExamplePerson struct {
+	Name  string
+	Email string
+	ssn   string
+
+	Messages []ExampleMessage
+}
+
+func (p ExamplePerson) ExpectedOutput() string {
+	return text.Indent(pretty.Sprint(p), "  ")
 }

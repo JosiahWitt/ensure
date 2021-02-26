@@ -4,9 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/JosiahWitt/erk"
 	"github.com/go-test/deep"
+	"github.com/kr/pretty"
+	"github.com/kr/text"
 )
 
 // IsTrue ensures the actual value is the boolean "true".
@@ -72,7 +75,7 @@ func (c *Chain) Equals(expected interface{}) {
 			errors += "\n - " + result
 		}
 
-		c.t.Fatalf("\n%s\n\nActual:   %+v\nExpected: %+v", errors, c.actual, expected)
+		c.t.Fatalf("\n%s\n\nACTUAL:\n%s\n\nEXPECTED:\n%s", errors, prettyFormat(c.actual), prettyFormat(expected))
 	}
 }
 
@@ -164,4 +167,24 @@ func isNil(value interface{}) bool {
 	reflection := reflect.ValueOf(value)
 	isNilPointer := reflection.Kind() == reflect.Ptr && reflection.IsNil()
 	return isNilPointer
+}
+
+func prettyFormat(value interface{}) string {
+	return text.Indent(prettyFormatValue(value), "  ")
+}
+
+func prettyFormatValue(value interface{}) string {
+	if str, ok := value.(string); ok {
+		return prettyFormatString(str)
+	}
+
+	return pretty.Sprint(value)
+}
+
+func prettyFormatString(str string) string {
+	if str == "" {
+		return "(empty string)"
+	}
+
+	return strconv.Quote(str)
 }
