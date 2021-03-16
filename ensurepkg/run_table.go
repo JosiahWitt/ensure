@@ -28,7 +28,7 @@ var (
 	errMocksEmbeddedNotStruct     = erk.New(erkTableInvalid{}, "Mocks.{{.mocksFieldName}} should be an embedded struct with no pointers, got {{type .mockEntry}}")
 	errMocksNEWMissing            = erk.New(erkTableInvalid{},
 		"\nMocks.{{.mocksFieldName}} is missing the NEW method. Expected:\n\tfunc ({{type .expectedReturn}}) NEW(*gomock.Controller) {{type .expectedReturn}}"+
-			"\nPlease ensure you generated the mocks using the `ensure generate mocks` command.",
+			"\nPlease ensure you generated the mocks using the `ensure mocks generate` command.",
 	)
 	errMocksNEWInvalidSignature = erk.New(erkTableInvalid{},
 		"\nMocks.{{.mocksFieldName}}.NEW has this method signature:\n\t{{type .actualMethod}}\nExpected:\n\tfunc(*gomock.Controller) {{type .expectedReturn}}",
@@ -124,7 +124,7 @@ func (e Ensure) RunTableByIndex(table interface{}, fn func(ensure Ensure, i int)
 		c.t.Logf(
 			"\n\n⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n\n"+
 				"WARNINGS:\n - %s\n\n"+
-				"These may or may not be the cause of a problem. If you recently changed an interface, make sure to rerun `ensure generate mocks`.\n\n"+
+				"These may or may not be the cause of a problem. If you recently changed an interface, make sure to rerun `ensure mocks generate`.\n\n"+
 				"⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n\n",
 
 			warnings,
