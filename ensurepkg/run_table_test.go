@@ -56,7 +56,7 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 					mockT.EXPECT().Logf(
 						"\n\n⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n\n"+
 							"WARNINGS:\n - %s\n\n"+
-							"These may or may not be the cause of a problem. If you recently changed an interface, make sure to rerun `ensure generate mocks`.\n\n"+
+							"These may or may not be the cause of a problem. If you recently changed an interface, make sure to rerun `ensure mocks generate`.\n\n"+
 							"⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n\n",
 
 						strings.Join(entry.ExpectedWarnings, "\n - "),
@@ -551,7 +551,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 			{
 				Name: "when missing NEW method",
 				ExpectedFatalMessage: "\nMocks.Invalid is missing the NEW method. Expected:\n\tfunc (*struct { Nothing bool }) NEW(*gomock.Controller) *struct { Nothing bool }" +
-					"\nPlease ensure you generated the mocks using the `ensure generate mocks` command.",
+					"\nPlease ensure you generated the mocks using the `ensure mocks generate` command.",
 				Table: []struct {
 					Name  string
 					Mocks *OneMockMissingNEWMethod
