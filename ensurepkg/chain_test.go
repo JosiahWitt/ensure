@@ -7,6 +7,7 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/erk"
+	"github.com/golang/mock/gomock"
 	"github.com/kr/pretty"
 	"github.com/kr/text"
 )
@@ -191,7 +192,13 @@ func TestChainEquals(t *testing.T) {
 
 	t.Run("when nil map equals empty map", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
+		mockT.EXPECT().Fatalf(errorMessageFormat,
+			"Actual does not equal expected:\n - <nil map> != map[]",
+			"  map[string]string{}",
+			"  map[string]string{}",
+		).After(
+			mockT.EXPECT().Helper(),
+		)
 
 		var nilMap map[string]string
 
@@ -201,12 +208,18 @@ func TestChainEquals(t *testing.T) {
 
 	t.Run("when nil slice equals empty slice", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
+		mockT.EXPECT().Fatalf(errorMessageFormat,
+			"Actual does not equal expected:\n - <nil slice> != []",
+			"  []string(nil)",
+			"  []string{}",
+		).After(
+			mockT.EXPECT().Helper(),
+		)
 
-		var nilMap []string
+		var nilSlice []string
 
 		ensure := ensure.New(mockT)
-		ensure(nilMap).Equals([]string{})
+		ensure(nilSlice).Equals([]string{})
 	})
 
 	t.Run("when nil array equals empty array", func(t *testing.T) {
@@ -832,6 +845,72 @@ func testContainsChain(t *testing.T, run func(t *testing.T, doesContain bool, ac
 			run(t, entry.DoesContain, entry.Actual, entry.Expected, entry.FormattedActual, entry.FormattedExpected)
 		})
 	}
+}
+
+func TestChainMatchesRegexp(t *testing.T) {
+	t.Run("with valid complete match", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Helper()
+
+		ensure := ensure.New(mockT)
+		ensure("hello 123 world").MatchesRegexp("^hello [1-3]+ world$")
+	})
+
+	t.Run("with valid partial match", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Helper()
+
+		ensure := ensure.New(mockT)
+		ensure("hello 123 world").MatchesRegexp("[1-3]+")
+	})
+
+	t.Run("with no match", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		mockT.EXPECT().Fatalf(
+			"Actual does not match regular expression:\n\nACTUAL:\n%s\n\nEXPECTED TO MATCH:\n%s",
+			`  "hello 1-3 world"`,      // Indented
+			`  "^hello [1-3]+ world$"`, // Indented
+		).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("hello 1-3 world").MatchesRegexp("^hello [1-3]+ world$")
+	})
+
+	t.Run("when pattern is empty", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		mockT.EXPECT().Fatalf("Cannot match against an empty pattern").After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("hello").MatchesRegexp("")
+	})
+
+	t.Run("when actual is not a string", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		mockT.EXPECT().Fatalf("Actual is not a string, it's a %T", 123).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(123).MatchesRegexp("hello")
+	})
+
+	t.Run("when regular expression is invalid", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		mockT.EXPECT().Fatalf("Unable to compile regular expression: %s\nERROR: %v", "[", gomock.Any()).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("hello").MatchesRegexp("[") // Missing closing ]
+	})
 }
 
 type TestError struct {

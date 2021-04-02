@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -77,8 +78,8 @@ func (c *Chain) Equals(expected interface{}) {
 	}
 
 	deep.CompareUnexportedFields = true
-	deep.NilMapsAreEmpty = true
-	deep.NilSlicesAreEmpty = true
+	deep.NilMapsAreEmpty = false
+	deep.NilSlicesAreEmpty = false
 	results := deep.Equal(c.actual, expected)
 	if len(results) > 0 {
 		errors := "Actual does not equal expected:"
@@ -208,6 +209,39 @@ func (c *Chain) DoesNotContain(expected interface{}) {
 			"Actual contains expected, but did not expect it to:\n\nACTUAL:\n%s\n\nEXPECTED NOT TO CONTAIN:\n%s",
 			prettyFormat(c.actual),
 			prettyFormat(expected),
+		)
+	}
+}
+
+// MatchesRegexp ensures that the actual value matches the regular expression pattern provided.
+// It only supports strings as actual values.
+func (c *Chain) MatchesRegexp(pattern string) {
+	c.t.Helper()
+	c.markRun()
+
+	if pattern == "" {
+		c.t.Fatalf("Cannot match against an empty pattern")
+		return
+	}
+
+	actualStr, ok := c.actual.(string)
+	if !ok {
+		c.t.Fatalf("Actual is not a string, it's a %T", c.actual)
+		return
+	}
+
+	patternRegexp, err := regexp.Compile(pattern)
+	if err != nil {
+		c.t.Fatalf("Unable to compile regular expression: %s\nERROR: %v", pattern, err)
+		return
+	}
+
+	isMatch := patternRegexp.MatchString(actualStr)
+	if !isMatch {
+		c.t.Fatalf(
+			"Actual does not match regular expression:\n\nACTUAL:\n%s\n\nEXPECTED TO MATCH:\n%s",
+			prettyFormat(c.actual),
+			prettyFormat(pattern),
 		)
 	}
 }
