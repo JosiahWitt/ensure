@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/JosiahWitt/erk"
 	"github.com/go-test/deep"
@@ -51,6 +52,16 @@ func (c *Chain) IsNil() {
 
 	if !isNil(c.actual) {
 		c.t.Fatalf("Got %+v, expected nil", c.actual)
+	}
+}
+
+// IsNotNil ensures the actual value is not nil and not a nil pointer.
+func (c *Chain) IsNotNil() {
+	c.t.Helper()
+	c.markRun()
+
+	if isNil(c.actual) {
+		c.t.Fatalf("Got nil of type %T, expected it not to be nil", c.actual)
 	}
 }
 
@@ -115,15 +126,89 @@ func (c *Chain) IsEmpty() {
 	c.t.Helper()
 	c.markRun()
 
-	actualReflect := reflect.ValueOf(c.actual)
-	actualReflectKind := actualReflect.Kind()
-	if actualReflectKind != reflect.Array && actualReflectKind != reflect.Slice && actualReflectKind != reflect.String && actualReflectKind != reflect.Map {
-		c.t.Fatalf("Got type %T, expected array, slice, string, or map", c.actual)
+	length, err := lengthOf(c.actual)
+	if err != nil {
+		c.t.Fatalf(err.Error())
 		return
 	}
 
-	if actualReflect.Len() > 0 {
-		c.t.Fatalf("Got %+v with length %d, expected it to be empty", c.actual, actualReflect.Len())
+	if length > 0 {
+		c.t.Fatalf("Got %+v with length %d, expected it to be empty", c.actual, length)
+	}
+}
+
+// IsNotEmpty ensures that the actual value is not empty.
+// It only supports arrays, slices, strings, or maps.
+func (c *Chain) IsNotEmpty() {
+	c.t.Helper()
+	c.markRun()
+
+	length, err := lengthOf(c.actual)
+	if err != nil {
+		c.t.Fatalf(err.Error())
+		return
+	}
+
+	if length == 0 {
+		c.t.Fatalf("Got %+v, expected it to not be empty", c.actual)
+	}
+}
+
+// Contains ensures that the actual value contains the expected value.
+// It only supports searching strings, arrays, or slices for the expected value.
+// If both the actual and expected are strings, strings.Contains(...) is used.
+//
+// For example:
+//  ensure("abc").Contains("b") // Succeeds
+//  ensure("abc").Contains("z") // Fails
+//
+//  ensure([]string{"abc", "xyz"}).Contains("xyz") // Succeeds
+//  ensure([]string{"abc", "xyz"}).Contains("y") // Fails
+func (c *Chain) Contains(expected interface{}) {
+	c.t.Helper()
+	c.markRun()
+
+	doesContain, err := contains(c.actual, expected)
+	if err != nil {
+		c.t.Fatalf(err.Error())
+		return
+	}
+
+	if !doesContain {
+		c.t.Fatalf(
+			"Actual does not contain expected:\n\nACTUAL:\n%s\n\nEXPECTED TO CONTAIN:\n%s",
+			prettyFormat(c.actual),
+			prettyFormat(expected),
+		)
+	}
+}
+
+// DoesNotContain ensures that the actual value does not contain the expected value.
+// It only supports verifying that strings, arrays, or slices do not contain the expected value.
+// If both the actual and expected are strings, strings.Contains(...) is used.
+//
+// For example:
+//  ensure("abc").DoesNotContain("b") // Fails
+//  ensure("abc").DoesNotContain("z") // Succeeds
+//
+//  ensure([]string{"abc", "xyz"}).DoesNotContain("xyz") // Fails
+//  ensure([]string{"abc", "xyz"}).DoesNotContain("y") // Succeeds
+func (c *Chain) DoesNotContain(expected interface{}) {
+	c.t.Helper()
+	c.markRun()
+
+	doesContain, err := contains(c.actual, expected)
+	if err != nil {
+		c.t.Fatalf(err.Error())
+		return
+	}
+
+	if doesContain {
+		c.t.Fatalf(
+			"Actual contains expected, but did not expect it to:\n\nACTUAL:\n%s\n\nEXPECTED NOT TO CONTAIN:\n%s",
+			prettyFormat(c.actual),
+			prettyFormat(expected),
+		)
 	}
 }
 
@@ -167,6 +252,42 @@ func isNil(value interface{}) bool {
 	reflection := reflect.ValueOf(value)
 	isNilPointer := reflection.Kind() == reflect.Ptr && reflection.IsNil()
 	return isNilPointer
+}
+
+func lengthOf(value interface{}) (int, error) {
+	reflectValue := reflect.ValueOf(value)
+	reflectKind := reflectValue.Kind()
+	if reflectKind != reflect.Array && reflectKind != reflect.Slice && reflectKind != reflect.String && reflectKind != reflect.Map {
+		return 0, fmt.Errorf("Got type %T, expected array, slice, string, or map", value) //nolint:goerr113,stylecheck // Only used internally
+	}
+
+	return reflectValue.Len(), nil
+}
+
+func contains(items, value interface{}) (bool, error) {
+	if str, strOk := items.(string); strOk {
+		substr, substrOk := value.(string)
+		if !substrOk {
+			return false, fmt.Errorf("Got string, but expected is a %T, and a string can only contain other strings", value) //nolint:goerr113,stylecheck,lll // Only used internally
+		}
+
+		return strings.Contains(str, substr), nil
+	}
+
+	itemsReflectValue := reflect.ValueOf(items)
+	itemsReflectKind := itemsReflectValue.Kind()
+	if itemsReflectKind != reflect.Array && itemsReflectKind != reflect.Slice {
+		return false, fmt.Errorf("Got type %T, expected string, array, or slice", value) //nolint:goerr113,stylecheck // Only used internally
+	}
+
+	for i := 0; i < itemsReflectValue.Len(); i++ {
+		item := itemsReflectValue.Index(i)
+		if reflect.DeepEqual(item.Interface(), value) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func prettyFormat(value interface{}) string {
