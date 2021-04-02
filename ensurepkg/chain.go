@@ -77,8 +77,8 @@ func (c *Chain) Equals(expected interface{}) {
 	}
 
 	deep.CompareUnexportedFields = true
-	deep.NilMapsAreEmpty = true
-	deep.NilSlicesAreEmpty = true
+	deep.NilMapsAreEmpty = false
+	deep.NilSlicesAreEmpty = false
 	results := deep.Equal(c.actual, expected)
 	if len(results) > 0 {
 		errors := "Actual does not equal expected:"

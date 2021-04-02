@@ -191,7 +191,13 @@ func TestChainEquals(t *testing.T) {
 
 	t.Run("when nil map equals empty map", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
+		mockT.EXPECT().Fatalf(errorMessageFormat,
+			"Actual does not equal expected:\n - <nil map> != map[]",
+			"  map[string]string{}",
+			"  map[string]string{}",
+		).After(
+			mockT.EXPECT().Helper(),
+		)
 
 		var nilMap map[string]string
 
@@ -201,12 +207,18 @@ func TestChainEquals(t *testing.T) {
 
 	t.Run("when nil slice equals empty slice", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
+		mockT.EXPECT().Fatalf(errorMessageFormat,
+			"Actual does not equal expected:\n - <nil slice> != []",
+			"  []string(nil)",
+			"  []string{}",
+		).After(
+			mockT.EXPECT().Helper(),
+		)
 
-		var nilMap []string
+		var nilSlice []string
 
 		ensure := ensure.New(mockT)
-		ensure(nilMap).Equals([]string{})
+		ensure(nilSlice).Equals([]string{})
 	})
 
 	t.Run("when nil array equals empty array", func(t *testing.T) {
