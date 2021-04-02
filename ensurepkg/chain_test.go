@@ -567,94 +567,117 @@ func TestChainIsNotError(t *testing.T) {
 }
 
 func TestChainIsEmpty(t *testing.T) {
-	const notEmptyFormat = "Got %+v with length %d, expected it to be empty"
-
-	t.Run("when empty: array", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
-
-		ensure := ensure.New(mockT)
-		ensure([0]string{}).IsEmpty()
-	})
-
-	t.Run("when not empty: array", func(t *testing.T) {
+	testEmptyChain(t, func(t *testing.T, valueLength int, value interface{}) {
 		mockT := setupMockTWithCleanupCheck(t)
 
-		mockT.EXPECT().Fatalf(notEmptyFormat, [2]string{"1", "2"}, 2).After(
-			mockT.EXPECT().Helper(),
-		)
+		if valueLength == 0 {
+			mockT.EXPECT().Helper()
+		} else {
+			mockT.EXPECT().Fatalf("Got %+v with length %d, expected it to be empty", value, valueLength).After(
+				mockT.EXPECT().Helper(),
+			)
+		}
 
 		ensure := ensure.New(mockT)
-		ensure([2]string{"1", "2"}).IsEmpty()
-	})
-
-	t.Run("when empty: slice", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
-
-		ensure := ensure.New(mockT)
-		ensure([]string{}).IsEmpty()
-	})
-
-	t.Run("when not empty: slice", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		mockT.EXPECT().Fatalf(notEmptyFormat, []string{"1"}, 1).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure([]string{"1"}).IsEmpty()
-	})
-
-	t.Run("when empty: string", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
-
-		ensure := ensure.New(mockT)
-		ensure("").IsEmpty()
-	})
-
-	t.Run("when not empty: string", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		mockT.EXPECT().Fatalf(notEmptyFormat, "not empty", 9).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure("not empty").IsEmpty()
-	})
-
-	t.Run("when empty: map", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
-
-		ensure := ensure.New(mockT)
-		ensure(map[string]string{}).IsEmpty()
-	})
-
-	t.Run("when not empty: map", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		mockT.EXPECT().Fatalf(notEmptyFormat, map[string]string{"hello": "world"}, 1).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure(map[string]string{"hello": "world"}).IsEmpty()
+		ensure(value).IsEmpty()
 	})
 
 	t.Run("when not valid type", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 
-		mockT.EXPECT().Fatalf("Got type %T, expected array, slice, string, or map", 1234).After(
+		mockT.EXPECT().Fatalf("Got type int, expected array, slice, string, or map").After(
 			mockT.EXPECT().Helper(),
 		)
 
 		ensure := ensure.New(mockT)
 		ensure(1234).IsEmpty()
 	})
+}
+
+func TestChainIsNotEmpty(t *testing.T) {
+	testEmptyChain(t, func(t *testing.T, valueLength int, value interface{}) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		if valueLength == 0 {
+			mockT.EXPECT().Fatalf("Got %+v, expected it to not be empty", value).After(
+				mockT.EXPECT().Helper(),
+			)
+		} else {
+			mockT.EXPECT().Helper()
+		}
+
+		ensure := ensure.New(mockT)
+		ensure(value).IsNotEmpty()
+	})
+
+	t.Run("when not valid type", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		mockT.EXPECT().Fatalf("Got type int, expected array, slice, string, or map").After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(1234).IsNotEmpty()
+	})
+}
+
+//nolint:thelper // Not a test helper, since that would lose valuable failure context
+func testEmptyChain(t *testing.T, run func(t *testing.T, valueLength int, value interface{})) {
+	table := []struct {
+		Name        string
+		ValueLength int
+		Value       interface{}
+	}{
+		{
+			Name:        "when empty: array",
+			ValueLength: 0,
+			Value:       [0]string{},
+		},
+		{
+			Name:        "when not empty: array",
+			ValueLength: 2,
+			Value:       [2]string{"1", "2"},
+		},
+		{
+			Name:        "when empty: slice",
+			ValueLength: 0,
+			Value:       []string{},
+		},
+		{
+			Name:        "when not empty: slice",
+			ValueLength: 1,
+			Value:       []string{"1"},
+		},
+		{
+			Name:        "when empty: string",
+			ValueLength: 0,
+			Value:       "",
+		},
+		{
+			Name:        "when not empty: string",
+			ValueLength: len("not empty"),
+			Value:       "not empty",
+		},
+		{
+			Name:        "when empty: map",
+			ValueLength: 0,
+			Value:       map[string]string{},
+		},
+		{
+			Name:        "when not empty: map",
+			ValueLength: 1,
+			Value:       map[string]string{"hello": "world"},
+		},
+	}
+
+	for _, entry := range table {
+		entry := entry // Pin range variable
+
+		t.Run(entry.Name, func(t *testing.T) {
+			run(t, entry.ValueLength, entry.Value)
+		})
+	}
 }
 
 type TestError struct {

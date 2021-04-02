@@ -125,15 +125,31 @@ func (c *Chain) IsEmpty() {
 	c.t.Helper()
 	c.markRun()
 
-	actualReflect := reflect.ValueOf(c.actual)
-	actualReflectKind := actualReflect.Kind()
-	if actualReflectKind != reflect.Array && actualReflectKind != reflect.Slice && actualReflectKind != reflect.String && actualReflectKind != reflect.Map {
-		c.t.Fatalf("Got type %T, expected array, slice, string, or map", c.actual)
+	length, err := lengthOf(c.actual)
+	if err != nil {
+		c.t.Fatalf(err.Error())
 		return
 	}
 
-	if actualReflect.Len() > 0 {
-		c.t.Fatalf("Got %+v with length %d, expected it to be empty", c.actual, actualReflect.Len())
+	if length > 0 {
+		c.t.Fatalf("Got %+v with length %d, expected it to be empty", c.actual, length)
+	}
+}
+
+// IsNotEmpty ensures that the actual value is not empty.
+// It only supports arrays, slices, strings, or maps.
+func (c *Chain) IsNotEmpty() {
+	c.t.Helper()
+	c.markRun()
+
+	length, err := lengthOf(c.actual)
+	if err != nil {
+		c.t.Fatalf(err.Error())
+		return
+	}
+
+	if length == 0 {
+		c.t.Fatalf("Got %+v, expected it to not be empty", c.actual)
 	}
 }
 
@@ -177,6 +193,16 @@ func isNil(value interface{}) bool {
 	reflection := reflect.ValueOf(value)
 	isNilPointer := reflection.Kind() == reflect.Ptr && reflection.IsNil()
 	return isNilPointer
+}
+
+func lengthOf(value interface{}) (int, error) {
+	reflectValue := reflect.ValueOf(value)
+	reflectKind := reflectValue.Kind()
+	if reflectKind != reflect.Array && reflectKind != reflect.Slice && reflectKind != reflect.String && reflectKind != reflect.Map {
+		return 0, fmt.Errorf("Got type %T, expected array, slice, string, or map", value) //nolint:goerr113,stylecheck // Only used internally
+	}
+
+	return reflectValue.Len(), nil
 }
 
 func prettyFormat(value interface{}) string {
