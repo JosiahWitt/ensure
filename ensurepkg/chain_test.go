@@ -109,6 +109,41 @@ func TestChainIsNil(t *testing.T) {
 	})
 }
 
+func TestChainIsNotNil(t *testing.T) {
+	t.Run("when not nil", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Helper()
+
+		const val = "not nil"
+		ensure := ensure.New(mockT)
+		ensure(val).IsNotNil()
+	})
+
+	t.Run("when nil", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		mockT.EXPECT().Fatalf("Got nil of type %T, expected it not to be nil", nil).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(nil).IsNotNil()
+	})
+
+	t.Run("when nil pointer", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		var nilPtr *string
+
+		mockT.EXPECT().Fatalf("Got nil of type %T, expected it not to be nil", nilPtr).After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(nilPtr).IsNotNil()
+	})
+}
+
 func TestChainEquals(t *testing.T) {
 	const errorMessageFormat = "\n%s\n\nACTUAL:\n%s\n\nEXPECTED:\n%s"
 

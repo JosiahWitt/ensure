@@ -54,6 +54,16 @@ func (c *Chain) IsNil() {
 	}
 }
 
+// IsNotNil ensures the actual value is not nil and not a nil pointer.
+func (c *Chain) IsNotNil() {
+	c.t.Helper()
+	c.markRun()
+
+	if isNil(c.actual) {
+		c.t.Fatalf("Got nil of type %T, expected it not to be nil", c.actual)
+	}
+}
+
 // Equals ensures the actual value equals the expected value.
 // Equals uses deep.Equal to print easy to read diffs.
 func (c *Chain) Equals(expected interface{}) {
