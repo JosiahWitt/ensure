@@ -680,6 +680,160 @@ func testEmptyChain(t *testing.T, run func(t *testing.T, valueLength int, value 
 	}
 }
 
+func TestChainContains(t *testing.T) {
+	testContainsChain(t, func(t *testing.T, doesContain bool, actual, expected interface{}, formattedActual, formattedExpected string) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		if doesContain {
+			mockT.EXPECT().Helper()
+		} else {
+			mockT.EXPECT().Fatalf("Actual does not contain expected:\n\nACTUAL:\n%s\n\nEXPECTED TO CONTAIN:\n%s", formattedActual, formattedExpected).After(
+				mockT.EXPECT().Helper(),
+			)
+		}
+
+		ensure := ensure.New(mockT)
+		ensure(actual).Contains(expected)
+	})
+
+	t.Run("when not valid type", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		mockT.EXPECT().Fatalf("Got type int, expected string, array, or slice").After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(1234).Contains(2)
+	})
+
+	t.Run("when string is expected to contain a non-string type", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		mockT.EXPECT().Fatalf("Got string, but expected is a int, and a string can only contain other strings").After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("hello").DoesNotContain(123)
+	})
+}
+
+func TestChainDoesNotContain(t *testing.T) {
+	testContainsChain(t, func(t *testing.T, doesContain bool, actual, expected interface{}, formattedActual, formattedExpected string) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		if doesContain {
+			mockT.EXPECT().Fatalf("Actual contains expected, but did not expect it to:\n\nACTUAL:\n%s\n\nEXPECTED NOT TO CONTAIN:\n%s", formattedActual, formattedExpected).After(
+				mockT.EXPECT().Helper(),
+			)
+		} else {
+			mockT.EXPECT().Helper()
+		}
+
+		ensure := ensure.New(mockT)
+		ensure(actual).DoesNotContain(expected)
+	})
+
+	t.Run("when not valid type", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		mockT.EXPECT().Fatalf("Got type int, expected string, array, or slice").After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure(1234).DoesNotContain(2)
+	})
+
+	t.Run("when string is expected to not contain a non-string type", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+
+		mockT.EXPECT().Fatalf("Got string, but expected is a int, and a string can only contain other strings").After(
+			mockT.EXPECT().Helper(),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure("hello").DoesNotContain(123)
+	})
+}
+
+//nolint:thelper // Not a test helper, since that would lose valuable failure context
+func testContainsChain(t *testing.T, run func(t *testing.T, doesContain bool, actual, expected interface{}, formattedActual, formattedExpected string)) {
+	table := []struct {
+		Name        string
+		Actual      interface{}
+		Expected    interface{}
+		DoesContain bool
+
+		FormattedActual   string
+		FormattedExpected string
+	}{
+		{
+			Name:        "when contains: string",
+			Actual:      "hello",
+			Expected:    "ell",
+			DoesContain: true,
+
+			FormattedActual:   `  "hello"`, // Indented
+			FormattedExpected: `  "ell"`,   // Indented
+		},
+		{
+			Name:        "when does not contain: string",
+			Actual:      "hello",
+			Expected:    "zzz",
+			DoesContain: false,
+
+			FormattedActual:   `  "hello"`, // Indented
+			FormattedExpected: `  "zzz"`,   // Indented
+		},
+		{
+			Name:        "when contains: array",
+			Actual:      [2]string{"abc", "xyz"},
+			Expected:    "xyz",
+			DoesContain: true,
+
+			FormattedActual:   `  [2]string{"abc", "xyz"}`, // Indented
+			FormattedExpected: `  "xyz"`,                   // Indented
+		},
+		{
+			Name:        "when does not contain: array",
+			Actual:      [2]string{"abc", "xyz"},
+			Expected:    "qwerty",
+			DoesContain: false,
+
+			FormattedActual:   `  [2]string{"abc", "xyz"}`, // Indented
+			FormattedExpected: `  "qwerty"`,                // Indented
+		},
+		{
+			Name:        "when contains: slice",
+			Actual:      []int{123, 456},
+			Expected:    123,
+			DoesContain: true,
+
+			FormattedActual:   `  []int{123, 456}`, // Indented
+			FormattedExpected: `  int(123)`,        // Indented
+		},
+		{
+			Name:        "when does not contain: slice",
+			Actual:      []int{123, 456},
+			Expected:    789,
+			DoesContain: false,
+
+			FormattedActual:   `  []int{123, 456}`, // Indented
+			FormattedExpected: `  int(789)`,        // Indented
+		},
+	}
+
+	for _, entry := range table {
+		entry := entry // Pin range variable
+
+		t.Run(entry.Name, func(t *testing.T) {
+			run(t, entry.DoesContain, entry.Actual, entry.Expected, entry.FormattedActual, entry.FormattedExpected)
+		})
+	}
+}
+
 type TestError struct {
 	Message string
 }

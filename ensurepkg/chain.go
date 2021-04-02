@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/JosiahWitt/erk"
 	"github.com/go-test/deep"
@@ -153,6 +154,64 @@ func (c *Chain) IsNotEmpty() {
 	}
 }
 
+// Contains ensures that the actual value contains the expected value.
+// It only supports searching strings, arrays, or slices for the expected value.
+// If both the actual and expected are strings, strings.Contains(...) is used.
+//
+// For example:
+//  ensure("abc").Contains("b") // Succeeds
+//  ensure("abc").Contains("z") // Fails
+//
+//  ensure([]string{"abc", "xyz"}).Contains("xyz") // Succeeds
+//  ensure([]string{"abc", "xyz"}).Contains("y") // Fails
+func (c *Chain) Contains(expected interface{}) {
+	c.t.Helper()
+	c.markRun()
+
+	doesContain, err := contains(c.actual, expected)
+	if err != nil {
+		c.t.Fatalf(err.Error())
+		return
+	}
+
+	if !doesContain {
+		c.t.Fatalf(
+			"Actual does not contain expected:\n\nACTUAL:\n%s\n\nEXPECTED TO CONTAIN:\n%s",
+			prettyFormat(c.actual),
+			prettyFormat(expected),
+		)
+	}
+}
+
+// DoesNotContain ensures that the actual value does not contain the expected value.
+// It only supports verifying that strings, arrays, or slices do not contain the expected value.
+// If both the actual and expected are strings, strings.Contains(...) is used.
+//
+// For example:
+//  ensure("abc").DoesNotContain("b") // Fails
+//  ensure("abc").DoesNotContain("z") // Succeeds
+//
+//  ensure([]string{"abc", "xyz"}).DoesNotContain("xyz") // Fails
+//  ensure([]string{"abc", "xyz"}).DoesNotContain("y") // Succeeds
+func (c *Chain) DoesNotContain(expected interface{}) {
+	c.t.Helper()
+	c.markRun()
+
+	doesContain, err := contains(c.actual, expected)
+	if err != nil {
+		c.t.Fatalf(err.Error())
+		return
+	}
+
+	if doesContain {
+		c.t.Fatalf(
+			"Actual contains expected, but did not expect it to:\n\nACTUAL:\n%s\n\nEXPECTED NOT TO CONTAIN:\n%s",
+			prettyFormat(c.actual),
+			prettyFormat(expected),
+		)
+	}
+}
+
 func (c *Chain) markRun() {
 	c.wasRun = true
 }
@@ -203,6 +262,32 @@ func lengthOf(value interface{}) (int, error) {
 	}
 
 	return reflectValue.Len(), nil
+}
+
+func contains(items, value interface{}) (bool, error) {
+	if str, strOk := items.(string); strOk {
+		substr, substrOk := value.(string)
+		if !substrOk {
+			return false, fmt.Errorf("Got string, but expected is a %T, and a string can only contain other strings", value) //nolint:goerr113,stylecheck,lll // Only used internally
+		}
+
+		return strings.Contains(str, substr), nil
+	}
+
+	itemsReflectValue := reflect.ValueOf(items)
+	itemsReflectKind := itemsReflectValue.Kind()
+	if itemsReflectKind != reflect.Array && itemsReflectKind != reflect.Slice {
+		return false, fmt.Errorf("Got type %T, expected string, array, or slice", value) //nolint:goerr113,stylecheck // Only used internally
+	}
+
+	for i := 0; i < itemsReflectValue.Len(); i++ {
+		item := itemsReflectValue.Index(i)
+		if reflect.DeepEqual(item.Interface(), value) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func prettyFormat(value interface{}) string {
