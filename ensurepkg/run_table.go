@@ -324,8 +324,9 @@ func (entry *tableEntry) prepareMock(mockFieldName string, mockEntry reflect.Val
 		})
 	}
 
-	// NEW signature should be:
+	// NEW signature should be one of:
 	//  func (m *MockXYZ) NEW(ctrl *gomock.Controller) *MockXYZ { ... }
+	//  func (m *MockXYZ) NEW() *MockXYZ { ... }
 	newMethodType := newMethod.Type()
 	controllerType := reflect.TypeOf(&gomock.Controller{})
 	isInvalidParam := newMethodType.NumIn() > 1 || (newMethodType.NumIn() == 1 && newMethodType.In(0) != controllerType)
