@@ -1,14 +1,12 @@
 package ensurepkg
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/JosiahWitt/erk"
 	"github.com/go-test/deep"
 	"github.com/kr/pretty"
 	"github.com/kr/text"
@@ -89,36 +87,6 @@ func (c *Chain) Equals(expected interface{}) {
 
 		c.t.Fatalf("\n%s\n\nACTUAL:\n%s\n\nEXPECTED:\n%s", errors, prettyFormat(c.actual), prettyFormat(expected))
 	}
-}
-
-// IsError ensures the actual value equals the expected error.
-// IsError uses errors.Is to support Go 1.13+ error comparisons.
-func (c *Chain) IsError(expected error) {
-	c.t.Helper()
-	c.markRun()
-
-	if c.actual == nil && expected == nil {
-		return
-	}
-
-	actual, ok := c.actual.(error)
-	if !ok && c.actual != nil {
-		c.t.Fatalf("Got type %T, expected error: \"%v\"", c.actual, expected)
-		return
-	}
-
-	if !errors.Is(actual, expected) {
-		actualOutput := buildActualErrorOutput(actual)
-		expectedOutput := buildExpectedErrorOutput(expected)
-		c.t.Fatalf("\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s", actualOutput, expectedOutput)
-	}
-}
-
-// IsNotError ensures that the actual value is nil.
-// It is analogous to IsError(nil).
-func (c *Chain) IsNotError() {
-	c.t.Helper()
-	c.IsError(nil)
 }
 
 // IsEmpty ensures that the actual value is empty.
@@ -248,34 +216,6 @@ func (c *Chain) MatchesRegexp(pattern string) {
 
 func (c *Chain) markRun() {
 	c.wasRun = true
-}
-
-func buildActualErrorOutput(actual error) string {
-	actualErk, isActualErk := actual.(erk.Erkable) //nolint:errorlint // Want to output the top level error
-	if !isActualErk {
-		return fmt.Sprintf("%v", actual)
-	}
-
-	return fmt.Sprintf(
-		"{KIND: \"%s\", MESSAGE: \"%s\", PARAMS: %+v}",
-		erk.GetKindString(actualErk),
-		actualErk.Error(),
-		actualErk.Params(),
-	)
-}
-
-func buildExpectedErrorOutput(expected error) string {
-	expectedErk, isExpectedErk := expected.(erk.Erkable) //nolint:errorlint // Want to output the top level error
-	if !isExpectedErk {
-		return fmt.Sprintf("%v", expected)
-	}
-
-	return fmt.Sprintf(
-		"{KIND: \"%s\", RAW MESSAGE: \"%s\", PARAMS: %+v}",
-		erk.GetKindString(expectedErk),
-		expectedErk.ExportRawMessage(),
-		expectedErk.Params(),
-	)
 }
 
 func isNil(value interface{}) bool {
