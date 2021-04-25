@@ -1,12 +1,9 @@
 package ensurepkg_test
 
 import (
-	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/erk"
 	"github.com/golang/mock/gomock"
 	"github.com/kr/pretty"
 	"github.com/kr/text"
@@ -384,201 +381,6 @@ func TestChainEquals(t *testing.T) {
 	})
 }
 
-func TestChainIsError(t *testing.T) {
-	const errorFormat = "\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s"
-
-	t.Run("when equal error by reference", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
-
-		err := errors.New("my error")
-
-		ensure := ensure.New(mockT)
-		ensure(err).IsError(err)
-	})
-
-	t.Run("when equal error by Is method", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
-
-		const errMsg = "my error"
-
-		ensure := ensure.New(mockT)
-		ensure(TestError{Message: errMsg}).IsError(TestError{Message: errMsg})
-	})
-
-	t.Run("when both are nil", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
-
-		ensure := ensure.New(mockT)
-		ensure(nil).IsError(nil)
-	})
-
-	t.Run("when not error type", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		err := errors.New("my error")
-		const val = "not an error"
-		mockT.EXPECT().Fatalf("Got type %T, expected error: \"%v\"", val, err).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure(val).IsError(err)
-	})
-
-	t.Run("when not equal: two different errors by reference", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		err1 := errors.New("my error")
-		err2 := errors.New("my error")
-
-		mockT.EXPECT().Fatalf(errorFormat, err1.Error(), err2.Error()).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure(err1).IsError(err2)
-	})
-
-	t.Run("when not equal: two different errors by Is method", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		err1 := TestError{Message: "error message 1"}
-		err2 := TestError{Message: "error message 2"}
-		mockT.EXPECT().Fatalf(errorFormat, err1.Error(), err2.Error()).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure(err1).IsError(err2)
-	})
-
-	t.Run("when not equal: expected nil", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		err := errors.New("my error")
-		mockT.EXPECT().Fatalf(errorFormat, err.Error(), "<nil>").After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure(err).IsError(nil)
-	})
-
-	t.Run("when not equal: got nil", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		err := errors.New("my error")
-		mockT.EXPECT().Fatalf(errorFormat, "<nil>", err.Error()).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure(nil).IsError(err)
-	})
-
-	t.Run("when not equal: erk errors: different kinds", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		type kind1 struct{ erk.DefaultKind }
-		type kind2 struct{ erk.DefaultKind }
-
-		expectedError := erk.New(kind1{}, "expected {{.a}}")
-		actualError := erk.NewWith(kind2{}, "actual {{.a}}", erk.Params{"a": "hi"})
-		mockT.EXPECT().Fatalf(
-			errorFormat,
-			fmt.Sprintf("{KIND: \"%s\", MESSAGE: \"actual hi\", PARAMS: map[a:hi]}", erk.GetKindString(actualError)),
-			fmt.Sprintf("{KIND: \"%s\", RAW MESSAGE: \"expected {{.a}}\", PARAMS: map[]}", erk.GetKindString(expectedError)),
-		).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure(actualError).IsError(expectedError)
-	})
-
-	t.Run("when not equal: erk errors: same kind", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		type kind1 struct{ erk.DefaultKind }
-
-		expectedError := erk.New(kind1{}, "expected {{.a}}")
-		actualError := erk.NewWith(kind1{}, "actual {{.a}}", erk.Params{"a": "hi"})
-		mockT.EXPECT().Fatalf(
-			errorFormat,
-			fmt.Sprintf("{KIND: \"%s\", MESSAGE: \"actual hi\", PARAMS: map[a:hi]}", erk.GetKindString(actualError)),
-			fmt.Sprintf("{KIND: \"%s\", RAW MESSAGE: \"expected {{.a}}\", PARAMS: map[]}", erk.GetKindString(expectedError)),
-		).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure(actualError).IsError(expectedError)
-	})
-
-	t.Run("when not equal: erk errors: only expected is erk error", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		type kind1 struct{ erk.DefaultKind }
-
-		expectedError := erk.New(kind1{}, "expected {{.a}}")
-		actualError := errors.New("actual")
-		mockT.EXPECT().Fatalf(
-			errorFormat,
-			actualError.Error(),
-			fmt.Sprintf("{KIND: \"%s\", RAW MESSAGE: \"expected {{.a}}\", PARAMS: map[]}", erk.GetKindString(expectedError)),
-		).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure(actualError).IsError(expectedError)
-	})
-
-	t.Run("when not equal: erk errors: only actual is erk error", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		type kind1 struct{ erk.DefaultKind }
-
-		expectedError := errors.New("expected")
-		actualError := erk.NewWith(kind1{}, "actual {{.a}}", erk.Params{"a": "hi"})
-		mockT.EXPECT().Fatalf(
-			errorFormat,
-			fmt.Sprintf("{KIND: \"%s\", MESSAGE: \"actual hi\", PARAMS: map[a:hi]}", erk.GetKindString(actualError)),
-			expectedError.Error(),
-		).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure(actualError).IsError(expectedError)
-	})
-}
-
-func TestChainIsNotError(t *testing.T) {
-	t.Run("when no error", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper().Times(2)
-
-		ensure := ensure.New(mockT)
-		ensure(nil).IsNotError()
-	})
-
-	t.Run("when error", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-
-		err := errors.New("my error")
-		mockT.EXPECT().Fatalf("\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s", err.Error(), "<nil>").After(
-			mockT.EXPECT().Helper().Times(2),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure(err).IsNotError()
-	})
-}
-
 func TestChainIsEmpty(t *testing.T) {
 	testEmptyChain(t, func(t *testing.T, valueLength int, value interface{}) {
 		mockT := setupMockTWithCleanupCheck(t)
@@ -911,23 +713,6 @@ func TestChainMatchesRegexp(t *testing.T) {
 		ensure := ensure.New(mockT)
 		ensure("hello").MatchesRegexp("[") // Missing closing ]
 	})
-}
-
-type TestError struct {
-	Message string
-}
-
-func (t TestError) Is(err error) bool {
-	inputErr := TestError{}
-	if errors.As(err, &inputErr) {
-		return inputErr.Message == t.Message
-	}
-
-	return false
-}
-
-func (t TestError) Error() string {
-	return t.Message
 }
 
 type ExampleMessage struct {
