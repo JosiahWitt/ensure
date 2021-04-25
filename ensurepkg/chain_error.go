@@ -32,8 +32,11 @@ func (c *Chain) IsError(expected error) {
 
 // MatchesAllErrors ensures the actual value is all of the expected errors.
 // This is useful for validating various levels of a wrapped error.
+//
+// If no errors are provided, this method assumes no error is expected.
+//
 // MatchesAllErrors uses errors.Is with each expected error to support Go 1.13+ error comparisons.
-func (c *Chain) MatchesAllErrors(expectedErrors []error) {
+func (c *Chain) MatchesAllErrors(expectedErrors ...error) {
 	c.t.Helper()
 	c.markRun()
 
@@ -43,16 +46,11 @@ func (c *Chain) MatchesAllErrors(expectedErrors []error) {
 		return
 	}
 
-	if expectedErrors == nil {
+	if len(expectedErrors) == 0 {
 		if c.actual != nil {
 			c.t.Fatalf("\nExpected no error, but got: %s", buildActualErrorOutput(actual))
 		}
 
-		return
-	}
-
-	if len(expectedErrors) == 0 {
-		c.t.Fatalf("At least one expected error must be provided.")
 		return
 	}
 

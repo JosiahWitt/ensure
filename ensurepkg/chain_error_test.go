@@ -40,39 +40,48 @@ func TestChainMatchesAllErrors(t *testing.T) {
 		)
 
 		ensure := ensure.New(mockT)
-		ensure(val).MatchesAllErrors([]error{errors.New("something"), errors.New("else")})
+		ensure(val).MatchesAllErrors(errors.New("something"), errors.New("else"))
 	})
 
 	t.Run("when no expected errors", func(t *testing.T) {
-		t.Run("when empty slice provided", func(t *testing.T) {
+		t.Run("when got error and expected empty slice", func(t *testing.T) {
 			mockT := setupMockTWithCleanupCheck(t)
 
-			mockT.EXPECT().Fatalf("At least one expected error must be provided.").After(
-				mockT.EXPECT().Helper(),
-			)
-
-			ensure := ensure.New(mockT)
-			ensure(errors.New("hi")).MatchesAllErrors([]error{})
-		})
-
-		t.Run("when expected no error, but got an error", func(t *testing.T) {
-			mockT := setupMockTWithCleanupCheck(t)
-
-			actual := errors.New("hi")
 			mockT.EXPECT().Fatalf("\nExpected no error, but got: %s", "hi").After(
 				mockT.EXPECT().Helper(),
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(actual).MatchesAllErrors(nil)
+			ensure(errors.New("hi")).MatchesAllErrors([]error{}...)
 		})
 
-		t.Run("when expected no error, and got no error", func(t *testing.T) {
+		t.Run("when no error and expected empty slice", func(t *testing.T) {
 			mockT := setupMockTWithCleanupCheck(t)
 			mockT.EXPECT().Helper()
 
 			ensure := ensure.New(mockT)
-			ensure(nil).MatchesAllErrors(nil)
+			ensure(nil).MatchesAllErrors([]error{}...)
+		})
+
+		t.Run("when got error and expected nil slice", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+
+			mockT.EXPECT().Fatalf("\nExpected no error, but got: %s", "hi").After(
+				mockT.EXPECT().Helper(),
+			)
+
+			var errs []error // nil error slice
+			ensure := ensure.New(mockT)
+			ensure(errors.New("hi")).MatchesAllErrors(errs...)
+		})
+
+		t.Run("when no error and expected nil slice", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+			mockT.EXPECT().Helper()
+
+			var errs []error // nil error slice
+			ensure := ensure.New(mockT)
+			ensure(nil).MatchesAllErrors(errs...)
 		})
 	})
 
@@ -80,7 +89,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 		sharedIsErrorTests(t, func(mockT *mock_ensurepkg.MockT, chain *ensurepkg.Chain, expected error) {
 			mockT.EXPECT().Helper()
 
-			chain.MatchesAllErrors([]error{expected})
+			chain.MatchesAllErrors(expected)
 		})
 	})
 
@@ -94,7 +103,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			err := errors.New("my error")
 
 			ensure := ensure.New(mockT)
-			ensure(err).MatchesAllErrors([]error{err, err})
+			ensure(err).MatchesAllErrors(err, err)
 		})
 
 		t.Run("when equal errors by Is method", func(t *testing.T) {
@@ -104,10 +113,10 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			const errMsg = "my error"
 
 			ensure := ensure.New(mockT)
-			ensure(TestError{Unique: 1, Message: errMsg}).MatchesAllErrors([]error{
+			ensure(TestError{Unique: 1, Message: errMsg}).MatchesAllErrors(
 				TestError{Unique: 2, Message: errMsg},
 				TestError{Unique: 3, Message: errMsg},
-			})
+			)
 		})
 
 		t.Run("when all are nil", func(t *testing.T) {
@@ -115,7 +124,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			mockT.EXPECT().Helper()
 
 			ensure := ensure.New(mockT)
-			ensure(nil).MatchesAllErrors([]error{nil, nil})
+			ensure(nil).MatchesAllErrors(nil, nil)
 		})
 
 		t.Run("when not equal: different errors by reference", func(t *testing.T) {
@@ -130,7 +139,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(err1).MatchesAllErrors([]error{err2, err3})
+			ensure(err1).MatchesAllErrors(err2, err3)
 		})
 
 		t.Run("when some not equal: different errors by reference", func(t *testing.T) {
@@ -144,7 +153,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(err1).MatchesAllErrors([]error{err1, err2})
+			ensure(err1).MatchesAllErrors(err1, err2)
 		})
 
 		t.Run("when not equal: different errors by Is method", func(t *testing.T) {
@@ -159,7 +168,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(err1).MatchesAllErrors([]error{err2, err3})
+			ensure(err1).MatchesAllErrors(err2, err3)
 		})
 
 		t.Run("when some not equal: different errors by Is method", func(t *testing.T) {
@@ -173,7 +182,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(err1).MatchesAllErrors([]error{err2, err1})
+			ensure(err1).MatchesAllErrors(err2, err1)
 		})
 
 		t.Run("when not equal: actual is nil", func(t *testing.T) {
@@ -186,7 +195,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(nil).MatchesAllErrors([]error{err1, err2})
+			ensure(nil).MatchesAllErrors(err1, err2)
 		})
 
 		t.Run("when some not equal: actual is nil", func(t *testing.T) {
@@ -198,7 +207,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(nil).MatchesAllErrors([]error{err, nil})
+			ensure(nil).MatchesAllErrors(err, nil)
 		})
 
 		t.Run("when not equal: erk errors: different kinds", func(t *testing.T) {
@@ -224,7 +233,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(actualError).MatchesAllErrors([]error{expectedError1, expectedError2})
+			ensure(actualError).MatchesAllErrors(expectedError1, expectedError2)
 		})
 
 		t.Run("when some not equal: erk errors: different kinds", func(t *testing.T) {
@@ -249,7 +258,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(actualError).MatchesAllErrors([]error{err, expectedError1})
+			ensure(actualError).MatchesAllErrors(err, expectedError1)
 		})
 
 		t.Run("when not equal: erk errors: only one expected is erk error", func(t *testing.T) {
@@ -273,7 +282,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(actualError).MatchesAllErrors([]error{expectedError1, expectedError2})
+			ensure(actualError).MatchesAllErrors(expectedError1, expectedError2)
 		})
 
 		t.Run("when some not equal: erk errors: only one expected is erk error", func(t *testing.T) {
@@ -297,7 +306,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(actualError).MatchesAllErrors([]error{expectedError1, expectedError2})
+			ensure(actualError).MatchesAllErrors(expectedError1, expectedError2)
 		})
 
 		t.Run("when not equal: erk errors: only actual is erk error", func(t *testing.T) {
@@ -321,7 +330,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			)
 
 			ensure := ensure.New(mockT)
-			ensure(actualError).MatchesAllErrors([]error{expectedError1, expectedError2})
+			ensure(actualError).MatchesAllErrors(expectedError1, expectedError2)
 		})
 	})
 }
