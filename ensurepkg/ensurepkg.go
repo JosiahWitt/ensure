@@ -57,6 +57,14 @@ func InternalCreateDoNotCallDirectly(t T) Ensure {
 	return wrap(t)
 }
 
+// New creates an instance of ensure with the provided testing context.
+//
+// This allows the `ensure` package to be shadowed by the `ensure` variable,
+// while still allowing new instances of ensure to be created.
+func (e Ensure) New(t T) Ensure {
+	return wrap(t)
+}
+
 // Failf fails the test immediately with a formatted message.
 // The formatted message follows the same format as the fmt package.
 func (e Ensure) Failf(format string, args ...interface{}) {
