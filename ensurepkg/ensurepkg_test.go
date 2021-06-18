@@ -35,6 +35,32 @@ func TestNew(t *testing.T) {
 	})
 }
 
+func TestNestedNew(t *testing.T) {
+	checkTestingContext := func(ensure ensurepkg.Ensure, mockT *mock_ensurepkg.MockT) {
+		mockT.EXPECT().Helper().AnyTimes()
+		mockT.EXPECT().Cleanup(gomock.Any()).AnyTimes()
+
+		if ensure.T() != mockT {
+			t.Errorf("The testing context should be the one provided")
+		}
+
+		mockT.EXPECT().Fatalf(gomock.Any(), gomock.Any())
+		ensure.Failf("") // Should trigger the provided mock context
+	}
+
+	outerMockT := setupMockT(t)
+	outerEnsure := ensure.New(outerMockT)
+
+	innerMockT := setupMockT(t)
+	innerEnsure := outerEnsure.New(innerMockT) // Uses the nested New method
+
+	// Make sure the inner testing context is correct
+	checkTestingContext(innerEnsure, innerMockT)
+
+	// Make sure the original testing context was not changed
+	checkTestingContext(outerEnsure, outerMockT)
+}
+
 func TestEnsureFailf(t *testing.T) {
 	mockT := setupMockTWithCleanupCheck(t)
 
