@@ -99,6 +99,8 @@ func wrap(t T) Ensure {
 			memoized: memoized,
 		}
 
+		// Cleanup should never call Fatalf, otherwise panics are hidden, and
+		// the Fatal message is displayed instead, which is really tricky for debugging.
 		t.Helper()
 		t.Cleanup(func() {
 			if c.memoized.goMockController != nil {
@@ -107,7 +109,7 @@ func wrap(t T) Ensure {
 
 			if !c.wasRun {
 				t.Helper()
-				t.Fatalf("Found ensure(<actual>) without chained assertion.")
+				t.Errorf("Found ensure(<actual>) without chained assertion.")
 			}
 		})
 
