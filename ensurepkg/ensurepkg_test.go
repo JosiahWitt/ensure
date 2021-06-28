@@ -163,7 +163,7 @@ func TestEnsureCleanupCheck(t *testing.T) {
 
 		gomock.InOrder(
 			mockT.EXPECT().Helper(),
-			mockT.EXPECT().Fatalf("Found ensure(<actual>) without chained assertion."),
+			mockT.EXPECT().Errorf("Found ensure(<actual>) without chained assertion."),
 		)
 		cleanupFn()
 	})
