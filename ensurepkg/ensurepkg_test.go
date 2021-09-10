@@ -36,29 +36,20 @@ func TestNew(t *testing.T) {
 }
 
 func TestNestedNew(t *testing.T) {
-	checkTestingContext := func(ensure ensurepkg.Ensure, mockT *mock_ensurepkg.MockT) {
-		mockT.EXPECT().Helper().AnyTimes()
-		mockT.EXPECT().Cleanup(gomock.Any()).AnyTimes()
+	originalName := t.Name()
+	outerEnsure := ensure.New(t)
 
-		if ensure.T() != mockT {
-			t.Errorf("The testing context should be the one provided")
+	t.Run("check nested ensure.New", func(t *testing.T) {
+		innerEnsure := outerEnsure.New(t) // Uses the nested New method
+
+		if outerEnsure.T().Name() == innerEnsure.T().Name() {
+			t.Errorf("The testing context should not be the same between the inner and outer ensure")
 		}
+	})
 
-		mockT.EXPECT().Fatalf(gomock.Any(), gomock.Any())
-		ensure.Failf("") // Should trigger the provided mock context
+	if outerEnsure.T().Name() != originalName {
+		t.Errorf("The testing context should not be changed when outerEnsure.New() is used")
 	}
-
-	outerMockT := setupMockT(t)
-	outerEnsure := ensure.New(outerMockT)
-
-	innerMockT := setupMockT(t)
-	innerEnsure := outerEnsure.New(innerMockT) // Uses the nested New method
-
-	// Make sure the inner testing context is correct
-	checkTestingContext(innerEnsure, innerMockT)
-
-	// Make sure the original testing context was not changed
-	checkTestingContext(outerEnsure, outerMockT)
 }
 
 func TestEnsureFailf(t *testing.T) {
@@ -76,12 +67,36 @@ func TestEnsureFailf(t *testing.T) {
 }
 
 func TestEnsureT(t *testing.T) {
-	mockT := setupMockTWithCleanupCheck(t)
+	t.Run("when provided a non *testing.T instance", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
 
-	ensure := ensure.New(mockT)
-	if ensure.T() != mockT {
-		t.Error("T() does not equal mockT")
-	}
+		gomock.InOrder(
+			mockT.EXPECT().Helper(),
+			mockT.EXPECT().Fatalf("An instance of *testing.T was not provided to ensure.New(t), thus T() cannot be used."),
+		)
+
+		ensure := ensure.New(mockT)
+		ensure.T()
+	})
+
+	t.Run("when provided a *testing.T instance", func(t *testing.T) {
+		ensure := ensure.New(t)
+
+		if ensure.T().Name() != t.Name() {
+			t.Fatalf("Expected the same *testing.T instance as the one that was provided")
+		}
+	})
+
+	t.Run("when provided a *testing.T instance and using ensure.Run", func(t *testing.T) {
+		ensure := ensure.New(t)
+		outerName := t.Name()
+
+		ensure.Run("inner", func(ensure ensurepkg.Ensure) {
+			if ensure.T().Name() != outerName+"/inner" {
+				t.Fatalf("Expected to be able to use T() inside ensure.Run")
+			}
+		})
+	})
 }
 
 func TestEnsureGoMockController(t *testing.T) {
