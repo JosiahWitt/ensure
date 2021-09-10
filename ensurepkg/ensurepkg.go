@@ -75,10 +75,20 @@ func (e Ensure) Failf(format string, args ...interface{}) {
 }
 
 // T exposes the test context provided to ensure.New(t).
-func (e Ensure) T() T {
+//
+// If an instance of *testing.T was not provided to ensure.New(t), this method cannot be used.
+// The test will fail immediately.
+func (e Ensure) T() *testing.T {
 	c := e(nil)
 	c.markRun()
-	return c.t
+
+	t, ok := c.t.(*testing.T)
+	if !ok {
+		c.t.Helper()
+		c.t.Fatalf("An instance of *testing.T was not provided to ensure.New(t), thus T() cannot be used.")
+	}
+
+	return t
 }
 
 // GoMockController exposes a GoMock Controller scoped to the current test context.
