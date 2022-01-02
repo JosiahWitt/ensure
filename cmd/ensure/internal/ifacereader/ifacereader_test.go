@@ -52,6 +52,7 @@ func TestReadPackages(t *testing.T) {
 
 			ExpectedPackages: []*ifacereader.Package{
 				{
+					Name: "emptyiface",
 					Path: pathPrefix + "/emptyiface",
 					Interfaces: []*ifacereader.Interface{
 						{
@@ -74,6 +75,7 @@ func TestReadPackages(t *testing.T) {
 
 			ExpectedPackages: []*ifacereader.Package{
 				{
+					Name: "nodepsiface",
 					Path: pathPrefix + "/nodepsiface",
 					Interfaces: []*ifacereader.Interface{
 						{
@@ -102,6 +104,7 @@ func TestReadPackages(t *testing.T) {
 
 			ExpectedPackages: []*ifacereader.Package{
 				{
+					Name: "nodepsiface",
 					Path: pathPrefix + "/nodepsiface",
 					Interfaces: []*ifacereader.Interface{
 						{
@@ -145,6 +148,7 @@ func TestReadPackages(t *testing.T) {
 
 			ExpectedPackages: []*ifacereader.Package{
 				{
+					Name: "nodepsiface",
 					Path: pathPrefix + "/nodepsiface",
 					Interfaces: []*ifacereader.Interface{
 						{
@@ -202,6 +206,7 @@ func TestReadPackages(t *testing.T) {
 
 			ExpectedPackages: []*ifacereader.Package{
 				{
+					Name: "nodepsiface",
 					Path: pathPrefix + "/nodepsiface",
 					Interfaces: []*ifacereader.Interface{
 						{
@@ -217,6 +222,7 @@ func TestReadPackages(t *testing.T) {
 					},
 				},
 				{
+					Name: "emptyiface",
 					Path: pathPrefix + "/emptyiface",
 					Interfaces: []*ifacereader.Interface{
 						{
@@ -239,6 +245,7 @@ func TestReadPackages(t *testing.T) {
 
 			ExpectedPackages: []*ifacereader.Package{
 				{
+					Name: "namedoutputs",
 					Path: pathPrefix + "/namedoutputs",
 					Interfaces: []*ifacereader.Interface{
 						{
@@ -270,6 +277,7 @@ func TestReadPackages(t *testing.T) {
 
 			ExpectedPackages: []*ifacereader.Package{
 				{
+					Name: "externaltypes",
 					Path: pathPrefix + "/externaltypes",
 					Interfaces: []*ifacereader.Interface{
 						{
@@ -306,6 +314,7 @@ func TestReadPackages(t *testing.T) {
 
 			ExpectedPackages: []*ifacereader.Package{
 				{
+					Name: "externaltypes",
 					Path: pathPrefix + "/externaltypes",
 					Interfaces: []*ifacereader.Interface{
 						{
@@ -319,6 +328,35 @@ func TestReadPackages(t *testing.T) {
 									Outputs: []*ifacereader.Tuple{
 										{VariableName: "", PackagePaths: []string{example1.PackagePath, example2.PackagePath}, Type: "map[externaltypes_example1!.String]*externaltypes_example2!.User"},
 									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "package with different name than the path suffix",
+
+			PackageDetails: []*ifacereader.PackageDetails{
+				{
+					Path:       pathPrefix + "/packagewithdifferentname",
+					Interfaces: []string{"Interface"},
+				},
+			},
+
+			ExpectedPackages: []*ifacereader.Package{
+				{
+					Name: "notthesamename",
+					Path: pathPrefix + "/packagewithdifferentname",
+					Interfaces: []*ifacereader.Interface{
+						{
+							Name: "Interface",
+							Methods: []*ifacereader.Method{
+								{
+									Name:    "Method",
+									Inputs:  []*ifacereader.Tuple{},
+									Outputs: []*ifacereader.Tuple{},
 								},
 							},
 						},
@@ -436,6 +474,7 @@ func buildTypeTests(ensure ensurepkg.Ensure) []entry {
 
 			ExpectedPackages: []*ifacereader.Package{
 				{
+					Name: filepath.Base(pkgPath),
 					Path: pkgPath,
 					Interfaces: []*ifacereader.Interface{
 						{

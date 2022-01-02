@@ -50,6 +50,7 @@ type PackageDetails struct {
 
 // Package includes the details of parsing the interfaces in the package.
 type Package struct {
+	Name       string
 	Path       string
 	Interfaces []*Interface
 }
@@ -175,6 +176,7 @@ func (r *internalPackageReader) buildPackage(pkgDetail *PackageDetails, pkg *pac
 	}
 
 	return &Package{
+		Name:       pkg.Name,
 		Path:       pkgDetail.Path,
 		Interfaces: ifaces,
 	}, nil
