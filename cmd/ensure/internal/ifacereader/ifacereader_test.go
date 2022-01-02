@@ -2,6 +2,7 @@ package ifacereader_test
 
 import (
 	"fmt"
+	"go/types"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -18,6 +19,7 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/scenarios/inlineexternaltypes"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/scenarios/iterableexternaltypes"
 	"github.com/JosiahWitt/ensure/ensurepkg"
+	"golang.org/x/tools/go/packages"
 )
 
 const pathPrefix = "github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures"
@@ -25,7 +27,8 @@ const pathPrefix = "github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader
 type entry struct {
 	Name string
 
-	PackageDetails []*ifacereader.PackageDetails
+	PackageDetails       []*ifacereader.PackageDetails
+	PackageNameGenerator ifacereader.PackageNameGenerator
 
 	ExpectedPackages []*ifacereader.Package
 	ExpectedError    error
@@ -275,10 +278,46 @@ func TestReadPackages(t *testing.T) {
 								{
 									Name: "ExternalIO",
 									Inputs: []*ifacereader.Tuple{
-										{VariableName: "a", PackagePaths: []string{example1.PackagePath}, Type: "*example1.Message"},
+										{VariableName: "a", PackagePaths: []string{example2.PackagePath, example1.PackagePath}, Type: "map[example2.Float64]*example1.Message"},
 									},
 									Outputs: []*ifacereader.Tuple{
-										{VariableName: "", PackagePaths: []string{example2.PackagePath}, Type: "*example2.User"},
+										{VariableName: "", PackagePaths: []string{example1.PackagePath, example2.PackagePath}, Type: "map[example1.String]*example2.User"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "leverages provided package name generator",
+
+			PackageDetails: []*ifacereader.PackageDetails{
+				{
+					Path:       pathPrefix + "/externaltypes",
+					Interfaces: []string{"ExternalTypes"},
+				},
+			},
+
+			PackageNameGenerator: packageNameGenerator(func(scopePackage *packages.Package, importedPackage *types.Package) string {
+				return scopePackage.Name + "_" + importedPackage.Name() + "!"
+			}),
+
+			ExpectedPackages: []*ifacereader.Package{
+				{
+					Path: pathPrefix + "/externaltypes",
+					Interfaces: []*ifacereader.Interface{
+						{
+							Name: "ExternalTypes",
+							Methods: []*ifacereader.Method{
+								{
+									Name: "ExternalIO",
+									Inputs: []*ifacereader.Tuple{
+										{VariableName: "a", PackagePaths: []string{example2.PackagePath, example1.PackagePath}, Type: "map[externaltypes_example2!.Float64]*externaltypes_example1!.Message"},
+									},
+									Outputs: []*ifacereader.Tuple{
+										{VariableName: "", PackagePaths: []string{example1.PackagePath, example2.PackagePath}, Type: "map[externaltypes_example1!.String]*externaltypes_example2!.User"},
 									},
 								},
 							},
@@ -352,7 +391,12 @@ func TestReadPackages(t *testing.T) {
 	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
 		entry := table[i]
 
-		pkgs, err := entry.Subject.ReadPackages(entry.PackageDetails)
+		pkgNameGen := entry.PackageNameGenerator
+		if pkgNameGen == nil {
+			pkgNameGen = packageNameGenerator(identityPackageNameGenerator)
+		}
+
+		pkgs, err := entry.Subject.ReadPackages(entry.PackageDetails, pkgNameGen)
 		ensure(pkgs).Equals(entry.ExpectedPackages)
 		ensure(err).IsError(entry.ExpectedError)
 	})
@@ -405,4 +449,29 @@ func buildTypeTests(ensure ensurepkg.Ensure) []entry {
 	}
 
 	return entries
+}
+
+type packageNameGenerator func(scopePackage *packages.Package, importedPackage *types.Package) string
+
+func (pkgNameGen packageNameGenerator) GeneratePackageName(scopePackage *packages.Package, importedPackage *types.Package) string {
+	return pkgNameGen(scopePackage, importedPackage)
+}
+
+func identityPackageNameGenerator(scopePackage *packages.Package, importedPackage *types.Package) string {
+	return importedPackage.Name()
+}
+
+func TestInterfaceNames(t *testing.T) {
+	ensure := ensure.New(t)
+
+	pkg := ifacereader.Package{
+		Name: "pkg1",
+		Path: "pkgs/pkg1",
+		Interfaces: []*ifacereader.Interface{
+			{Name: "Iface1", Methods: []*ifacereader.Method{{Name: "Method"}}},
+			{Name: "Iface2", Methods: []*ifacereader.Method{{Name: "Method"}}},
+		},
+	}
+
+	ensure(pkg.InterfaceNames()).Equals([]string{"Iface1", "Iface2"})
 }

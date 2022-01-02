@@ -29,13 +29,18 @@ var (
 
 // Readable reads the specified interfaces, returning their listed methods.
 type Readable interface {
-	ReadPackages(pkgDetails []*PackageDetails) ([]*Package, error)
+	ReadPackages(pkgDetails []*PackageDetails, pkgNameGen PackageNameGenerator) ([]*Package, error)
 }
 
 // InterfaceReader reads the specified interfaces, returning their listed methods.
 type InterfaceReader struct{}
 
 var _ Readable = &InterfaceReader{}
+
+// PackageNameGenerator allows generating a package name for a type given the current package and the imported package.
+type PackageNameGenerator interface {
+	GeneratePackageName(scopePackage *packages.Package, importedPackage *types.Package) string
+}
 
 // PackageDetails provides the package path and interfaces to the ReadPackages method.
 type PackageDetails struct {
@@ -69,8 +74,13 @@ type Tuple struct {
 	Type         string
 }
 
+type internalPackageReader struct {
+	pkg        *packages.Package
+	pkgNameGen PackageNameGenerator
+}
+
 // ReadPackages reads all the packages within the specified package and interface combinations.
-func (r *InterfaceReader) ReadPackages(pkgDetails []*PackageDetails) ([]*Package, error) {
+func (r *InterfaceReader) ReadPackages(pkgDetails []*PackageDetails, pkgNameGen PackageNameGenerator) ([]*Package, error) {
 	pkgDetailsByPath := make(map[string]*PackageDetails, len(pkgDetails))
 	pkgPaths := make([]string, 0, len(pkgDetails))
 
@@ -113,7 +123,12 @@ func (r *InterfaceReader) ReadPackages(pkgDetails []*PackageDetails) ([]*Package
 			return nil, erk.WithParams(ErrPathMismatch, erk.Params{"path": pkgDetail.Path})
 		}
 
-		builtPkg, err := buildPackage(pkgDetail, pkg)
+		pkgReader := &internalPackageReader{
+			pkg:        pkg,
+			pkgNameGen: pkgNameGen,
+		}
+
+		builtPkg, err := pkgReader.buildPackage(pkgDetail, pkg)
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +145,7 @@ func (r *InterfaceReader) ReadPackages(pkgDetails []*PackageDetails) ([]*Package
 	return pkgs, nil
 }
 
-func buildPackage(pkgDetail *PackageDetails, pkg *packages.Package) (*Package, error) {
+func (r *internalPackageReader) buildPackage(pkgDetail *PackageDetails, pkg *packages.Package) (*Package, error) {
 	ifaces := make([]*Interface, 0, len(pkgDetail.Interfaces))
 
 	for _, ifaceName := range pkgDetail.Interfaces {
@@ -151,7 +166,7 @@ func buildPackage(pkgDetail *PackageDetails, pkg *packages.Package) (*Package, e
 			})
 		}
 
-		builtIface, err := buildIface(ifaceName, iface)
+		builtIface, err := r.buildIface(ifaceName, iface)
 		if err != nil {
 			return nil, err
 		}
@@ -165,11 +180,11 @@ func buildPackage(pkgDetail *PackageDetails, pkg *packages.Package) (*Package, e
 	}, nil
 }
 
-func buildIface(ifaceName string, iface *types.Interface) (*Interface, error) {
+func (r *internalPackageReader) buildIface(ifaceName string, iface *types.Interface) (*Interface, error) {
 	methods := make([]*Method, 0, iface.NumMethods())
 
 	for i := 0; i < iface.NumMethods(); i++ {
-		builtMethod, err := buildMethod(iface.Method(i))
+		builtMethod, err := r.buildMethod(iface.Method(i))
 		if err != nil {
 			return nil, err
 		}
@@ -183,14 +198,14 @@ func buildIface(ifaceName string, iface *types.Interface) (*Interface, error) {
 	}, nil
 }
 
-func buildMethod(method *types.Func) (*Method, error) {
+func (r *internalPackageReader) buildMethod(method *types.Func) (*Method, error) {
 	signature := method.Type().Underlying().(*types.Signature)
 
 	inputs := make([]*Tuple, 0, signature.Params().Len())
 	for i := 0; i < signature.Params().Len(); i++ {
 		param := signature.Params().At(i)
 
-		builtInput, err := buildTuple(param.Name(), param.Type())
+		builtInput, err := r.buildTuple(param.Name(), param.Type())
 		if err != nil {
 			return nil, err
 		}
@@ -202,7 +217,7 @@ func buildMethod(method *types.Func) (*Method, error) {
 	for i := 0; i < signature.Results().Len(); i++ {
 		result := signature.Results().At(i)
 
-		builtOutput, err := buildTuple(result.Name(), result.Type())
+		builtOutput, err := r.buildTuple(result.Name(), result.Type())
 		if err != nil {
 			return nil, err
 		}
@@ -217,8 +232,8 @@ func buildMethod(method *types.Func) (*Method, error) {
 	}, nil
 }
 
-func buildTuple(variableName string, rawType types.Type) (*Tuple, error) {
-	pkgPaths, err := extractPackagePaths(rawType)
+func (r *internalPackageReader) buildTuple(variableName string, rawType types.Type) (*Tuple, error) {
+	pkgPaths, err := r.extractPackagePaths(rawType)
 	if err != nil {
 		return nil, err
 	}
@@ -227,17 +242,15 @@ func buildTuple(variableName string, rawType types.Type) (*Tuple, error) {
 		VariableName: variableName,
 		PackagePaths: pkgPaths,
 
-		Type: types.TypeString(rawType, extractTypeString),
+		Type: types.TypeString(rawType, func(p *types.Package) string {
+			return r.pkgNameGen.GeneratePackageName(r.pkg, p)
+		}),
 	}
 
 	return tuple, nil
 }
 
-func extractTypeString(p *types.Package) string {
-	return p.Name()
-}
-
-func extractPackagePaths(rawType types.Type) ([]string, error) {
+func (r *internalPackageReader) extractPackagePaths(rawType types.Type) ([]string, error) {
 	switch t := rawType.(type) {
 	case *types.Named:
 		if pkg := t.Obj().Pkg(); pkg != nil {
@@ -250,28 +263,28 @@ func extractPackagePaths(rawType types.Type) ([]string, error) {
 		return []string{}, nil
 
 	case *types.Slice:
-		return extractPackagePaths(t.Elem())
+		return r.extractPackagePaths(t.Elem())
 
 	case *types.Array:
-		return extractPackagePaths(t.Elem())
+		return r.extractPackagePaths(t.Elem())
 
 	case *types.Pointer:
-		return extractPackagePaths(t.Elem())
+		return r.extractPackagePaths(t.Elem())
 
 	case *types.Chan:
-		return extractPackagePaths(t.Elem())
+		return r.extractPackagePaths(t.Elem())
 
 	case *types.Map:
-		return extractMapPackagePaths(t)
+		return r.extractMapPackagePaths(t)
 
 	case *types.Signature:
-		return extractSignaturePackagePaths(t)
+		return r.extractSignaturePackagePaths(t)
 
 	case *types.Interface:
-		return extractInterfacePackagePaths(t)
+		return r.extractInterfacePackagePaths(t)
 
 	case *types.Struct:
-		return extractStructPackagePaths(t)
+		return r.extractStructPackagePaths(t)
 
 	default:
 		// Shouldn't be possible, unless some types are missing
@@ -282,13 +295,13 @@ func extractPackagePaths(rawType types.Type) ([]string, error) {
 	}
 }
 
-func extractMapPackagePaths(t *types.Map) ([]string, error) {
-	keyPaths, err := extractPackagePaths(t.Key())
+func (r *internalPackageReader) extractMapPackagePaths(t *types.Map) ([]string, error) {
+	keyPaths, err := r.extractPackagePaths(t.Key())
 	if err != nil {
 		return nil, err
 	}
 
-	elemPaths, err := extractPackagePaths(t.Elem())
+	elemPaths, err := r.extractPackagePaths(t.Elem())
 	if err != nil {
 		return nil, err
 	}
@@ -296,11 +309,11 @@ func extractMapPackagePaths(t *types.Map) ([]string, error) {
 	return uniqueStrings(append(keyPaths, elemPaths...)), nil
 }
 
-func extractSignaturePackagePaths(t *types.Signature) ([]string, error) {
+func (r *internalPackageReader) extractSignaturePackagePaths(t *types.Signature) ([]string, error) {
 	paths := make([]string, 0, t.Params().Len()+t.Results().Len())
 
 	for i := 0; i < t.Params().Len(); i++ {
-		paramPaths, err := extractPackagePaths(t.Params().At(i).Type())
+		paramPaths, err := r.extractPackagePaths(t.Params().At(i).Type())
 		if err != nil {
 			return nil, err
 		}
@@ -309,7 +322,7 @@ func extractSignaturePackagePaths(t *types.Signature) ([]string, error) {
 	}
 
 	for i := 0; i < t.Results().Len(); i++ {
-		resultPaths, err := extractPackagePaths(t.Results().At(i).Type())
+		resultPaths, err := r.extractPackagePaths(t.Results().At(i).Type())
 		if err != nil {
 			return nil, err
 		}
@@ -320,8 +333,8 @@ func extractSignaturePackagePaths(t *types.Signature) ([]string, error) {
 	return uniqueStrings(paths), nil
 }
 
-func extractInterfacePackagePaths(t *types.Interface) ([]string, error) {
-	builtIface, err := buildIface("<unused>", t)
+func (r *internalPackageReader) extractInterfacePackagePaths(t *types.Interface) ([]string, error) {
+	builtIface, err := r.buildIface("<unused>", t)
 	if err != nil {
 		return nil, err
 	}
@@ -340,11 +353,11 @@ func extractInterfacePackagePaths(t *types.Interface) ([]string, error) {
 	return uniqueStrings(paths), nil
 }
 
-func extractStructPackagePaths(t *types.Struct) ([]string, error) {
+func (r *internalPackageReader) extractStructPackagePaths(t *types.Struct) ([]string, error) {
 	paths := make([]string, 0, t.NumFields())
 
 	for i := 0; i < t.NumFields(); i++ {
-		fieldPaths, err := extractPackagePaths(t.Field(i).Type())
+		fieldPaths, err := r.extractPackagePaths(t.Field(i).Type())
 		if err != nil {
 			return nil, err
 		}
@@ -367,4 +380,15 @@ func uniqueStrings(strs []string) []string {
 	}
 
 	return uniqueStrs
+}
+
+// InterfaceNames extracts each of the interface names for which to generate mocks.
+func (pkg *Package) InterfaceNames() []string {
+	names := make([]string, 0, len(pkg.Interfaces))
+
+	for _, iface := range pkg.Interfaces {
+		names = append(names, iface.Name)
+	}
+
+	return names
 }

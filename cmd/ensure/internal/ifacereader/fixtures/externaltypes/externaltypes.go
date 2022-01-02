@@ -6,5 +6,5 @@ import (
 )
 
 type ExternalTypes interface {
-	ExternalIO(a *example1.Message) *example2.User
+	ExternalIO(a map[example2.Float64]*example1.Message) map[example1.String]*example2.User
 }
