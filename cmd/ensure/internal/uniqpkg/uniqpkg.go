@@ -11,22 +11,15 @@ import (
 
 // UniquePackagePaths supports generating unique package names by creating aliases as necessary.
 type UniquePackagePaths struct {
-	packagePaths map[string]*internalPackage
-}
-
-type internalPackage struct {
-	name string
-	path string
-
-	byPath map[string]*ImportDetails
-	byName map[string]*ImportDetails
+	packages map[string]*Package
 }
 
 // Package stores the imports for a single package.
 type Package struct {
-	Name    string
-	Path    string
-	Imports []*ImportDetails
+	Path string
+
+	byPath map[string]*ImportDetails
+	byName map[string]*ImportDetails
 }
 
 // ImportDetails stores the details of a single import within a package.
@@ -36,85 +29,76 @@ type ImportDetails struct {
 	IsAlias bool // Indicates that the name is not the default name, and thus should be specified as an alias.
 }
 
+func New() *UniquePackagePaths {
+	return &UniquePackagePaths{}
+}
+
 // GeneratePackageName supports generating unique package names by creating aliases as necessary.
+// This method is expected to be called from within ifacereader, as it satisfies the PackageNameGenerator interface.
 func (p *UniquePackagePaths) GeneratePackageName(scopePackage *packages.Package, importedPackage *types.Package) string {
-	rawPkg := p.getByScope(scopePackage)
-
-	details := rawPkg.byPath[importedPackage.Path()]
-	if details == nil {
-		details = p.buildImportDetails(rawPkg, importedPackage)
-		rawPkg.byName[details.Name] = details
-		rawPkg.byPath[details.Path] = details
-	}
-
+	pkg := p.ForPackage(scopePackage.PkgPath)
+	details := pkg.AddImport(importedPackage.Path(), importedPackage.Name())
 	return details.Name
 }
 
-func (p *UniquePackagePaths) getByScope(scopePackage *packages.Package) *internalPackage {
-	if p.packagePaths == nil {
-		p.packagePaths = make(map[string]*internalPackage)
+// ForPackage finds or adds the package identified by the path.
+func (p *UniquePackagePaths) ForPackage(path string) *Package {
+	if p.packages == nil {
+		p.packages = make(map[string]*Package)
 	}
 
-	rawPkg := p.packagePaths[scopePackage.PkgPath]
-	if rawPkg == nil {
-		rawPkg = &internalPackage{
-			name: scopePackage.Name,
-			path: scopePackage.PkgPath,
+	pkg := p.packages[path]
+	if pkg == nil {
+		pkg = &Package{
+			Path: path,
 
 			byPath: make(map[string]*ImportDetails),
 			byName: make(map[string]*ImportDetails),
 		}
 
-		p.packagePaths[scopePackage.PkgPath] = rawPkg
+		p.packages[path] = pkg
 	}
 
-	return rawPkg
+	return pkg
 }
 
-func (p *UniquePackagePaths) buildImportDetails(rawPkg *internalPackage, importedPackage *types.Package) *ImportDetails {
-	pkgName := importedPackage.Name()
-	pkgPath := importedPackage.Path()
+// AddImport adds the package path and name as an import, generating an alias if necessary.
+func (pkg *Package) AddImport(packagePath, packageName string) *ImportDetails {
+	if details := pkg.byPath[packagePath]; details != nil {
+		return details
+	}
 
 	// Start at 1, so the first alias starts with a suffix of 2.
 	// eg. mypkg, mypkg2, mypkg3, etc.
 	for i := 1; ; i++ {
 		isAlias := i != 1 // After one iteration, we are creating an alias
 
-		generatedPkgName := pkgName
+		generatedPackageName := packageName
 		if isAlias {
-			generatedPkgName = fmt.Sprintf("%s%d", pkgName, i)
+			generatedPackageName = fmt.Sprintf("%s%d", packageName, i)
 		}
 
 		// When we find a name that doesn't exist yet, we use it as the import details
-		if details := rawPkg.byName[generatedPkgName]; details == nil {
-			return &ImportDetails{
-				Name:    generatedPkgName,
-				Path:    pkgPath,
+		if details := pkg.byName[generatedPackageName]; details == nil {
+			details := &ImportDetails{
+				Name:    generatedPackageName,
+				Path:    packagePath,
 				IsAlias: isAlias,
 			}
+
+			pkg.byName[details.Name] = details
+			pkg.byPath[details.Path] = details
+
+			return details
 		}
 	}
 }
 
-// Export the packages into the external formats.
-func (p *UniquePackagePaths) Export() []*Package {
-	pkgs := make([]*Package, 0, len(p.packagePaths))
+// Imports returns the list of imports for the Package in sorted order.
+func (pkg *Package) Imports() []*ImportDetails {
+	imports := make([]*ImportDetails, 0, len(pkg.byPath))
 
-	for _, rawPkg := range p.packagePaths {
-		pkgs = append(pkgs, rawPkg.export())
-	}
-
-	sort.Slice(pkgs, func(i, j int) bool {
-		return pkgs[i].Path < pkgs[j].Path
-	})
-
-	return pkgs
-}
-
-func (rawPkg *internalPackage) export() *Package {
-	imports := make([]*ImportDetails, 0, len(rawPkg.byPath))
-
-	for _, details := range rawPkg.byPath {
+	for _, details := range pkg.byPath {
 		imports = append(imports, details)
 	}
 
@@ -122,10 +106,5 @@ func (rawPkg *internalPackage) export() *Package {
 		return imports[i].Path < imports[j].Path
 	})
 
-	return &Package{
-		Name: rawPkg.name,
-		Path: rawPkg.path,
-
-		Imports: imports,
-	}
+	return imports
 }
