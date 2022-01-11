@@ -23,6 +23,7 @@ var templateFuncs = template.FuncMap{
 	"buildInputVariableList":  templateFuncBuildInputVariableList,
 	"buildOutputSignature":    templateFuncBuildOutputSignature,
 	"buildMockReturns":        templateFuncBuildMockReturns,
+	"buildParamsDoc":          templateFuncBuildParamsDoc,
 }
 
 const packageTemplate = `{{ $params := . -}}
@@ -73,6 +74,14 @@ func (m *Mock{{$iface.Name}}) {{$method.Name}}({{buildInputSignature $method.Inp
 
 // {{$method.Name}} sets up expectations for calls to {{$method.Name}}.
 // Calling this method multiple times allows expecting multiple calls to {{$method.Name}} with a variety of parameters.
+//
+// Inputs:
+//
+//  {{buildParamsDoc $method.Inputs}}
+//
+// Outputs:
+//
+//  {{buildParamsDoc $method.Outputs}}
 func (mr *Mock{{$iface.Name}}MockRecorder) {{$method.Name}}({{buildMockInputSignature $method.Inputs}}) *{{$params.GoMockPackageName}}.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "{{$method.Name}}", {{$params.ReflectPackageName}}.TypeOf((*Mock{{$iface.Name}})(nil).{{$method.Name}}){{buildInputVariableList $method.Inputs}})
@@ -181,6 +190,24 @@ func templateFuncBuildMockReturns(outputs []*ifacereader.Tuple) string {
 	assertions := strings.Join(builtAssertions, "\n\t")
 	returns := "return " + strings.Join(builtReturns, ", ")
 	return assertions + "\n\t" + returns
+}
+
+func templateFuncBuildParamsDoc(params []*ifacereader.Tuple) string {
+	if len(params) == 0 {
+		return "none"
+	}
+
+	builtParams := make([]string, 0, len(params))
+	for _, param := range params {
+		builtParam := param.Type
+		if param.VariableName != "" {
+			builtParam = param.VariableName + " " + param.Type
+		}
+
+		builtParams = append(builtParams, builtParam)
+	}
+
+	return strings.Join(builtParams, "\n//  ")
 }
 
 func populateVariableNames(inputs []*ifacereader.Tuple) []*ifacereader.Tuple {

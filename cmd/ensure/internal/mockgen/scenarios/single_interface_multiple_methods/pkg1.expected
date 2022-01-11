@@ -48,6 +48,16 @@ func (m *MockTransformable) TransformString(_prefix string, _str string) (string
 
 // TransformString sets up expectations for calls to TransformString.
 // Calling this method multiple times allows expecting multiple calls to TransformString with a variety of parameters.
+//
+// Inputs:
+//
+//  prefix string
+//  str string
+//
+// Outputs:
+//
+//  string
+//  error
 func (mr *MockTransformableMockRecorder) TransformString(_prefix, _str interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockTransformable)(nil).TransformString), _prefix, _str)
@@ -63,6 +73,14 @@ func (m *MockTransformable) TransformFloat64(_f float64) float64 {
 
 // TransformFloat64 sets up expectations for calls to TransformFloat64.
 // Calling this method multiple times allows expecting multiple calls to TransformFloat64 with a variety of parameters.
+//
+// Inputs:
+//
+//  f float64
+//
+// Outputs:
+//
+//  float64
 func (mr *MockTransformableMockRecorder) TransformFloat64(_f interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformFloat64", reflect.TypeOf((*MockTransformable)(nil).TransformFloat64), _f)

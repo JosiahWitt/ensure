@@ -47,6 +47,14 @@ func (m *MockTransformable) TransformString(_str string) string {
 
 // TransformString sets up expectations for calls to TransformString.
 // Calling this method multiple times allows expecting multiple calls to TransformString with a variety of parameters.
+//
+// Inputs:
+//
+//  str string
+//
+// Outputs:
+//
+//  string
 func (mr *MockTransformableMockRecorder) TransformString(_str interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockTransformable)(nil).TransformString), _str)

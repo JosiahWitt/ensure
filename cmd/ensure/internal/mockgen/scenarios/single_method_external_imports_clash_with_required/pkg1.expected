@@ -49,6 +49,15 @@ func (m *MockDoable) Do(_thing *reflect.Thing, _other *gomock.Other) {
 
 // Do sets up expectations for calls to Do.
 // Calling this method multiple times allows expecting multiple calls to Do with a variety of parameters.
+//
+// Inputs:
+//
+//  thing *reflect.Thing
+//  other *gomock.Other
+//
+// Outputs:
+//
+//  none
 func (mr *MockDoableMockRecorder) Do(_thing, _other interface{}) *gomock2.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect2.TypeOf((*MockDoable)(nil).Do), _thing, _other)

@@ -47,6 +47,14 @@ func (m *MockNoopable) Noop() {
 
 // Noop sets up expectations for calls to Noop.
 // Calling this method multiple times allows expecting multiple calls to Noop with a variety of parameters.
+//
+// Inputs:
+//
+//  none
+//
+// Outputs:
+//
+//  none
 func (mr *MockNoopableMockRecorder) Noop() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Noop", reflect.TypeOf((*MockNoopable)(nil).Noop))

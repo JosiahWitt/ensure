@@ -49,6 +49,15 @@ func (m *MockTransformable) Transform(_user *external1.User, _message *external2
 
 // Transform sets up expectations for calls to Transform.
 // Calling this method multiple times allows expecting multiple calls to Transform with a variety of parameters.
+//
+// Inputs:
+//
+//  user *external1.User
+//  message *external2.Message
+//
+// Outputs:
+//
+//  external1.String
 func (mr *MockTransformableMockRecorder) Transform(_user, _message interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transform", reflect.TypeOf((*MockTransformable)(nil).Transform), _user, _message)
