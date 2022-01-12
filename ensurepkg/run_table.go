@@ -199,6 +199,7 @@ func buildTableEntry(rawEntry reflect.Value) (*tableEntry, error) {
 		return nil, erk.WithParam(errInvalidEntryType, "entry", rawEntry.Interface())
 	}
 
+	//nolint:exhaustivestruct
 	entry := &tableEntry{
 		rawEntry: rawEntry,
 		mocks:    make(map[reflect.Type]*tableEntryMock),
@@ -316,8 +317,7 @@ func (entry *tableEntry) prepareMock(mockFieldName string, mockEntry reflect.Val
 
 	// Mocks should have a NEW method, to allow creating the mock
 	newMethod := mockEntry.MethodByName("NEW")
-	zeroValue := reflect.Value{}
-	if newMethod == zeroValue {
+	if newMethod == (reflect.Value{}) {
 		return erk.WithParams(errMocksNEWMissing, erk.Params{
 			"mocksFieldName": mockFieldName,
 			"expectedReturn": mockEntry.Interface(),
@@ -328,7 +328,7 @@ func (entry *tableEntry) prepareMock(mockFieldName string, mockEntry reflect.Val
 	//  func (m *MockXYZ) NEW(ctrl *gomock.Controller) *MockXYZ { ... }
 	//  func (m *MockXYZ) NEW() *MockXYZ { ... }
 	newMethodType := newMethod.Type()
-	controllerType := reflect.TypeOf(&gomock.Controller{})
+	controllerType := reflect.TypeOf(&gomock.Controller{}) //nolint:exhaustivestruct
 	isInvalidParam := newMethodType.NumIn() > 1 || (newMethodType.NumIn() == 1 && newMethodType.In(0) != controllerType)
 	isInvalidReturn := newMethodType.NumOut() != 1 || newMethodType.Out(0) != mockEntry.Type()
 	if isInvalidParam || isInvalidReturn {
@@ -345,6 +345,8 @@ func (entry *tableEntry) prepareMock(mockFieldName string, mockEntry reflect.Val
 			"duplicate": mockEntry.Interface(),
 		})
 	}
+
+	//nolint:exhaustivestruct
 	entry.mocks[mockEntry.Type()] = &tableEntryMock{
 		fieldName: mockFieldName,
 	}
@@ -397,7 +399,7 @@ func (entry *tableEntry) prepareSetupMocks() error {
 	return nil
 }
 
-//nolint:funlen // TODO: Refactor (https://github.com/JosiahWitt/ensure/issues/23)
+//nolint:funlen,cyclop // TODO: Refactor (https://github.com/JosiahWitt/ensure/issues/23)
 func (entry *tableEntry) prepareSubjectStruct() error {
 	entrySubject, ok := entry.fieldByName("Subject")
 	if !ok {

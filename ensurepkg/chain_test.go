@@ -437,7 +437,6 @@ func TestChainIsNotEmpty(t *testing.T) {
 	})
 }
 
-//nolint:thelper // Not a test helper, since that would lose valuable failure context
 func testEmptyChain(t *testing.T, run func(t *testing.T, valueLength int, value interface{})) {
 	table := []struct {
 		Name        string
@@ -573,7 +572,6 @@ func TestChainDoesNotContain(t *testing.T) {
 	})
 }
 
-//nolint:thelper // Not a test helper, since that would lose valuable failure context
 func testContainsChain(t *testing.T, run func(t *testing.T, doesContain bool, actual, expected interface{}, formattedActual, formattedExpected string)) {
 	table := []struct {
 		Name        string
