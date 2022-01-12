@@ -14,6 +14,8 @@ type (
 	ErkInternal     struct{ erk.DefaultKind }
 )
 
+const unexpectedErrorPrefix = "Unexpected error; please open an issue on GitHub"
+
 var (
 	ErrNoInterfaces     = erk.New(ErkInvalidInput{}, "No interfaces provided for path '{{.path}}'. Please provide which interfaces to mock.")
 	ErrDuplicatePath    = erk.New(ErkInvalidInput{}, "Duplicate entry for path '{{.path}}'. Please combine both entries and list multiple interfaces instead.")
@@ -22,9 +24,12 @@ var (
 	ErrInvalidInterface = erk.New(ErkInvalidInput{}, "Interface '{{.interface}}' not found in package: {{.package}}")
 	ErrNotInterface     = erk.New(ErkInvalidInput{}, "Type '{{.interface}}' is not an interface in package '{{.package}}', it's a '{{.type}}'")
 
-	ErrPathMismatch           = erk.New(ErkInternal{}, "Unexpected error; please open an issue on GitHub: Could not find package details for path: {{.path}}")
-	ErrLeftoverPackageDetails = erk.New(ErkInternal{}, "Unexpected error; please open an issue on GitHub: Unexpected leftover package details")
-	ErrUnsupportedType        = erk.New(ErkInternal{}, "Unexpected error; please open an issue on GitHub: Unsupported type '{{type .rawType}}': {{.typeString}}")
+	ErrPathMismatch           = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Could not find package details for path: {{.path}}")
+	ErrLeftoverPackageDetails = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Unexpected leftover package details")
+	ErrUnsupportedType        = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Unsupported type '{{type .rawType}}': {{.typeString}}")
+	ErrFuncUnderlyingType     = erk.New(ErkInternal{},
+		unexpectedErrorPrefix+": *types.Func underlying type was not *types.Signature, it was: {{type .underlyingType}}",
+	)
 )
 
 // Readable reads the specified interfaces, returning their listed methods.
@@ -110,12 +115,7 @@ func (r *InterfaceReader) ReadPackages(pkgDetails []*PackageDetails, pkgNameGen 
 	pkgs := make([]*Package, 0, len(rawPkgs))
 	for _, pkg := range rawPkgs {
 		if len(pkg.Errors) > 0 {
-			err := erg.NewAs(erk.WithParams(ErrReadingPackage, erk.Params{"path": pkg.PkgPath}))
-			for _, pkgErr := range pkg.Errors {
-				err = erg.Append(err, pkgErr)
-			}
-
-			return nil, err
+			return nil, buildPackageReadError(pkg)
 		}
 
 		pkgDetail, ok := pkgDetailsByPath[pkg.PkgPath]
@@ -201,7 +201,10 @@ func (r *internalPackageReader) buildIface(ifaceName string, iface *types.Interf
 }
 
 func (r *internalPackageReader) buildMethod(method *types.Func) (*Method, error) {
-	signature := method.Type().Underlying().(*types.Signature)
+	signature, ok := method.Type().Underlying().(*types.Signature)
+	if !ok {
+		return nil, erk.WithParams(ErrFuncUnderlyingType, erk.Params{"underlyingType": method.Type().Underlying()}) // Not sure if this is possible
+	}
 
 	inputs := make([]*Tuple, 0, signature.Params().Len())
 	for i := 0; i < signature.Params().Len(); i++ {
@@ -252,6 +255,7 @@ func (r *internalPackageReader) buildTuple(variableName string, rawType types.Ty
 	return tuple, nil
 }
 
+//nolint:cyclop
 func (r *internalPackageReader) extractPackagePaths(rawType types.Type) ([]string, error) {
 	switch t := rawType.(type) {
 	case *types.Named:
@@ -368,6 +372,16 @@ func (r *internalPackageReader) extractStructPackagePaths(t *types.Struct) ([]st
 	}
 
 	return uniqueStrings(paths), nil
+}
+
+func buildPackageReadError(pkg *packages.Package) error {
+	err := erg.NewAs(erk.WithParams(ErrReadingPackage, erk.Params{"path": pkg.PkgPath}))
+
+	for _, pkgErr := range pkg.Errors {
+		err = erg.Append(err, pkgErr)
+	}
+
+	return err
 }
 
 func uniqueStrings(strs []string) []string {

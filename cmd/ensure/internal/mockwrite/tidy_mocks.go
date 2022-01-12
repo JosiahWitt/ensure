@@ -15,7 +15,7 @@ var (
 )
 
 // TidyMocks removes any files other than those that are expected to exist in the mock directories.
-func (g *MockWriter) TidyMocks(config *ensurefile.Config) error {
+func (w *MockWriter) TidyMocks(config *ensurefile.Config) error {
 	mockDestinations, err := computeMockDestinations(config)
 	if err != nil {
 		return err
@@ -25,7 +25,7 @@ func (g *MockWriter) TidyMocks(config *ensurefile.Config) error {
 	pathsToDelete := []string{}
 
 	for mockDir, mockDests := range mockDestinationsByMockDir {
-		recursivePaths, err := g.FSWrite.ListRecursive(mockDir)
+		recursivePaths, err := w.FSWrite.ListRecursive(mockDir)
 		if err != nil {
 			return erk.WrapWith(ErrTidyUnableToList, err, erk.Params{
 				"path": mockDir,
@@ -41,11 +41,11 @@ func (g *MockWriter) TidyMocks(config *ensurefile.Config) error {
 	}
 
 	if len(pathsToDelete) > 0 {
-		g.Logger.Println("Tidying mocks:")
+		w.Logger.Println("Tidying mocks:")
 		for _, pathToDelete := range pathsToDelete {
-			g.Logger.Printf(" - Removing: %s\n", pathToDelete)
+			w.Logger.Printf(" - Removing: %s\n", pathToDelete)
 
-			if err := g.FSWrite.RemoveAll(pathToDelete); err != nil {
+			if err := w.FSWrite.RemoveAll(pathToDelete); err != nil {
 				return erk.WrapWith(ErrTidyUnableToCleanup, err, erk.Params{
 					"path": pathToDelete,
 				})

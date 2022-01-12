@@ -1,0 +1,54 @@
+linters:
+  enable-all: true
+  fast: false
+  disable:
+    - maligned
+    - prealloc
+    - wsl
+    - nlreturn
+    - wrapcheck
+    - godox
+    - golint
+    - interfacer
+    - scopelint
+    - varnamelen
+    - exhaustivestruct
+    - gofumpt
+
+linters-settings:
+  lll:
+    line-length: 160
+
+issues:
+  exclude-rules:
+    # Exclude some linters from tests
+    - path: _test\.go
+      linters:
+        - funlen
+        - lll
+        - goconst
+        - goerr113
+        - dupl
+        - paralleltest
+        - exhaustivestruct
+        - gocognit
+        - cyclop
+        - forcetypeassert
+        - ifshort
+        - thelper
+
+    # Exclude some linters from fixtures and scenarios
+    - path: .*(/fixtures/)|(/scenarios/).*
+      linters:
+        - gochecknoglobals
+
+    - path: .*(/fixtures/)|(/scenarios/).*
+      text: "underscores? in package name"
+      linters:
+        - revive
+        - stylecheck
+
+    # erk types don't need to be exhaustive
+    - text: ".*in erk.*"
+      linters:
+        - exhaustivestruct

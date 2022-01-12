@@ -424,7 +424,7 @@ func TestReadPackages(t *testing.T) {
 		},
 	}
 
-	table = append(table, buildTypeTests(ensure)...)
+	table = append(table, buildTypeTests()...)
 
 	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
 		entry := table[i]
@@ -440,7 +440,7 @@ func TestReadPackages(t *testing.T) {
 	})
 }
 
-func buildTypeTests(ensure ensurepkg.Ensure) []entry {
+func buildTypeTests() []entry {
 	allFixtures := []*base.ScenarioDetails{
 		builtin.FixtureDetails,
 		externaltypes.FixtureDetails,

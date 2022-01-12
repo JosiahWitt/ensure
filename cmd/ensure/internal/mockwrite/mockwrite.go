@@ -78,13 +78,13 @@ func (w *MockWriter) writeMock(config *ensurefile.Config, mock *mockgen.PackageM
 	ifaceNames := strings.Join(mock.Package.InterfaceNames(), ",")
 	w.Logger.Printf(" - Writing mocks: %s:%s -> %s\n", mock.Package.Path, ifaceNames, mockFilePath)
 
-	if err := w.FSWrite.MkdirAll(mockDirPath, 0775); err != nil {
+	if err := w.FSWrite.MkdirAll(mockDirPath, 0775); err != nil { //nolint:gomnd
 		return erk.WrapWith(ErrUnableToCreateDir, err, erk.Params{
 			"path": mockDirPath,
 		})
 	}
 
-	if err := w.FSWrite.WriteFile(mockFilePath, mock.FileContents, 0664); err != nil {
+	if err := w.FSWrite.WriteFile(mockFilePath, mock.FileContents, 0664); err != nil { //nolint:gomnd
 		return erk.WrapWith(ErrUnableToCreateFile, err, erk.Params{
 			"path": mockFilePath,
 		})

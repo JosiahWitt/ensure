@@ -161,7 +161,7 @@ func TestLoadConfig(t *testing.T) {
 		},
 	}
 
-	table = appendValidationEntriesToLoadConfigEntries(ensure, table)
+	table = appendValidationEntriesToLoadConfigEntries(table)
 
 	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
 		entry := table[i]

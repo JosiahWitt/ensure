@@ -4,10 +4,9 @@ import (
 	"strings"
 
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
-	"github.com/JosiahWitt/ensure/ensurepkg"
 )
 
-func appendValidationEntriesToLoadConfigEntries(ensure ensurepkg.Ensure, table []loadConfigEntry) []loadConfigEntry {
+func appendValidationEntriesToLoadConfigEntries(table []loadConfigEntry) []loadConfigEntry {
 	validationEntries := []struct {
 		Name string
 
