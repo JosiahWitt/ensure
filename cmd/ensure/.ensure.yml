@@ -1,6 +1,6 @@
 mocks:
   packages:
-    - path: bursavich.dev/fs-shim/io/fs
+    - path: io/fs
       interfaces: [ReadFileFS]
 
     - path: github.com/JosiahWitt/ensure/cmd/ensure/internal/fswrite

@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"bursavich.dev/fs-shim/io/fs"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/cmd"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/fswrite"
@@ -39,7 +38,7 @@ func run() error {
 
 		Logger:           logger,
 		Getwd:            os.Getwd,
-		EnsureFileLoader: &ensurefile.Loader{FS: fs.DirFS("")},
+		EnsureFileLoader: &ensurefile.Loader{FS: os.DirFS("")},
 		InterfaceReader:  &ifacereader.InterfaceReader{},
 		MockGenerator:    mockGen,
 		MockWriter: &mockwrite.MockWriter{

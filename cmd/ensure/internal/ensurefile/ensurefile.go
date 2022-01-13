@@ -4,10 +4,10 @@ package ensurefile
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"strings"
 
-	"bursavich.dev/fs-shim/io/fs"
 	"github.com/JosiahWitt/erk"
 	"golang.org/x/mod/modfile"
 	"gopkg.in/yaml.v3"

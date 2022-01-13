@@ -1,9 +1,8 @@
 module github.com/JosiahWitt/ensure/cmd/ensure
 
-go 1.15
+go 1.16
 
 require (
-	bursavich.dev/fs-shim v1.0.1
 	github.com/JosiahWitt/ensure v0.3.9
 	github.com/JosiahWitt/erk v0.5.9
 	github.com/golang/mock v1.6.0

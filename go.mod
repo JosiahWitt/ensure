@@ -1,6 +1,6 @@
 module github.com/JosiahWitt/ensure
 
-go 1.15
+go 1.16
 
 require (
 	github.com/JosiahWitt/erk v0.5.8

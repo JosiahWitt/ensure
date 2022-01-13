@@ -2,12 +2,12 @@ package ensurefile_test
 
 import (
 	"errors"
+	"io/fs"
 	"testing"
 
-	"bursavich.dev/fs-shim/io/fs"
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
-	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mocks/bursavich.dev/fs-shim/io/mock_fs"
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mocks/io/mock_fs"
 	"github.com/JosiahWitt/ensure/ensurepkg"
 	"github.com/golang/mock/gomock"
 )
