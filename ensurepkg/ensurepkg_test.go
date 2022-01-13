@@ -5,7 +5,7 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/ensurepkg"
-	"github.com/JosiahWitt/ensure/internal/mocks/mock_ensurepkg"
+	"github.com/JosiahWitt/ensure/internal/mocks/github.com/JosiahWitt/ensure/mock_ensurepkg"
 	"github.com/golang/mock/gomock"
 )
 

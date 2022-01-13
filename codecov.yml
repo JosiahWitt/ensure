@@ -1,0 +1,21 @@
+codecov:
+  require_ci_to_pass: yes
+
+coverage:
+  precision: 2
+  round: down
+  range: "75...100"
+
+comment:
+  layout: "reach,diff,flags,files,footer"
+  behavior: default
+  require_changes: no
+
+flags:
+  cli:
+    paths:
+      - cmd/ensure/**
+  package:
+    paths:
+      - "*.go"
+      - "ensurepkg/**"

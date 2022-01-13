@@ -1,0 +1,4 @@
+mocks:
+  packages:
+    - path: github.com/JosiahWitt/ensure/ensurepkg
+      interfaces: [T]
