@@ -18,6 +18,7 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/single_method_no_imports"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/single_method_no_params"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/single_method_unnamed_inputs"
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/single_method_variadic_input"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/uniqpkg"
 	"github.com/JosiahWitt/ensure/ensurepkg"
 )
@@ -75,6 +76,21 @@ func TestGenerateMocks(t *testing.T) {
 					Package: single_method_multiple_params.Package,
 
 					FileContents: readExpectationFile("single_method_multiple_params", "pkg1"),
+				},
+			},
+		},
+		{
+			Name: "with a single method with variadic input",
+
+			InputPackages: []*ifacereader.Package{
+				single_method_variadic_input.Package,
+			},
+
+			ExpectedPackageMocks: []*mockgen.PackageMock{
+				{
+					Package: single_method_variadic_input.Package,
+
+					FileContents: readExpectationFile("single_method_variadic_input", "pkg1"),
 				},
 			},
 		},

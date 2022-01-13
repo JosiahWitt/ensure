@@ -40,7 +40,8 @@ func (m *MockStringTransformable) EXPECT() *MockStringTransformableMockRecorder 
 // TransformString mocks TransformString on StringTransformable.
 func (m *MockStringTransformable) TransformString(_prefix string, _str string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TransformString", _prefix, _str)
+	inputs := []interface{}{_prefix, _str}
+	ret := m.ctrl.Call(m, "TransformString", inputs...)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -58,9 +59,10 @@ func (m *MockStringTransformable) TransformString(_prefix string, _str string) (
 //
 //  string
 //  error
-func (mr *MockStringTransformableMockRecorder) TransformString(_prefix, _str interface{}) *gomock.Call {
+func (mr *MockStringTransformableMockRecorder) TransformString(_prefix interface{}, _str interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockStringTransformable)(nil).TransformString), _prefix, _str)
+	inputs := []interface{}{_prefix, _str}
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockStringTransformable)(nil).TransformString), inputs...)
 }
 
 // MockNumberTransformable is a mock of the NumberTransformable interface in pkgs/pkg1.
@@ -94,7 +96,8 @@ func (m *MockNumberTransformable) EXPECT() *MockNumberTransformableMockRecorder 
 // TransformInt mocks TransformInt on NumberTransformable.
 func (m *MockNumberTransformable) TransformInt(_i int) int {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TransformInt", _i)
+	inputs := []interface{}{_i}
+	ret := m.ctrl.Call(m, "TransformInt", inputs...)
 	ret0, _ := ret[0].(int)
 	return ret0
 }
@@ -111,13 +114,15 @@ func (m *MockNumberTransformable) TransformInt(_i int) int {
 //  int
 func (mr *MockNumberTransformableMockRecorder) TransformInt(_i interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformInt", reflect.TypeOf((*MockNumberTransformable)(nil).TransformInt), _i)
+	inputs := []interface{}{_i}
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformInt", reflect.TypeOf((*MockNumberTransformable)(nil).TransformInt), inputs...)
 }
 
 // TransformFloat64 mocks TransformFloat64 on NumberTransformable.
 func (m *MockNumberTransformable) TransformFloat64(_f float64) float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TransformFloat64", _f)
+	inputs := []interface{}{_f}
+	ret := m.ctrl.Call(m, "TransformFloat64", inputs...)
 	ret0, _ := ret[0].(float64)
 	return ret0
 }
@@ -134,5 +139,6 @@ func (m *MockNumberTransformable) TransformFloat64(_f float64) float64 {
 //  float64
 func (mr *MockNumberTransformableMockRecorder) TransformFloat64(_f interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformFloat64", reflect.TypeOf((*MockNumberTransformable)(nil).TransformFloat64), _f)
+	inputs := []interface{}{_f}
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformFloat64", reflect.TypeOf((*MockNumberTransformable)(nil).TransformFloat64), inputs...)
 }

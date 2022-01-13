@@ -40,7 +40,8 @@ func (m *MockTransformable) EXPECT() *MockTransformableMockRecorder {
 // TransformString mocks TransformString on Transformable.
 func (m *MockTransformable) TransformString(_arg0 string, _arg1 string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TransformString", _arg0, _arg1)
+	inputs := []interface{}{_arg0, _arg1}
+	ret := m.ctrl.Call(m, "TransformString", inputs...)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -58,7 +59,8 @@ func (m *MockTransformable) TransformString(_arg0 string, _arg1 string) (string,
 //
 //  string
 //  error
-func (mr *MockTransformableMockRecorder) TransformString(_arg0, _arg1 interface{}) *gomock.Call {
+func (mr *MockTransformableMockRecorder) TransformString(_arg0 interface{}, _arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockTransformable)(nil).TransformString), _arg0, _arg1)
+	inputs := []interface{}{_arg0, _arg1}
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockTransformable)(nil).TransformString), inputs...)
 }

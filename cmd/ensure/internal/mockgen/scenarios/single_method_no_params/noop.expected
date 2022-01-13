@@ -40,7 +40,8 @@ func (m *MockNoopable) EXPECT() *MockNoopableMockRecorder {
 // Noop mocks Noop on Noopable.
 func (m *MockNoopable) Noop() {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Noop")
+	inputs := []interface{}{}
+	ret := m.ctrl.Call(m, "Noop", inputs...)
 	var _ = ret // Unused, since there are no returns
 	return
 }
@@ -57,5 +58,6 @@ func (m *MockNoopable) Noop() {
 //  none
 func (mr *MockNoopableMockRecorder) Noop() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Noop", reflect.TypeOf((*MockNoopable)(nil).Noop))
+	inputs := []interface{}{}
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Noop", reflect.TypeOf((*MockNoopable)(nil).Noop), inputs...)
 }

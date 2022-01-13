@@ -78,6 +78,7 @@ type Tuple struct {
 	VariableName string
 	PackagePaths []string
 	Type         string
+	Variadic     bool
 }
 
 type internalPackageReader struct {
@@ -228,6 +229,11 @@ func (r *internalPackageReader) buildMethod(method *types.Func) (*Method, error)
 		}
 
 		outputs = append(outputs, builtOutput)
+	}
+
+	// If the signature is variadic, mark the last input type variadic
+	if signature.Variadic() {
+		inputs[len(inputs)-1].Variadic = true
 	}
 
 	return &Method{

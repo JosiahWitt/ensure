@@ -40,7 +40,8 @@ func (m *MockTransformable) EXPECT() *MockTransformableMockRecorder {
 // TransformString mocks TransformString on Transformable.
 func (m *MockTransformable) TransformString(_prefix string, _str string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TransformString", _prefix, _str)
+	inputs := []interface{}{_prefix, _str}
+	ret := m.ctrl.Call(m, "TransformString", inputs...)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -58,15 +59,17 @@ func (m *MockTransformable) TransformString(_prefix string, _str string) (string
 //
 //  string
 //  error
-func (mr *MockTransformableMockRecorder) TransformString(_prefix, _str interface{}) *gomock.Call {
+func (mr *MockTransformableMockRecorder) TransformString(_prefix interface{}, _str interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockTransformable)(nil).TransformString), _prefix, _str)
+	inputs := []interface{}{_prefix, _str}
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockTransformable)(nil).TransformString), inputs...)
 }
 
 // TransformFloat64 mocks TransformFloat64 on Transformable.
 func (m *MockTransformable) TransformFloat64(_f float64) float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TransformFloat64", _f)
+	inputs := []interface{}{_f}
+	ret := m.ctrl.Call(m, "TransformFloat64", inputs...)
 	ret0, _ := ret[0].(float64)
 	return ret0
 }
@@ -83,5 +86,6 @@ func (m *MockTransformable) TransformFloat64(_f float64) float64 {
 //  float64
 func (mr *MockTransformableMockRecorder) TransformFloat64(_f interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformFloat64", reflect.TypeOf((*MockTransformable)(nil).TransformFloat64), _f)
+	inputs := []interface{}{_f}
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformFloat64", reflect.TypeOf((*MockTransformable)(nil).TransformFloat64), inputs...)
 }

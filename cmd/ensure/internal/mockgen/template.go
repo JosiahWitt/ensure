@@ -21,7 +21,7 @@ type templateParams struct {
 var templateFuncs = template.FuncMap{
 	"buildInputSignature":     templateFuncBuildInputSignature,
 	"buildMockInputSignature": templateFuncBuildMockInputSignature,
-	"buildInputVariableList":  templateFuncBuildInputVariableList,
+	"buildInputsSlice":        templateFuncBuildInputsSlice,
 	"buildOutputSignature":    templateFuncBuildOutputSignature,
 	"buildMockReturns":        templateFuncBuildMockReturns,
 	"buildParamsDoc":          templateFuncBuildParamsDoc,
@@ -70,7 +70,8 @@ func (m *Mock{{$iface.Name}}) EXPECT() *Mock{{$iface.Name}}MockRecorder {
 // {{$method.Name}} mocks {{$method.Name}} on {{$iface.Name}}.
 func (m *Mock{{$iface.Name}}) {{$method.Name}}({{buildInputSignature $method.Inputs}}){{buildOutputSignature $method.Outputs}} {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "{{$method.Name}}"{{buildInputVariableList $method.Inputs}})
+	{{buildInputsSlice $method.Inputs}}
+	ret := m.ctrl.Call(m, "{{$method.Name}}", inputs...)
 	{{buildMockReturns $method.Outputs}}
 }
 
@@ -86,7 +87,8 @@ func (m *Mock{{$iface.Name}}) {{$method.Name}}({{buildInputSignature $method.Inp
 //  {{buildParamsDoc $method.Outputs}}
 func (mr *Mock{{$iface.Name}}MockRecorder) {{$method.Name}}({{buildMockInputSignature $method.Inputs}}) *{{$params.GoMockPackageName}}.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "{{$method.Name}}", {{$params.ReflectPackageName}}.TypeOf((*Mock{{$iface.Name}})(nil).{{$method.Name}}){{buildInputVariableList $method.Inputs}})
+	{{buildInputsSlice $method.Inputs}}
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "{{$method.Name}}", {{$params.ReflectPackageName}}.TypeOf((*Mock{{$iface.Name}})(nil).{{$method.Name}}), inputs...)
 }
 {{end -}}
 {{end}}`
@@ -116,7 +118,7 @@ func (p *templateParams) BuildImports() string {
 
 func templateFuncBuildInputSignature(inputs []*ifacereader.Tuple) string {
 	builtInputs := make([]string, 0, len(inputs))
-	for _, input := range populateVariableNames(inputs) {
+	for _, input := range preprocessParams(inputs, false) {
 		builtInputs = append(builtInputs, input.VariableName+" "+input.Type)
 	}
 
@@ -128,26 +130,42 @@ func templateFuncBuildMockInputSignature(inputs []*ifacereader.Tuple) string {
 		return ""
 	}
 
-	builtInputs := buildInputVariableList(inputs)
-	return builtInputs + " interface{}"
-}
-
-func templateFuncBuildInputVariableList(inputs []*ifacereader.Tuple) string {
-	if len(inputs) == 0 {
-		return ""
-	}
-
-	builtInputs := buildInputVariableList(inputs)
-	return ", " + builtInputs
-}
-
-func buildInputVariableList(inputs []*ifacereader.Tuple) string {
 	builtInputs := make([]string, 0, len(inputs))
-	for _, input := range populateVariableNames(inputs) {
-		builtInputs = append(builtInputs, input.VariableName)
+	for _, input := range preprocessParams(inputs, false) {
+		inputType := "interface{}"
+		if input.Variadic {
+			inputType = "...interface{}"
+		}
+
+		builtInputs = append(builtInputs, input.VariableName+" "+inputType)
 	}
 
 	return strings.Join(builtInputs, ", ")
+}
+
+func templateFuncBuildInputsSlice(inputs []*ifacereader.Tuple) string {
+	nonVariadicVariables := make([]string, 0, len(inputs))
+	variadicVariable := ""
+
+	for _, input := range preprocessParams(inputs, false) {
+		if input.Variadic {
+			// Skip adding the variadic input to the list, since we need to use a loop to get around type issues
+			variadicVariable = input.VariableName
+			continue
+		}
+
+		nonVariadicVariables = append(nonVariadicVariables, input.VariableName)
+	}
+
+	builtInputs := "inputs := []interface{}{" + strings.Join(nonVariadicVariables, ", ") + "}"
+
+	if variadicVariable != "" {
+		builtInputs += "\n\tfor _, variadicInput := range " + variadicVariable + " {\n" +
+			"\t\tinputs = append(inputs, variadicInput)\n" +
+			"\t}"
+	}
+
+	return builtInputs
 }
 
 func templateFuncBuildOutputSignature(outputs []*ifacereader.Tuple) string {
@@ -200,7 +218,7 @@ func templateFuncBuildParamsDoc(params []*ifacereader.Tuple) string {
 	}
 
 	builtParams := make([]string, 0, len(params))
-	for _, param := range params {
+	for _, param := range preprocessParams(params, true) {
 		builtParam := param.Type
 		if param.VariableName != "" {
 			builtParam = param.VariableName + " " + param.Type
@@ -212,20 +230,26 @@ func templateFuncBuildParamsDoc(params []*ifacereader.Tuple) string {
 	return strings.Join(builtParams, "\n//  ")
 }
 
-func populateVariableNames(inputs []*ifacereader.Tuple) []*ifacereader.Tuple {
-	populatedInputs := make([]*ifacereader.Tuple, 0, len(inputs))
-	for i, input := range inputs {
-		varName := input.VariableName
-		if varName == "" {
-			varName = fmt.Sprintf("arg%d", i)
+func preprocessParams(params []*ifacereader.Tuple, originalVarName bool) []*ifacereader.Tuple {
+	populatedParams := make([]*ifacereader.Tuple, 0, len(params))
+	for i, originalParam := range params {
+		param := *originalParam
+
+		if !originalVarName {
+			if param.VariableName == "" {
+				param.VariableName = fmt.Sprintf("arg%d", i)
+			}
+
+			// Prefix variable names with `_` to prevent clashing with internal variables inside our mocks
+			param.VariableName = "_" + param.VariableName
 		}
 
-		populatedInputs = append(populatedInputs, &ifacereader.Tuple{
-			VariableName: "_" + varName, // Prefix variable names with `_` to prevent clashing with internal variables inside our mocks
-			Type:         input.Type,
-			PackagePaths: input.PackagePaths,
-		})
+		if param.Variadic {
+			param.Type = "..." + strings.TrimPrefix(param.Type, "[]")
+		}
+
+		populatedParams = append(populatedParams, &param)
 	}
 
-	return populatedInputs
+	return populatedParams
 }

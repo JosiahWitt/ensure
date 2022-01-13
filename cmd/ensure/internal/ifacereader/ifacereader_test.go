@@ -18,6 +18,7 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/scenarios/externaltypes"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/scenarios/inlineexternaltypes"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/scenarios/iterableexternaltypes"
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/scenarios/variadic"
 	"github.com/JosiahWitt/ensure/ensurepkg"
 	"golang.org/x/tools/go/packages"
 )
@@ -443,6 +444,7 @@ func TestReadPackages(t *testing.T) {
 func buildTypeTests() []entry {
 	allFixtures := []*base.ScenarioDetails{
 		builtin.FixtureDetails,
+		variadic.FixtureDetails,
 		externaltypes.FixtureDetails,
 		iterableexternaltypes.FixtureDetails,
 		inlineexternaltypes.FixtureDetails,

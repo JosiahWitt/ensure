@@ -11,6 +11,8 @@ type Fixture interface {
 	InterfaceWithNestedTypes(a interface {
 		Method([]func(m *example1.Message) map[example1.String]*example2.User) *struct{ ID []example2.Float64 }
 	})
+
+	Variadic(a []func(m *example1.Message), b ...[]map[example1.String]*example2.User) (x string, y []*struct{ ID example2.Float64 }, z error)
 }
 
 var FixtureDetails = &base.ScenarioDetails{
@@ -27,6 +29,39 @@ var FixtureDetails = &base.ScenarioDetails{
 				},
 			},
 			Outputs: []*ifacereader.Tuple{},
+		},
+		{
+			Name: "Variadic",
+			Inputs: []*ifacereader.Tuple{
+				{
+					VariableName: "a",
+					PackagePaths: []string{example1.PackagePath},
+					Type:         "[]func(m *example1.Message)",
+				},
+				{
+					VariableName: "b",
+					PackagePaths: []string{example1.PackagePath, example2.PackagePath},
+					Type:         "[][]map[example1.String]*example2.User",
+					Variadic:     true,
+				},
+			},
+			Outputs: []*ifacereader.Tuple{
+				{
+					VariableName: "x",
+					PackagePaths: []string{},
+					Type:         "string",
+				},
+				{
+					VariableName: "y",
+					PackagePaths: []string{example2.PackagePath},
+					Type:         "[]*struct{ID example2.Float64}",
+				},
+				{
+					VariableName: "z",
+					PackagePaths: []string{},
+					Type:         "error",
+				},
+			},
 		},
 	},
 }
