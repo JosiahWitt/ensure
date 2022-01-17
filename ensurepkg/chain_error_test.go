@@ -7,7 +7,7 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/ensurepkg"
-	"github.com/JosiahWitt/ensure/internal/mocks/mock_ensurepkg"
+	"github.com/JosiahWitt/ensure/internal/mocks/github.com/JosiahWitt/ensure/mock_ensurepkg"
 	"github.com/JosiahWitt/erk"
 )
 
@@ -335,7 +335,6 @@ func TestChainMatchesAllErrors(t *testing.T) {
 	})
 }
 
-//nolint:thelper // Only used a couple places, so it's helpful to get the exact line number.
 func sharedIsErrorTests(t *testing.T, run func(mockT *mock_ensurepkg.MockT, chain *ensurepkg.Chain, expected error)) {
 	const errorFormat = "\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s"
 

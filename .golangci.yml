@@ -8,6 +8,10 @@ linters:
     - nlreturn
     - wrapcheck
     - godox
+    - golint
+    - interfacer
+    - scopelint
+    - varnamelen
 
 linters-settings:
   lll:
@@ -26,7 +30,12 @@ issues:
         - paralleltest
         - exhaustivestruct
         - gocognit
+        - cyclop
+        - forcetypeassert
+        - ifshort
+        - thelper
 
-    - path: internal/cmd/
+    # erk types don't need to be exhaustive
+    - text: ".*in erk.*"
       linters:
         - exhaustivestruct

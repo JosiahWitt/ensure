@@ -100,13 +100,14 @@ func (e Ensure) GoMockController() *gomock.Controller {
 }
 
 func wrap(t T) Ensure {
-	memoized := &memoized{}
+	memoized := &memoized{} //nolint:exhaustivestruct
 
 	return func(actual interface{}) *Chain {
 		c := &Chain{
 			t:        t,
 			actual:   actual,
 			memoized: memoized,
+			wasRun:   false,
 		}
 
 		// Cleanup should never call Fatalf, otherwise panics are hidden, and

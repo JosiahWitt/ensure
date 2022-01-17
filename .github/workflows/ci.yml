@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: [1.14, 1.15, 1.16]
+        go-version: [1.16, 1.17]
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
@@ -16,15 +16,27 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: Check out code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
-      - name: Test
-        run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+      - name: Test Ensure Package
+        run: go test -race -coverprofile=pkg-coverage.txt -covermode=atomic ./...
 
-      - name: Upload to codecov
-        uses: codecov/codecov-action@v1
+      - name: Upload package coverage to codecov
+        uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: pkg-coverage.txt
+          flags: package
+
+      - name: Test Ensure CLI
+        run: (cd cmd/ensure; go test -race -coverprofile=../../cli-coverage.txt -covermode=atomic ./...)
+
+      - name: Upload CLI coverage to codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: cli-coverage.txt
+          flags: cli
 
 
   lint:
@@ -32,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: [1.14, 1.15, 1.16, 1.17]
+        go-version: [1.16, 1.17]
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
@@ -41,12 +53,20 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: Check out code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
-      - name: Lint
+      - name: Lint Ensure Package
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.34.1
+          version: v1.43.0
+          skip-go-installation: true
+
+      - name: Lint Ensure CLI
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.43.0
+          skip-go-installation: true
+          working-directory: cmd/ensure
 
 
   regression-test:
@@ -54,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: [1.14, 1.15, 1.16, 1.17]
+        go-version: [1.16, 1.17]
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
@@ -63,13 +83,13 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: Check out code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
-      - name: Install tools
-        run: make install-tools
-
-      - name: Generate Mocks
+      - name: Generate Package Mocks
         run: make generate-mocks
+
+      - name: Generate CLI Mocks
+        run: (cd cmd/ensure; make generate-mocks)
 
       - name: Git diff
         run: git diff

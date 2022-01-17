@@ -1,0 +1,19 @@
+mocks:
+  packages:
+    - path: io/fs
+      interfaces: [ReadFileFS]
+
+    - path: github.com/JosiahWitt/ensure/cmd/ensure/internal/fswrite
+      interfaces: [Writable]
+
+    - path: github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader
+      interfaces: [Readable]
+
+    - path: github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile
+      interfaces: [LoaderIface]
+
+    - path: github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen
+      interfaces: [Generator]
+
+    - path: github.com/JosiahWitt/ensure/cmd/ensure/internal/mockwrite
+      interfaces: [Writable]
