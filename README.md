@@ -19,7 +19,7 @@ $ go get github.com/JosiahWitt/ensure
 ### CLI
 ```bash
 # Requires Go 1.16+
-$ go install github.com/JosiahWitt/ensure/cmd/ensure
+$ go install github.com/JosiahWitt/ensure/cmd/ensure@latest
 ```
 
 
