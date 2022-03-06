@@ -8,6 +8,7 @@ import (
 
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/fswrite"
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen"
 	"github.com/JosiahWitt/erk"
 	"github.com/JosiahWitt/erk/erg"
@@ -36,7 +37,7 @@ var (
 // Writable writes the provided mocks to the file system.
 type Writable interface {
 	WriteMocks(config *ensurefile.Config, mocks []*mockgen.PackageMock) error
-	TidyMocks(config *ensurefile.Config) error
+	TidyMocks(config *ensurefile.Config, packages []*ifacereader.Package) error
 }
 
 // MockWriter writes the provided mocks to the file system.
@@ -67,7 +68,7 @@ func (w *MockWriter) WriteMocks(config *ensurefile.Config, mocks []*mockgen.Pack
 }
 
 func (w *MockWriter) writeMock(config *ensurefile.Config, mock *mockgen.PackageMock) error {
-	mockDest, err := computeMockDestination(config, mock.Package.Path)
+	mockDest, err := computeMockDestination(config, mock.Package.Name, mock.Package.Path)
 	if err != nil {
 		return err
 	}

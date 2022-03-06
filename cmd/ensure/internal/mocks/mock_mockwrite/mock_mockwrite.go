@@ -6,6 +6,7 @@ package mock_mockwrite
 
 import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen"
 	"github.com/golang/mock/gomock"
 	"reflect"
@@ -40,9 +41,9 @@ func (m *MockWritable) EXPECT() *MockWritableMockRecorder {
 }
 
 // TidyMocks mocks TidyMocks on Writable.
-func (m *MockWritable) TidyMocks(_config *ensurefile.Config) error {
+func (m *MockWritable) TidyMocks(_config *ensurefile.Config, _packages []*ifacereader.Package) error {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_config}
+	inputs := []interface{}{_config, _packages}
 	ret := m.ctrl.Call(m, "TidyMocks", inputs...)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -54,13 +55,14 @@ func (m *MockWritable) TidyMocks(_config *ensurefile.Config) error {
 // Inputs:
 //
 //  config *ensurefile.Config
+//  packages []*ifacereader.Package
 //
 // Outputs:
 //
 //  error
-func (mr *MockWritableMockRecorder) TidyMocks(_config interface{}) *gomock.Call {
+func (mr *MockWritableMockRecorder) TidyMocks(_config interface{}, _packages interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_config}
+	inputs := []interface{}{_config, _packages}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TidyMocks", reflect.TypeOf((*MockWritable)(nil).TidyMocks), inputs...)
 }
 

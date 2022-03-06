@@ -8,6 +8,7 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mocks/mock_fswrite"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockwrite"
 	"github.com/JosiahWitt/ensure/ensurepkg"
@@ -21,8 +22,11 @@ func TestTidyMocks(t *testing.T) {
 	}
 
 	table := []struct {
-		Name          string
-		Config        *ensurefile.Config
+		Name string
+
+		Config   *ensurefile.Config
+		Packages []*ifacereader.Package
+
 		ExpectedError error
 
 		Mocks      *Mocks
@@ -31,6 +35,7 @@ func TestTidyMocks(t *testing.T) {
 	}{
 		{
 			Name: "with files to delete",
+
 			Config: &ensurefile.Config{
 				RootPath:   "/root/path",
 				ModulePath: "github.com/my/mod",
@@ -43,7 +48,7 @@ func TestTidyMocks(t *testing.T) {
 							Interfaces: []string{"Iface1"},
 						},
 						{
-							Path:       "github.com/some/pkg/qwerty",
+							Path:       "github.com/some/pkg/qwerty/v2",
 							Interfaces: []string{"Iface2"},
 						},
 						{
@@ -51,6 +56,24 @@ func TestTidyMocks(t *testing.T) {
 							Interfaces: []string{"Iface3"},
 						},
 					},
+				},
+			},
+
+			Packages: []*ifacereader.Package{
+				{
+					Name: "abc",
+					Path: "github.com/some/pkg/abc",
+					// Other fields are unused by this package
+				},
+				{
+					Name: "qwerty",
+					Path: "github.com/some/pkg/qwerty/v2",
+					// Other fields are unused by this package
+				},
+				{
+					Name: "xyz",
+					Path: "github.com/my/mod/layer1/layer2/internal/layer3/layer4/internal/layer5/layer6/xyz",
+					// Other fields are unused by this package
 				},
 			},
 
@@ -63,8 +86,8 @@ func TestTidyMocks(t *testing.T) {
 						primaryMocksDir + "/github.com/some/pkg",
 						primaryMocksDir + "/github.com/some/pkg/mock_abc",
 						primaryMocksDir + "/github.com/some/pkg/mock_abc/mock_abc.go",
-						primaryMocksDir + "/github.com/some/pkg/mock_qwerty",
-						primaryMocksDir + "/github.com/some/pkg/mock_qwerty/mock_qwerty.go",
+						primaryMocksDir + "/github.com/some/pkg/qwerty/v2/mock_qwerty",
+						primaryMocksDir + "/github.com/some/pkg/qwerty/v2/mock_qwerty/mock_qwerty.go",
 
 						// Extra files
 
@@ -141,7 +164,7 @@ func TestTidyMocks(t *testing.T) {
 							Interfaces: []string{"Iface1"},
 						},
 						{
-							Path:       "github.com/some/pkg/qwerty",
+							Path:       "github.com/some/pkg/qwerty/v2",
 							Interfaces: []string{"Iface2"},
 						},
 						{
@@ -149,6 +172,24 @@ func TestTidyMocks(t *testing.T) {
 							Interfaces: []string{"Iface3"},
 						},
 					},
+				},
+			},
+
+			Packages: []*ifacereader.Package{
+				{
+					Name: "abc",
+					Path: "github.com/some/pkg/abc",
+					// Other fields are unused by this package
+				},
+				{
+					Name: "qwerty",
+					Path: "github.com/some/pkg/qwerty/v2",
+					// Other fields are unused by this package
+				},
+				{
+					Name: "xyz",
+					Path: "github.com/my/mod/layer1/layer2/internal/layer3/layer4/internal/layer5/layer6/xyz",
+					// Other fields are unused by this package
 				},
 			},
 
@@ -161,8 +202,8 @@ func TestTidyMocks(t *testing.T) {
 						primaryMocksDir + "/github.com/some/pkg",
 						primaryMocksDir + "/github.com/some/pkg/mock_abc",
 						primaryMocksDir + "/github.com/some/pkg/mock_abc/mock_abc.go",
-						primaryMocksDir + "/github.com/some/pkg/mock_qwerty",
-						primaryMocksDir + "/github.com/some/pkg/mock_qwerty/mock_qwerty.go",
+						primaryMocksDir + "/github.com/some/pkg/qwerty/v2/mock_qwerty",
+						primaryMocksDir + "/github.com/some/pkg/qwerty/v2/mock_qwerty/mock_qwerty.go",
 					}, nil)
 
 				const internalMocksDir = "/root/path/layer1/layer2/internal/layer3/layer4/internal/internal_mocks"
@@ -177,8 +218,8 @@ func TestTidyMocks(t *testing.T) {
 		},
 
 		{
-			Name:          "with invalid config: internal package outside module",
-			ExpectedError: mockwrite.ErrInternalPackageOutsideModule,
+			Name: "with invalid config: internal package outside module",
+
 			Config: &ensurefile.Config{
 				RootPath:   "/root/path",
 				ModulePath: "github.com/my/mod",
@@ -191,11 +232,20 @@ func TestTidyMocks(t *testing.T) {
 					},
 				},
 			},
+
+			Packages: []*ifacereader.Package{
+				{
+					Name: "xyz",
+					Path: "github.com/not/my/mod/internal/xyz",
+				},
+			},
+
+			ExpectedError: mockwrite.ErrInternalPackageOutsideModule,
 		},
 
 		{
-			Name:          "when unable to list files recursively",
-			ExpectedError: mockwrite.ErrTidyUnableToList,
+			Name: "when unable to list files recursively",
+
 			Config: &ensurefile.Config{
 				RootPath:   "/root/path",
 				ModulePath: "github.com/my/mod",
@@ -211,6 +261,15 @@ func TestTidyMocks(t *testing.T) {
 				},
 			},
 
+			Packages: []*ifacereader.Package{
+				{
+					Name: "abc",
+					Path: "github.com/some/pkg/abc",
+				},
+			},
+
+			ExpectedError: mockwrite.ErrTidyUnableToList,
+
 			SetupMocks: func(m *Mocks) {
 				m.FSWrite.EXPECT().ListRecursive("/root/path/primary_mocks").
 					Return(nil, errors.New("you can't do that"))
@@ -218,8 +277,8 @@ func TestTidyMocks(t *testing.T) {
 		},
 
 		{
-			Name:          "when unable to delete files",
-			ExpectedError: mockwrite.ErrTidyUnableToCleanup,
+			Name: "when unable to delete files",
+
 			Config: &ensurefile.Config{
 				RootPath:   "/root/path",
 				ModulePath: "github.com/my/mod",
@@ -234,6 +293,15 @@ func TestTidyMocks(t *testing.T) {
 					},
 				},
 			},
+
+			Packages: []*ifacereader.Package{
+				{
+					Name: "abc",
+					Path: "github.com/abc",
+				},
+			},
+
+			ExpectedError: mockwrite.ErrTidyUnableToCleanup,
 
 			SetupMocks: func(m *Mocks) {
 				const primaryMocksDir = "/root/path/primary_mocks"
@@ -256,7 +324,7 @@ func TestTidyMocks(t *testing.T) {
 		entry := table[i]
 		entry.Subject.Logger = log.New(ioutil.Discard, "", 0)
 
-		err := entry.Subject.TidyMocks(entry.Config)
+		err := entry.Subject.TidyMocks(entry.Config, entry.Packages)
 		ensure(err).IsError(entry.ExpectedError)
 	})
 }

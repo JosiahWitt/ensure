@@ -63,6 +63,7 @@ func TestWriteMocks(t *testing.T) {
 			GeneratedMocks: []*mockgen.PackageMock{
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg1",
 						Path: "github.com/my/mod/pkgs/pkg1",
 						// Other fields are unused by this package
 					},
@@ -71,6 +72,7 @@ func TestWriteMocks(t *testing.T) {
 				},
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg2",
 						Path: "github.com/my/mod/pkgs/pkg2",
 						// Other fields are unused by this package
 					},
@@ -116,6 +118,7 @@ func TestWriteMocks(t *testing.T) {
 			GeneratedMocks: []*mockgen.PackageMock{
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg1",
 						Path: "github.com/my/mod/lib/internal/pkgs/pkg1",
 						// Other fields are unused by this package
 					},
@@ -125,6 +128,7 @@ func TestWriteMocks(t *testing.T) {
 				{
 					Package: &ifacereader.Package{
 						// Doubly nested internal package
+						Name: "pkg2",
 						Path: "github.com/my/mod/lib/internal/pkgs/internal/thing/pkg2",
 						// Other fields are unused by this package
 					},
@@ -169,6 +173,7 @@ func TestWriteMocks(t *testing.T) {
 			GeneratedMocks: []*mockgen.PackageMock{
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg1",
 						Path: "github.com/not/my/mod/pkgs/pkg1",
 						// Other fields are unused by this package
 					},
@@ -177,6 +182,7 @@ func TestWriteMocks(t *testing.T) {
 				},
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg2",
 						Path: "github.com/not/my/mod/pkgs/pkg2",
 						// Other fields are unused by this package
 					},
@@ -225,6 +231,7 @@ func TestWriteMocks(t *testing.T) {
 			GeneratedMocks: []*mockgen.PackageMock{
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg1",
 						Path: "github.com/my/mod/lib/internal/pkgs/pkg1",
 						// Other fields are unused by this package
 					},
@@ -233,6 +240,7 @@ func TestWriteMocks(t *testing.T) {
 				},
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg2",
 						Path: "github.com/my/mod/pkgs/pkg2",
 						// Other fields are unused by this package
 					},
@@ -241,6 +249,7 @@ func TestWriteMocks(t *testing.T) {
 				},
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg1",
 						Path: "github.com/not/my/mod/pkgs/pkg1",
 						// Other fields are unused by this package
 					},
@@ -258,6 +267,62 @@ func TestWriteMocks(t *testing.T) {
 
 				m.FS.EXPECT().MkdirAll("/my/root/primary-mocks/github.com/not/my/mod/pkgs/mock_pkg1", fs.FileMode(0775))
 				m.FS.EXPECT().WriteFile("/my/root/primary-mocks/github.com/not/my/mod/pkgs/mock_pkg1/mock_pkg1.go", "pkg2 file!", fs.FileMode(0664))
+			},
+		},
+		{
+			Name: "when provided mocks for a v2 package",
+
+			Config: &ensurefile.Config{
+				RootPath:   "/my/root",
+				ModulePath: "github.com/my/mod",
+
+				Mocks: &ensurefile.MockConfig{
+					PrimaryDestination:  "primary-mocks",
+					InternalDestination: "internal-mocks",
+					TidyAfterGenerate:   true,
+
+					// Mocks for these two paths will collide in the same file.
+					// Hopefully this doesn't happen much in the real world.
+					Packages: []*ensurefile.MockPackage{
+						{
+							Path:       "github.com/my/pkg1/v2",
+							Interfaces: []string{"Iface1", "Iface2"},
+						},
+						{
+							Path:       "github.com/my/pkg1/v2/pkg1",
+							Interfaces: []string{"Iface3", "Iface4"},
+						},
+					},
+				},
+			},
+
+			GeneratedMocks: []*mockgen.PackageMock{
+				{
+					Package: &ifacereader.Package{
+						Name: "pkg1",
+						Path: "github.com/my/pkg1/v2",
+						// Other fields are unused by this package
+					},
+
+					FileContents: "pkg1 file!",
+				},
+				{
+					Package: &ifacereader.Package{
+						Name: "pkg1",
+						Path: "github.com/my/pkg1/v2/pkg1",
+						// Other fields are unused by this package
+					},
+
+					FileContents: "nested pkg1 file!",
+				},
+			},
+
+			SetupMocks: func(m *Mocks) {
+				m.FS.EXPECT().MkdirAll("/my/root/primary-mocks/github.com/my/pkg1/v2/mock_pkg1", fs.FileMode(0775))
+				m.FS.EXPECT().WriteFile("/my/root/primary-mocks/github.com/my/pkg1/v2/mock_pkg1/mock_pkg1.go", "pkg1 file!", fs.FileMode(0664))
+
+				m.FS.EXPECT().MkdirAll("/my/root/primary-mocks/github.com/my/pkg1/v2/mock_pkg1", fs.FileMode(0775))
+				m.FS.EXPECT().WriteFile("/my/root/primary-mocks/github.com/my/pkg1/v2/mock_pkg1/mock_pkg1.go", "nested pkg1 file!", fs.FileMode(0664))
 			},
 		},
 		{
@@ -288,6 +353,7 @@ func TestWriteMocks(t *testing.T) {
 			GeneratedMocks: []*mockgen.PackageMock{
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg1",
 						Path: "github.com/not/my/mod/internal/pkgs/pkg1",
 						// Other fields are unused by this package
 					},
@@ -296,6 +362,7 @@ func TestWriteMocks(t *testing.T) {
 				},
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg2",
 						Path: "github.com/my/mod/pkgs/pkg2",
 						// Other fields are unused by this package
 					},
@@ -340,6 +407,7 @@ func TestWriteMocks(t *testing.T) {
 			GeneratedMocks: []*mockgen.PackageMock{
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg1",
 						Path: "github.com/my/mod/pkgs/pkg1",
 						// Other fields are unused by this package
 					},
@@ -348,6 +416,7 @@ func TestWriteMocks(t *testing.T) {
 				},
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg2",
 						Path: "github.com/my/mod/pkgs/pkg2",
 						// Other fields are unused by this package
 					},
@@ -396,6 +465,7 @@ func TestWriteMocks(t *testing.T) {
 			GeneratedMocks: []*mockgen.PackageMock{
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg1",
 						Path: "github.com/my/mod/pkgs/pkg1",
 						// Other fields are unused by this package
 					},
@@ -404,6 +474,7 @@ func TestWriteMocks(t *testing.T) {
 				},
 				{
 					Package: &ifacereader.Package{
+						Name: "pkg2",
 						Path: "github.com/my/mod/pkgs/pkg2",
 						// Other fields are unused by this package
 					},
