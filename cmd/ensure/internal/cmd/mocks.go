@@ -57,7 +57,7 @@ func (a *App) mocksGenerateCmd() *cli.Command {
 			}
 
 			if config.Mocks.TidyAfterGenerate {
-				if err := a.MockWriter.TidyMocks(config); err != nil {
+				if err := a.MockWriter.TidyMocks(config, pkgs); err != nil {
 					return err
 				}
 			}
@@ -83,7 +83,17 @@ func (a *App) mocksTidyCmd() *cli.Command {
 				return err
 			}
 
-			return a.MockWriter.TidyMocks(config)
+			pkgList := buildPackageList(config.Mocks.Packages)
+			packageImports := uniqpkg.New()
+
+			a.Logger.Println("Reading packages listed in .ensure.yml...")
+
+			pkgs, err := a.InterfaceReader.ReadPackages(pkgList, packageImports)
+			if err != nil {
+				return err
+			}
+
+			return a.MockWriter.TidyMocks(config, pkgs)
 		},
 	}
 }

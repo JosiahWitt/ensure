@@ -2,6 +2,7 @@ package mockwrite
 
 import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/erk"
 )
 
@@ -15,8 +16,8 @@ var (
 )
 
 // TidyMocks removes any files other than those that are expected to exist in the mock directories.
-func (w *MockWriter) TidyMocks(config *ensurefile.Config) error {
-	mockDestinations, err := computeMockDestinations(config)
+func (w *MockWriter) TidyMocks(config *ensurefile.Config, packages []*ifacereader.Package) error {
+	mockDestinations, err := computeMockDestinations(config, packages)
 	if err != nil {
 		return err
 	}

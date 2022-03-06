@@ -81,7 +81,7 @@ func TestMocksGenerate(t *testing.T) {
 
 				m.MockWriter.EXPECT().WriteMocks(buildConfig(configTidyEnabled), buildGeneratedMocks())
 
-				m.MockWriter.EXPECT().TidyMocks(buildConfig(configTidyEnabled))
+				m.MockWriter.EXPECT().TidyMocks(buildConfig(configTidyEnabled), buildIfaceReaderPackagesOutput())
 			},
 		},
 		{
@@ -179,7 +179,7 @@ func TestMocksGenerate(t *testing.T) {
 
 				m.MockWriter.EXPECT().WriteMocks(buildConfig(configTidyEnabled), buildGeneratedMocks())
 
-				m.MockWriter.EXPECT().TidyMocks(buildConfig(configTidyEnabled)).Return(exampleError)
+				m.MockWriter.EXPECT().TidyMocks(buildConfig(configTidyEnabled), buildIfaceReaderPackagesOutput()).Return(exampleError)
 			},
 		},
 	}
@@ -199,6 +199,8 @@ func TestMocksTidy(t *testing.T) {
 
 	type Mocks struct {
 		EnsureFileLoader *mock_ensurefile.MockLoaderIface
+		IfaceReader      *mock_ifacereader.MockReadable
+		MockGen          *mock_mockgen.MockGenerator
 		MockWriter       *mock_mockwrite.MockWritable
 	}
 
@@ -220,16 +222,16 @@ func TestMocksTidy(t *testing.T) {
 			Name:  "with valid execution",
 			Getwd: defaultWd,
 			SetupMocks: func(m *Mocks) {
-				m.EnsureFileLoader.EXPECT().
-					LoadConfig("/test").
-					Return(&ensurefile.Config{
-						RootPath: "/some/root/path",
-					}, nil)
+				m.EnsureFileLoader.EXPECT().LoadConfig("/test").Return(buildConfig(configNoop), nil)
+
+				pkgsImports := uniqpkg.New()
+
+				m.IfaceReader.EXPECT().
+					ReadPackages(buildIfaceReaderPackagesInput(), pkgsImports).
+					Return(buildIfaceReaderPackagesOutput(), nil)
 
 				m.MockWriter.EXPECT().
-					TidyMocks(&ensurefile.Config{
-						RootPath: "/some/root/path",
-					}).
+					TidyMocks(buildConfig(configNoop), buildIfaceReaderPackagesOutput()).
 					Return(nil)
 			},
 		},
@@ -247,20 +249,34 @@ func TestMocksTidy(t *testing.T) {
 			},
 		},
 		{
+			Name:          "returns error when unable to load packages",
+			Getwd:         defaultWd,
+			ExpectedError: exampleError,
+			SetupMocks: func(m *Mocks) {
+				m.EnsureFileLoader.EXPECT().LoadConfig("/test").Return(buildConfig(configNoop), nil)
+
+				pkgsImports := uniqpkg.New()
+
+				m.IfaceReader.EXPECT().
+					ReadPackages(buildIfaceReaderPackagesInput(), pkgsImports).
+					Return(buildIfaceReaderPackagesOutput(), exampleError)
+			},
+		},
+		{
 			Name:          "returns error when unable to tidy mocks",
 			Getwd:         defaultWd,
 			ExpectedError: exampleError,
 			SetupMocks: func(m *Mocks) {
-				m.EnsureFileLoader.EXPECT().
-					LoadConfig("/test").
-					Return(&ensurefile.Config{
-						RootPath: "/some/root/path",
-					}, nil)
+				m.EnsureFileLoader.EXPECT().LoadConfig("/test").Return(buildConfig(configNoop), nil)
+
+				pkgsImports := uniqpkg.New()
+
+				m.IfaceReader.EXPECT().
+					ReadPackages(buildIfaceReaderPackagesInput(), pkgsImports).
+					Return(buildIfaceReaderPackagesOutput(), nil)
 
 				m.MockWriter.EXPECT().
-					TidyMocks(&ensurefile.Config{
-						RootPath: "/some/root/path",
-					}).
+					TidyMocks(buildConfig(configNoop), buildIfaceReaderPackagesOutput()).
 					Return(exampleError)
 			},
 		},
@@ -269,6 +285,7 @@ func TestMocksTidy(t *testing.T) {
 	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
 		entry := table[i]
 		entry.Subject.Getwd = entry.Getwd
+		entry.Subject.Logger = log.New(ioutil.Discard, "", 0)
 
 		err := entry.Subject.Run([]string{"ensure", "mocks", "tidy"})
 		ensure(err).IsError(entry.ExpectedError)
