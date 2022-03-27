@@ -34,6 +34,7 @@ issues:
         - forcetypeassert
         - ifshort
         - thelper
+        - maintidx
 
     # erk types don't need to be exhaustive
     - text: ".*in erk.*"
