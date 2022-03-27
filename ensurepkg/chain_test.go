@@ -1,6 +1,7 @@
 package ensurepkg_test
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
@@ -378,6 +379,37 @@ func TestChainEquals(t *testing.T) {
 
 		ensure := ensure.New(mockT)
 		ensure("abc").Equals("abc\n\"xyz\"\n\tqwerty")
+	})
+
+	t.Run("when concurrent", func(t *testing.T) {
+		mockT := setupMockT(t)
+
+		mockT.EXPECT().Helper().Times(3 * 2)
+		mockT.EXPECT().Cleanup(gomock.Any()).Do(func(fn func()) {
+			t.Cleanup(fn)
+		}).Times(3)
+
+		ensure := ensure.New(mockT)
+
+		var wg sync.WaitGroup
+		wg.Add(3)
+
+		go func() {
+			ensure("abc").Equals("abc")
+			wg.Done()
+		}()
+
+		go func() {
+			ensure("xyz").Equals("xyz")
+			wg.Done()
+		}()
+
+		go func() {
+			ensure("qwerty").Equals("qwerty")
+			wg.Done()
+		}()
+
+		wg.Wait()
 	})
 }
 

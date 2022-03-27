@@ -6,11 +6,16 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/go-test/deep"
 	"github.com/kr/pretty"
 	"github.com/kr/text"
 )
+
+// Mutex to synchronize accessing deep.
+//nolint:gochecknoglobals // Deep global variables need a global mutex.
+var deepGlobalMu sync.Mutex
 
 // IsTrue ensures the actual value is the boolean "true".
 func (c *Chain) IsTrue() {
@@ -75,10 +80,7 @@ func (c *Chain) Equals(expected interface{}) {
 		return
 	}
 
-	deep.CompareUnexportedFields = true
-	deep.NilMapsAreEmpty = false
-	deep.NilSlicesAreEmpty = false
-	results := deep.Equal(c.actual, expected)
+	results := checkEquality(c.actual, expected)
 	if len(results) > 0 {
 		errors := "Actual does not equal expected:"
 		for _, result := range results {
@@ -282,4 +284,18 @@ func prettyFormatString(str string) string {
 	}
 
 	return strconv.Quote(str)
+}
+
+func checkEquality(actual, expected interface{}) []string {
+	// Since deep only supports global settings, we wrap setting them
+	// and the equality check in a mutex for concurrency safety.
+
+	deepGlobalMu.Lock()
+	defer deepGlobalMu.Unlock()
+
+	deep.CompareUnexportedFields = true
+	deep.NilMapsAreEmpty = false
+	deep.NilSlicesAreEmpty = false
+
+	return deep.Equal(actual, expected)
 }
