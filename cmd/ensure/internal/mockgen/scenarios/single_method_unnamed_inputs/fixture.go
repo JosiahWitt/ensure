@@ -12,12 +12,12 @@ var Package = &ifacereader.Package{
 				{
 					Name: "TransformString",
 					Inputs: []*ifacereader.Tuple{
-						{VariableName: "", PackagePaths: []string{}, Type: "string"},
-						{VariableName: "", PackagePaths: []string{}, Type: "string"},
+						{VariableName: "", Type: "string"},
+						{VariableName: "", Type: "string"},
 					},
 					Outputs: []*ifacereader.Tuple{
-						{VariableName: "", PackagePaths: []string{}, Type: "string"},
-						{VariableName: "", PackagePaths: []string{}, Type: "error"},
+						{VariableName: "", Type: "string"},
+						{VariableName: "", Type: "error"},
 					},
 				},
 			},

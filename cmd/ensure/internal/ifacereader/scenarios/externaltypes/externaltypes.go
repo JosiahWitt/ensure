@@ -17,11 +17,13 @@ type Fixture interface {
 var FixtureDetails = &base.ScenarioDetails{
 	Fixture: (*Fixture)(nil),
 
+	ExpectedPackagePaths: []string{example1.PackagePath, example2.PackagePath},
+
 	ExpectedMethods: []*ifacereader.Method{
 		{
 			Name: "ExternalInput",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{example1.PackagePath}, Type: "*example1.Message"},
+				{VariableName: "a", Type: "*example1.Message"},
 			},
 			Outputs: []*ifacereader.Tuple{},
 		},
@@ -29,25 +31,25 @@ var FixtureDetails = &base.ScenarioDetails{
 			Name:   "ExternalOutput",
 			Inputs: []*ifacereader.Tuple{},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{example1.PackagePath}, Type: "*example1.Message"},
+				{VariableName: "", Type: "*example1.Message"},
 			},
 		},
 		{
 			Name: "ExternalIO",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{example1.PackagePath}, Type: "*example1.Message"},
+				{VariableName: "a", Type: "*example1.Message"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{example1.PackagePath}, Type: "*example1.Message"},
+				{VariableName: "", Type: "*example1.Message"},
 			},
 		},
 		{
 			Name: "ExternalIODifferentPackages",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{example1.PackagePath}, Type: "*example1.Message"},
+				{VariableName: "a", Type: "*example1.Message"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{example2.PackagePath}, Type: "*example2.User"},
+				{VariableName: "", Type: "*example2.User"},
 			},
 		},
 	},

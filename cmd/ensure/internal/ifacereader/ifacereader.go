@@ -14,7 +14,7 @@ type (
 	ErkInternal     struct{ erk.DefaultKind }
 )
 
-const unexpectedErrorPrefix = "Unexpected error; please open an issue on GitHub"
+const unexpectedErrorPrefix = "Unexpected error; please open an issue on GitHub (https://github.com/JosiahWitt/ensure/issues)"
 
 var (
 	ErrNoInterfaces     = erk.New(ErkInvalidInput{}, "No interfaces provided for path '{{.path}}'. Please provide which interfaces to mock.")
@@ -26,7 +26,6 @@ var (
 
 	ErrPathMismatch           = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Could not find package details for path: {{.path}}")
 	ErrLeftoverPackageDetails = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Unexpected leftover package details")
-	ErrUnsupportedType        = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Unsupported type '{{type .rawType}}': {{.typeString}}")
 	ErrFuncUnderlyingType     = erk.New(ErkInternal{},
 		unexpectedErrorPrefix+": *types.Func underlying type was not *types.Signature, it was: {{type .underlyingType}}",
 	)
@@ -76,7 +75,6 @@ type Method struct {
 // Tuple includes the details of a single input or output parameter in a method signature.
 type Tuple struct {
 	VariableName string
-	PackagePaths []string
 	Type         string
 	Variadic     bool
 }
@@ -210,25 +208,13 @@ func (r *internalPackageReader) buildMethod(method *types.Func) (*Method, error)
 	inputs := make([]*Tuple, 0, signature.Params().Len())
 	for i := 0; i < signature.Params().Len(); i++ {
 		param := signature.Params().At(i)
-
-		builtInput, err := r.buildTuple(param.Name(), param.Type())
-		if err != nil {
-			return nil, err
-		}
-
-		inputs = append(inputs, builtInput)
+		inputs = append(inputs, r.buildTuple(param.Name(), param.Type()))
 	}
 
 	outputs := make([]*Tuple, 0, signature.Results().Len())
 	for i := 0; i < signature.Results().Len(); i++ {
 		result := signature.Results().At(i)
-
-		builtOutput, err := r.buildTuple(result.Name(), result.Type())
-		if err != nil {
-			return nil, err
-		}
-
-		outputs = append(outputs, builtOutput)
+		outputs = append(outputs, r.buildTuple(result.Name(), result.Type()))
 	}
 
 	// If the signature is variadic, mark the last input type variadic
@@ -243,141 +229,14 @@ func (r *internalPackageReader) buildMethod(method *types.Func) (*Method, error)
 	}, nil
 }
 
-func (r *internalPackageReader) buildTuple(variableName string, rawType types.Type) (*Tuple, error) {
-	pkgPaths, err := r.extractPackagePaths(rawType)
-	if err != nil {
-		return nil, err
-	}
-
-	tuple := &Tuple{
+func (r *internalPackageReader) buildTuple(variableName string, rawType types.Type) *Tuple {
+	return &Tuple{
 		VariableName: variableName,
-		PackagePaths: pkgPaths,
 
 		Type: types.TypeString(rawType, func(p *types.Package) string {
 			return r.pkgNameGen.GeneratePackageName(r.pkg, p)
 		}),
 	}
-
-	return tuple, nil
-}
-
-//nolint:cyclop
-func (r *internalPackageReader) extractPackagePaths(rawType types.Type) ([]string, error) {
-	switch t := rawType.(type) {
-	case *types.Named:
-		if pkg := t.Obj().Pkg(); pkg != nil {
-			return []string{pkg.Path()}, nil
-		}
-
-		return []string{}, nil
-
-	case *types.Basic:
-		return []string{}, nil
-
-	case *types.Slice:
-		return r.extractPackagePaths(t.Elem())
-
-	case *types.Array:
-		return r.extractPackagePaths(t.Elem())
-
-	case *types.Pointer:
-		return r.extractPackagePaths(t.Elem())
-
-	case *types.Chan:
-		return r.extractPackagePaths(t.Elem())
-
-	case *types.Map:
-		return r.extractMapPackagePaths(t)
-
-	case *types.Signature:
-		return r.extractSignaturePackagePaths(t)
-
-	case *types.Interface:
-		return r.extractInterfacePackagePaths(t)
-
-	case *types.Struct:
-		return r.extractStructPackagePaths(t)
-
-	default:
-		// Shouldn't be possible, unless some types are missing
-		return nil, erk.WithParams(ErrUnsupportedType, erk.Params{
-			"rawType":    rawType,
-			"typeString": rawType.String(),
-		})
-	}
-}
-
-func (r *internalPackageReader) extractMapPackagePaths(t *types.Map) ([]string, error) {
-	keyPaths, err := r.extractPackagePaths(t.Key())
-	if err != nil {
-		return nil, err
-	}
-
-	elemPaths, err := r.extractPackagePaths(t.Elem())
-	if err != nil {
-		return nil, err
-	}
-
-	return uniqueStrings(append(keyPaths, elemPaths...)), nil
-}
-
-func (r *internalPackageReader) extractSignaturePackagePaths(t *types.Signature) ([]string, error) {
-	paths := make([]string, 0, t.Params().Len()+t.Results().Len())
-
-	for i := 0; i < t.Params().Len(); i++ {
-		paramPaths, err := r.extractPackagePaths(t.Params().At(i).Type())
-		if err != nil {
-			return nil, err
-		}
-
-		paths = append(paths, paramPaths...)
-	}
-
-	for i := 0; i < t.Results().Len(); i++ {
-		resultPaths, err := r.extractPackagePaths(t.Results().At(i).Type())
-		if err != nil {
-			return nil, err
-		}
-
-		paths = append(paths, resultPaths...)
-	}
-
-	return uniqueStrings(paths), nil
-}
-
-func (r *internalPackageReader) extractInterfacePackagePaths(t *types.Interface) ([]string, error) {
-	builtIface, err := r.buildIface("<unused>", t)
-	if err != nil {
-		return nil, err
-	}
-
-	var paths []string
-	for _, method := range builtIface.Methods {
-		for _, input := range method.Inputs {
-			paths = append(paths, input.PackagePaths...)
-		}
-
-		for _, output := range method.Outputs {
-			paths = append(paths, output.PackagePaths...)
-		}
-	}
-
-	return uniqueStrings(paths), nil
-}
-
-func (r *internalPackageReader) extractStructPackagePaths(t *types.Struct) ([]string, error) {
-	paths := make([]string, 0, t.NumFields())
-
-	for i := 0; i < t.NumFields(); i++ {
-		fieldPaths, err := r.extractPackagePaths(t.Field(i).Type())
-		if err != nil {
-			return nil, err
-		}
-
-		paths = append(paths, fieldPaths...)
-	}
-
-	return uniqueStrings(paths), nil
 }
 
 func buildPackageReadError(pkg *packages.Package) error {
@@ -388,20 +247,6 @@ func buildPackageReadError(pkg *packages.Package) error {
 	}
 
 	return err
-}
-
-func uniqueStrings(strs []string) []string {
-	uniqueStrs := make([]string, 0, len(strs))
-	exists := make(map[string]bool, len(strs))
-
-	for _, str := range strs {
-		if !exists[str] {
-			exists[str] = true
-			uniqueStrs = append(uniqueStrs, str)
-		}
-	}
-
-	return uniqueStrs
 }
 
 // InterfaceNames extracts each of the interface names for which to generate mocks.

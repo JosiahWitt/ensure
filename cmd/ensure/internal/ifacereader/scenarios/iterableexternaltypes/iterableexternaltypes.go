@@ -22,70 +22,72 @@ type Fixture interface {
 var FixtureDetails = &base.ScenarioDetails{
 	Fixture: (*Fixture)(nil),
 
+	ExpectedPackagePaths: []string{example1.PackagePath, example2.PackagePath},
+
 	ExpectedMethods: []*ifacereader.Method{
 		{
 			Name: "ExternalIOSlice",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{example1.PackagePath}, Type: "[]*example1.Message"},
+				{VariableName: "a", Type: "[]*example1.Message"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{example2.PackagePath}, Type: "[]*example2.User"},
+				{VariableName: "", Type: "[]*example2.User"},
 			},
 		},
 		{
 			Name: "ExternalIOArray",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{example1.PackagePath}, Type: "[2]*example1.Message"},
+				{VariableName: "a", Type: "[2]*example1.Message"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{example2.PackagePath}, Type: "[3]*example2.User"},
+				{VariableName: "", Type: "[3]*example2.User"},
 			},
 		},
 
 		{
 			Name: "ExternalIOMapValue",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{example1.PackagePath}, Type: "map[string]*example1.Message"},
+				{VariableName: "a", Type: "map[string]*example1.Message"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{example2.PackagePath}, Type: "map[int]*example2.User"},
+				{VariableName: "", Type: "map[int]*example2.User"},
 			},
 		},
 		{
 			Name: "ExternalIOMapKey",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{example2.PackagePath}, Type: "map[example2.Float64]string"},
+				{VariableName: "a", Type: "map[example2.Float64]string"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{example1.PackagePath}, Type: "map[example1.String]string"},
+				{VariableName: "", Type: "map[example1.String]string"},
 			},
 		},
 		{
 			Name: "ExternalIOMapKeyAndValue",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{example2.PackagePath, example1.PackagePath}, Type: "map[example2.Float64]*example1.Message"},
+				{VariableName: "a", Type: "map[example2.Float64]*example1.Message"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{example1.PackagePath, example2.PackagePath}, Type: "map[example1.String]*example2.User"},
+				{VariableName: "", Type: "map[example1.String]*example2.User"},
 			},
 		},
 		{
 			Name: "ExternalIOMapKeyAndValueSamePackage",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{example1.PackagePath}, Type: "map[example1.String]*example1.Message"},
+				{VariableName: "a", Type: "map[example1.String]*example1.Message"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{example2.PackagePath}, Type: "map[example2.Float64]*example2.User"},
+				{VariableName: "", Type: "map[example2.Float64]*example2.User"},
 			},
 		},
 
 		{
 			Name: "ExternalIOChan",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{example1.PackagePath}, Type: "chan *example1.Message"},
+				{VariableName: "a", Type: "chan *example1.Message"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{example2.PackagePath}, Type: "chan *example2.User"},
+				{VariableName: "", Type: "chan *example2.User"},
 			},
 		},
 	},

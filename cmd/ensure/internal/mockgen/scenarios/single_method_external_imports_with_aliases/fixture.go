@@ -15,11 +15,11 @@ var Package = &ifacereader.Package{
 				{
 					Name: "Transform",
 					Inputs: []*ifacereader.Tuple{
-						{VariableName: "user", PackagePaths: []string{}, Type: "*models.User"},
-						{VariableName: "message", PackagePaths: []string{}, Type: "*models2.Message"},
+						{VariableName: "user", Type: "*models.User"},
+						{VariableName: "message", Type: "*models2.Message"},
 					},
 					Outputs: []*ifacereader.Tuple{
-						{VariableName: "", PackagePaths: []string{}, Type: "models.String"},
+						{VariableName: "", Type: "models.String"},
 					},
 				},
 			},
