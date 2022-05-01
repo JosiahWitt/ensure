@@ -21,47 +21,47 @@ var FixtureDetails = &base.ScenarioDetails{
 		{
 			Name: "Bool",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{}, Type: "bool"},
+				{VariableName: "a", Type: "bool"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{}, Type: "bool"},
+				{VariableName: "", Type: "bool"},
 			},
 		},
 		{
 			Name: "String",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{}, Type: "string"},
+				{VariableName: "a", Type: "string"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{}, Type: "string"},
+				{VariableName: "", Type: "string"},
 			},
 		},
 		{
 			Name: "Int",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{}, Type: "int"},
+				{VariableName: "a", Type: "int"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{}, Type: "int"},
+				{VariableName: "", Type: "int"},
 			},
 		},
 		{
 			Name: "Float64",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{}, Type: "float64"},
+				{VariableName: "a", Type: "float64"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{}, Type: "float64"},
+				{VariableName: "", Type: "float64"},
 			},
 		},
 
 		{
 			Name: "EmptyInterface",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", PackagePaths: []string{}, Type: "interface{}"},
+				{VariableName: "a", Type: "interface{}"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", PackagePaths: []string{}, Type: "interface{}"},
+				{VariableName: "", Type: "interface{}"},
 			},
 		},
 	},

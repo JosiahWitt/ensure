@@ -31,8 +31,9 @@ type entry struct {
 	PackageDetails       []*ifacereader.PackageDetails
 	PackageNameGenerator ifacereader.PackageNameGenerator
 
-	ExpectedPackages []*ifacereader.Package
-	ExpectedError    error
+	ExpectedPackages     []*ifacereader.Package
+	ExpectedPackagePaths []string
+	ExpectedError        error
 
 	Subject *ifacereader.InterfaceReader
 }
@@ -114,21 +115,21 @@ func TestReadPackages(t *testing.T) {
 								{
 									Name: "Method1",
 									Inputs: []*ifacereader.Tuple{
-										{VariableName: "a", PackagePaths: []string{}, Type: "string"},
+										{VariableName: "a", Type: "string"},
 									},
 									Outputs: []*ifacereader.Tuple{
-										{VariableName: "", PackagePaths: []string{}, Type: "string"},
+										{VariableName: "", Type: "string"},
 									},
 								},
 								{
 									Name: "Method2",
 									Inputs: []*ifacereader.Tuple{
-										{VariableName: "a", PackagePaths: []string{}, Type: "string"},
-										{VariableName: "b", PackagePaths: []string{}, Type: "float64"},
+										{VariableName: "a", Type: "string"},
+										{VariableName: "b", Type: "float64"},
 									},
 									Outputs: []*ifacereader.Tuple{
-										{VariableName: "", PackagePaths: []string{}, Type: "string"},
-										{VariableName: "", PackagePaths: []string{}, Type: "error"},
+										{VariableName: "", Type: "string"},
+										{VariableName: "", Type: "error"},
 									},
 								},
 							},
@@ -168,21 +169,21 @@ func TestReadPackages(t *testing.T) {
 								{
 									Name: "Method1",
 									Inputs: []*ifacereader.Tuple{
-										{VariableName: "a", PackagePaths: []string{}, Type: "string"},
+										{VariableName: "a", Type: "string"},
 									},
 									Outputs: []*ifacereader.Tuple{
-										{VariableName: "", PackagePaths: []string{}, Type: "string"},
+										{VariableName: "", Type: "string"},
 									},
 								},
 								{
 									Name: "Method2",
 									Inputs: []*ifacereader.Tuple{
-										{VariableName: "a", PackagePaths: []string{}, Type: "string"},
-										{VariableName: "b", PackagePaths: []string{}, Type: "float64"},
+										{VariableName: "a", Type: "string"},
+										{VariableName: "b", Type: "float64"},
 									},
 									Outputs: []*ifacereader.Tuple{
-										{VariableName: "", PackagePaths: []string{}, Type: "string"},
-										{VariableName: "", PackagePaths: []string{}, Type: "error"},
+										{VariableName: "", Type: "string"},
+										{VariableName: "", Type: "error"},
 									},
 								},
 							},
@@ -256,8 +257,8 @@ func TestReadPackages(t *testing.T) {
 									Name:   "NamedOut",
 									Inputs: []*ifacereader.Tuple{},
 									Outputs: []*ifacereader.Tuple{
-										{VariableName: "a", PackagePaths: []string{}, Type: "string"},
-										{VariableName: "b", PackagePaths: []string{}, Type: "error"},
+										{VariableName: "a", Type: "string"},
+										{VariableName: "b", Type: "error"},
 									},
 								},
 							},
@@ -276,6 +277,8 @@ func TestReadPackages(t *testing.T) {
 				},
 			},
 
+			ExpectedPackagePaths: []string{example1.PackagePath, example2.PackagePath},
+
 			ExpectedPackages: []*ifacereader.Package{
 				{
 					Name: "externaltypes",
@@ -287,10 +290,10 @@ func TestReadPackages(t *testing.T) {
 								{
 									Name: "ExternalIO",
 									Inputs: []*ifacereader.Tuple{
-										{VariableName: "a", PackagePaths: []string{example2.PackagePath, example1.PackagePath}, Type: "map[example2.Float64]*example1.Message"},
+										{VariableName: "a", Type: "map[example2.Float64]*example1.Message"},
 									},
 									Outputs: []*ifacereader.Tuple{
-										{VariableName: "", PackagePaths: []string{example1.PackagePath, example2.PackagePath}, Type: "map[example1.String]*example2.User"},
+										{VariableName: "", Type: "map[example1.String]*example2.User"},
 									},
 								},
 							},
@@ -324,10 +327,10 @@ func TestReadPackages(t *testing.T) {
 								{
 									Name: "ExternalIO",
 									Inputs: []*ifacereader.Tuple{
-										{VariableName: "a", PackagePaths: []string{example2.PackagePath, example1.PackagePath}, Type: "map[externaltypes_example2!.Float64]*externaltypes_example1!.Message"},
+										{VariableName: "a", Type: "map[externaltypes_example2!.Float64]*externaltypes_example1!.Message"},
 									},
 									Outputs: []*ifacereader.Tuple{
-										{VariableName: "", PackagePaths: []string{example1.PackagePath, example2.PackagePath}, Type: "map[externaltypes_example1!.String]*externaltypes_example2!.User"},
+										{VariableName: "", Type: "map[externaltypes_example1!.String]*externaltypes_example2!.User"},
 									},
 								},
 							},
@@ -430,14 +433,20 @@ func TestReadPackages(t *testing.T) {
 	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
 		entry := table[i]
 
+		visitedPackages := map[string]bool{}
+
 		pkgNameGen := entry.PackageNameGenerator
 		if pkgNameGen == nil {
-			pkgNameGen = packageNameGenerator(identityPackageNameGenerator)
+			pkgNameGen = packageNameGenerator(func(scopePackage *packages.Package, importedPackage *types.Package) string {
+				visitedPackages[importedPackage.Path()] = true
+				return importedPackage.Name()
+			})
 		}
 
 		pkgs, err := entry.Subject.ReadPackages(entry.PackageDetails, pkgNameGen)
-		ensure(pkgs).Equals(entry.ExpectedPackages)
 		ensure(err).IsError(entry.ExpectedError)
+		ensure(pkgs).Equals(entry.ExpectedPackages)
+		ensure(visitedPackages).Equals(buildExpectedPackagePathsMap(entry.ExpectedPackagePaths))
 	})
 }
 
@@ -474,6 +483,8 @@ func buildTypeTests() []entry {
 				},
 			},
 
+			ExpectedPackagePaths: fixture.ExpectedPackagePaths,
+
 			ExpectedPackages: []*ifacereader.Package{
 				{
 					Name: filepath.Base(pkgPath),
@@ -498,8 +509,14 @@ func (pkgNameGen packageNameGenerator) GeneratePackageName(scopePackage *package
 	return pkgNameGen(scopePackage, importedPackage)
 }
 
-func identityPackageNameGenerator(scopePackage *packages.Package, importedPackage *types.Package) string {
-	return importedPackage.Name()
+func buildExpectedPackagePathsMap(expectedPackagePaths []string) map[string]bool {
+	expectedPackagePathsMap := make(map[string]bool, len(expectedPackagePaths))
+
+	for _, expectedPackagePath := range expectedPackagePaths {
+		expectedPackagePathsMap[expectedPackagePath] = true
+	}
+
+	return expectedPackagePathsMap
 }
 
 func TestInterfaceNames(t *testing.T) {

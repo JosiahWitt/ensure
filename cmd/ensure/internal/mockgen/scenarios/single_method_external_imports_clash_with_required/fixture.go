@@ -15,8 +15,8 @@ var Package = &ifacereader.Package{
 				{
 					Name: "Do",
 					Inputs: []*ifacereader.Tuple{
-						{VariableName: "thing", PackagePaths: []string{}, Type: "*reflect.Thing"},
-						{VariableName: "other", PackagePaths: []string{}, Type: "*gomock.Other"},
+						{VariableName: "thing", Type: "*reflect.Thing"},
+						{VariableName: "other", Type: "*gomock.Other"},
 					},
 					Outputs: []*ifacereader.Tuple{},
 				},

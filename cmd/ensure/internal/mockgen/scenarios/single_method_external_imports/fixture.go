@@ -15,11 +15,11 @@ var Package = &ifacereader.Package{
 				{
 					Name: "Transform",
 					Inputs: []*ifacereader.Tuple{
-						{VariableName: "user", PackagePaths: []string{}, Type: "*external1.User"},
-						{VariableName: "message", PackagePaths: []string{}, Type: "*external2.Message"},
+						{VariableName: "user", Type: "*external1.User"},
+						{VariableName: "message", Type: "*external2.Message"},
 					},
 					Outputs: []*ifacereader.Tuple{
-						{VariableName: "", PackagePaths: []string{}, Type: "external1.String"},
+						{VariableName: "", Type: "external1.String"},
 					},
 				},
 			},

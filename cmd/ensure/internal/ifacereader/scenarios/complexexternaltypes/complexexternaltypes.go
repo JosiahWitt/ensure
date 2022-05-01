@@ -18,13 +18,14 @@ type Fixture interface {
 var FixtureDetails = &base.ScenarioDetails{
 	Fixture: (*Fixture)(nil),
 
+	ExpectedPackagePaths: []string{example1.PackagePath, example2.PackagePath},
+
 	ExpectedMethods: []*ifacereader.Method{
 		{
 			Name: "InterfaceWithNestedTypes",
 			Inputs: []*ifacereader.Tuple{
 				{
 					VariableName: "a",
-					PackagePaths: []string{example1.PackagePath, example2.PackagePath},
 					Type:         "interface{Method([]func(m *example1.Message) map[example1.String]*example2.User) *struct{ID []example2.Float64}}",
 				},
 			},
@@ -35,12 +36,10 @@ var FixtureDetails = &base.ScenarioDetails{
 			Inputs: []*ifacereader.Tuple{
 				{
 					VariableName: "a",
-					PackagePaths: []string{example1.PackagePath},
 					Type:         "[]func(m *example1.Message)",
 				},
 				{
 					VariableName: "b",
-					PackagePaths: []string{example1.PackagePath, example2.PackagePath},
 					Type:         "[][]map[example1.String]*example2.User",
 					Variadic:     true,
 				},
@@ -48,17 +47,14 @@ var FixtureDetails = &base.ScenarioDetails{
 			Outputs: []*ifacereader.Tuple{
 				{
 					VariableName: "x",
-					PackagePaths: []string{},
 					Type:         "string",
 				},
 				{
 					VariableName: "y",
-					PackagePaths: []string{example2.PackagePath},
 					Type:         "[]*struct{ID example2.Float64}",
 				},
 				{
 					VariableName: "z",
-					PackagePaths: []string{},
 					Type:         "error",
 				},
 			},

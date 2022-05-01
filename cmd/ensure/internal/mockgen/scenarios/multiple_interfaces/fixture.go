@@ -12,12 +12,12 @@ var Package = &ifacereader.Package{
 				{
 					Name: "TransformString",
 					Inputs: []*ifacereader.Tuple{
-						{VariableName: "prefix", PackagePaths: []string{}, Type: "string"},
-						{VariableName: "str", PackagePaths: []string{}, Type: "string"},
+						{VariableName: "prefix", Type: "string"},
+						{VariableName: "str", Type: "string"},
 					},
 					Outputs: []*ifacereader.Tuple{
-						{VariableName: "", PackagePaths: []string{}, Type: "string"},
-						{VariableName: "", PackagePaths: []string{}, Type: "error"},
+						{VariableName: "", Type: "string"},
+						{VariableName: "", Type: "error"},
 					},
 				},
 			},
@@ -28,19 +28,19 @@ var Package = &ifacereader.Package{
 				{
 					Name: "TransformInt",
 					Inputs: []*ifacereader.Tuple{
-						{VariableName: "i", PackagePaths: []string{}, Type: "int"},
+						{VariableName: "i", Type: "int"},
 					},
 					Outputs: []*ifacereader.Tuple{
-						{VariableName: "", PackagePaths: []string{}, Type: "int"},
+						{VariableName: "", Type: "int"},
 					},
 				},
 				{
 					Name: "TransformFloat64",
 					Inputs: []*ifacereader.Tuple{
-						{VariableName: "f", PackagePaths: []string{}, Type: "float64"},
+						{VariableName: "f", Type: "float64"},
 					},
 					Outputs: []*ifacereader.Tuple{
-						{VariableName: "", PackagePaths: []string{}, Type: "float64"},
+						{VariableName: "", Type: "float64"},
 					},
 				},
 			},
