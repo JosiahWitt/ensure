@@ -3,6 +3,7 @@ package ifacereader_test
 import (
 	"fmt"
 	"go/types"
+	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -27,6 +28,9 @@ const pathPrefix = "github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader
 
 type entry struct {
 	Name string
+
+	// TODO: Remove this once Go 1.18 is the lowest supported version
+	WorkingDir string
 
 	PackageDetails       []*ifacereader.PackageDetails
 	PackageNameGenerator ifacereader.PackageNameGenerator
@@ -429,24 +433,27 @@ func TestReadPackages(t *testing.T) {
 	}
 
 	table = append(table, buildTypeTests()...)
+	table = append(table, buildGenericTests()...)
 
 	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
 		entry := table[i]
 
-		visitedPackages := map[string]bool{}
+		withinDirectory(entry.WorkingDir, func() {
+			visitedPackages := map[string]bool{}
 
-		pkgNameGen := entry.PackageNameGenerator
-		if pkgNameGen == nil {
-			pkgNameGen = packageNameGenerator(func(scopePackage *packages.Package, importedPackage *types.Package) string {
-				visitedPackages[importedPackage.Path()] = true
-				return importedPackage.Name()
-			})
-		}
+			pkgNameGen := entry.PackageNameGenerator
+			if pkgNameGen == nil {
+				pkgNameGen = packageNameGenerator(func(scopePackage *packages.Package, importedPackage *types.Package) string {
+					visitedPackages[importedPackage.Path()] = true
+					return importedPackage.Name()
+				})
+			}
 
-		pkgs, err := entry.Subject.ReadPackages(entry.PackageDetails, pkgNameGen)
-		ensure(err).IsError(entry.ExpectedError)
-		ensure(pkgs).Equals(entry.ExpectedPackages)
-		ensure(visitedPackages).Equals(buildExpectedPackagePathsMap(entry.ExpectedPackagePaths))
+			pkgs, err := entry.Subject.ReadPackages(entry.PackageDetails, pkgNameGen)
+			ensure(err).IsError(entry.ExpectedError)
+			ensure(pkgs).Equals(entry.ExpectedPackages)
+			ensure(visitedPackages).Equals(buildExpectedPackagePathsMap(entry.ExpectedPackagePaths))
+		})
 	})
 }
 
@@ -501,6 +508,27 @@ func buildTypeTests() []entry {
 	}
 
 	return entries
+}
+
+func withinDirectory(workingDir string, fn func()) {
+	if workingDir == "" {
+		fn()
+		return
+	}
+
+	pwd, err := os.Getwd()
+	checkErr(err)
+
+	defer func() { checkErr(os.Chdir(pwd)) }()
+
+	checkErr(os.Chdir(workingDir))
+	fn()
+}
+
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
 
 type packageNameGenerator func(scopePackage *packages.Package, importedPackage *types.Package) string

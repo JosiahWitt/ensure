@@ -26,6 +26,7 @@ var (
 
 	ErrPathMismatch           = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Could not find package details for path: {{.path}}")
 	ErrLeftoverPackageDetails = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Unexpected leftover package details")
+	ErrInterfaceTypeNotNamed  = erk.New(ErkInternal{}, unexpectedErrorPrefix+": interface type for '{{.interface}}' was not *types.Named, it was: {{type .type}}")
 	ErrFuncUnderlyingType     = erk.New(ErkInternal{},
 		unexpectedErrorPrefix+": *types.Func underlying type was not *types.Signature, it was: {{type .underlyingType}}",
 	)
@@ -61,8 +62,9 @@ type Package struct {
 
 // Interface includes the details of parsing the interface in the package.
 type Interface struct {
-	Name    string
-	Methods []*Method
+	Name       string
+	Methods    []*Method
+	TypeParams []*TypeParam
 }
 
 // Method includes the details of a single method inside of an interface.
@@ -77,6 +79,12 @@ type Tuple struct {
 	VariableName string
 	Type         string
 	Variadic     bool
+}
+
+// TypeParam contains details about a Go 1.18+ generic type parameter.
+type TypeParam struct {
+	Name string
+	Type string
 }
 
 type internalPackageReader struct {
@@ -171,6 +179,17 @@ func (r *internalPackageReader) buildPackage(pkgDetail *PackageDetails, pkg *pac
 			return nil, err
 		}
 
+		namedIface, ok := rawIface.Type().(*types.Named)
+		if !ok {
+			// Not sure if this is possible
+			return nil, erk.WithParams(ErrInterfaceTypeNotNamed, erk.Params{
+				"interface": ifaceName,
+				"package":   pkgDetail.Path,
+				"type":      rawIface.Type(),
+			})
+		}
+
+		builtIface.TypeParams = r.parseTypeParams(namedIface)
 		ifaces = append(ifaces, builtIface)
 	}
 

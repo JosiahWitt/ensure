@@ -8,6 +8,8 @@ import (
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen"
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/generics_multiple_type_params"
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/generics_single_type_param"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/multiple_interfaces"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/single_interface_multiple_methods"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/single_method_external_imports"
@@ -223,6 +225,38 @@ func TestGenerateMocks(t *testing.T) {
 					Package: single_method_external_imports_clash_with_required.Package,
 
 					FileContents: readExpectationFile("single_method_external_imports_clash_with_required", "pkg1"),
+				},
+			},
+		},
+		{
+			Name: "with a single generic type param with no imports",
+
+			InputPackages: []*ifacereader.Package{
+				generics_single_type_param.Package,
+			},
+
+			ExpectedPackageMocks: []*mockgen.PackageMock{
+				{
+					Package: generics_single_type_param.Package,
+
+					FileContents: readExpectationFile("generics_single_type_param", "pkg1"),
+				},
+			},
+		},
+		{
+			Name: "with multiple generic type params with imports",
+
+			InputPackages: []*ifacereader.Package{
+				generics_multiple_type_params.Package,
+			},
+
+			Imports: generics_multiple_type_params.AddImports(&uniqpkg.UniquePackagePaths{}),
+
+			ExpectedPackageMocks: []*mockgen.PackageMock{
+				{
+					Package: generics_multiple_type_params.Package,
+
+					FileContents: readExpectationFile("generics_multiple_type_params", "pkg1"),
 				},
 			},
 		},
