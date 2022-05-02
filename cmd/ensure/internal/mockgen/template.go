@@ -19,12 +19,15 @@ type templateParams struct {
 
 //nolint:gochecknoglobals // Only read internally
 var templateFuncs = template.FuncMap{
-	"buildInputSignature":     templateFuncBuildInputSignature,
-	"buildMockInputSignature": templateFuncBuildMockInputSignature,
-	"buildInputsSlice":        templateFuncBuildInputsSlice,
-	"buildOutputSignature":    templateFuncBuildOutputSignature,
-	"buildMockReturns":        templateFuncBuildMockReturns,
-	"buildParamsDoc":          templateFuncBuildParamsDoc,
+	"buildTypeParamsDeclaration":  templateFuncBuildTypeParamsDeclaration,
+	"buildMockStructName":         templateFuncBuildMockStructName,
+	"buildMockRecorderStructName": templateFuncBuildMockRecorderStructName,
+	"buildInputSignature":         templateFuncBuildInputSignature,
+	"buildMockInputSignature":     templateFuncBuildMockInputSignature,
+	"buildInputsSlice":            templateFuncBuildInputsSlice,
+	"buildOutputSignature":        templateFuncBuildOutputSignature,
+	"buildMockReturns":            templateFuncBuildMockReturns,
+	"buildParamsDoc":              templateFuncBuildParamsDoc,
 }
 
 //nolint:lll
@@ -40,35 +43,35 @@ import (
 )
 {{range $params.Package.Interfaces}}{{ $iface := . }}
 // Mock{{$iface.Name}} is a mock of the {{$iface.Name}} interface in {{$params.Package.Path}}.
-type Mock{{$iface.Name}} struct {
+type Mock{{$iface.Name}}{{buildTypeParamsDeclaration $iface.TypeParams}} struct {
 	ctrl     *{{$params.GoMockPackageName}}.Controller
-	recorder *Mock{{$iface.Name}}MockRecorder
+	recorder *{{buildMockRecorderStructName $iface}}
 }
 
 // Mock{{$iface.Name}}MockRecorder is the mock recorder for Mock{{$iface.Name}}.
-type Mock{{$iface.Name}}MockRecorder struct {
-	mock *Mock{{$iface.Name}}
+type Mock{{$iface.Name}}MockRecorder{{buildTypeParamsDeclaration $iface.TypeParams}} struct {
+	mock *{{buildMockStructName $iface}}
 }
 
 // NewMock{{$iface.Name}} creates a new mock instance.
-func NewMock{{$iface.Name}}(ctrl *{{$params.GoMockPackageName}}.Controller) *Mock{{$iface.Name}} {
-	mock := &Mock{{$iface.Name}}{ctrl: ctrl}
-	mock.recorder = &Mock{{$iface.Name}}MockRecorder{mock}
+func NewMock{{$iface.Name}}{{buildTypeParamsDeclaration $iface.TypeParams}}(ctrl *{{$params.GoMockPackageName}}.Controller) *{{buildMockStructName $iface}} {
+	mock := &{{buildMockStructName $iface}}{ctrl: ctrl}
+	mock.recorder = &{{buildMockRecorderStructName $iface}}{mock}
 	return mock
 }
 
 // NEW creates a Mock{{$iface.Name}}. This method is used internally by ensure.
-func (*Mock{{$iface.Name}}) NEW(ctrl *{{$params.GoMockPackageName}}.Controller) *Mock{{$iface.Name}} {
-	return NewMock{{$iface.Name}}(ctrl)
+func (*{{buildMockStructName $iface}}) NEW(ctrl *{{$params.GoMockPackageName}}.Controller) *{{buildMockStructName $iface}} {
+	return New{{buildMockStructName $iface}}(ctrl)
 }
 
 // EXPECT returns a struct that allows setting up expectations.
-func (m *Mock{{$iface.Name}}) EXPECT() *Mock{{$iface.Name}}MockRecorder {
+func (m *{{buildMockStructName $iface}}) EXPECT() *{{buildMockRecorderStructName $iface}} {
 	return m.recorder
 }
 {{range .Methods}}{{ $method := . }}
 // {{$method.Name}} mocks {{$method.Name}} on {{$iface.Name}}.
-func (m *Mock{{$iface.Name}}) {{$method.Name}}({{buildInputSignature $method.Inputs}}){{buildOutputSignature $method.Outputs}} {
+func (m *{{buildMockStructName $iface}}) {{$method.Name}}({{buildInputSignature $method.Inputs}}){{buildOutputSignature $method.Outputs}} {
 	m.ctrl.T.Helper()
 	{{buildInputsSlice $method.Inputs}}
 	ret := m.ctrl.Call(m, "{{$method.Name}}", inputs...)
@@ -85,10 +88,10 @@ func (m *Mock{{$iface.Name}}) {{$method.Name}}({{buildInputSignature $method.Inp
 // Outputs:
 //
 //  {{buildParamsDoc $method.Outputs}}
-func (mr *Mock{{$iface.Name}}MockRecorder) {{$method.Name}}({{buildMockInputSignature $method.Inputs}}) *{{$params.GoMockPackageName}}.Call {
+func (mr *{{buildMockRecorderStructName $iface}}) {{$method.Name}}({{buildMockInputSignature $method.Inputs}}) *{{$params.GoMockPackageName}}.Call {
 	mr.mock.ctrl.T.Helper()
 	{{buildInputsSlice $method.Inputs}}
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "{{$method.Name}}", {{$params.ReflectPackageName}}.TypeOf((*Mock{{$iface.Name}})(nil).{{$method.Name}}), inputs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "{{$method.Name}}", {{$params.ReflectPackageName}}.TypeOf((*{{buildMockStructName $iface}})(nil).{{$method.Name}}), inputs...)
 }
 {{end -}}
 {{end}}`
@@ -114,6 +117,28 @@ func (p *templateParams) BuildImports() string {
 	}
 
 	return strings.Join(importLines, "\n\t")
+}
+
+func templateFuncBuildTypeParamsDeclaration(typeParams []*ifacereader.TypeParam) string {
+	return buildTypeParams(typeParams, func(typeParam *ifacereader.TypeParam) string {
+		return typeParam.Name + " " + typeParam.Type
+	})
+}
+
+func templateFuncBuildMockStructName(iface *ifacereader.Interface) string {
+	typeParams := buildTypeParams(iface.TypeParams, func(typeParam *ifacereader.TypeParam) string {
+		return typeParam.Name
+	})
+
+	return fmt.Sprintf("Mock%s%s", iface.Name, typeParams)
+}
+
+func templateFuncBuildMockRecorderStructName(iface *ifacereader.Interface) string {
+	typeParams := buildTypeParams(iface.TypeParams, func(typeParam *ifacereader.TypeParam) string {
+		return typeParam.Name
+	})
+
+	return fmt.Sprintf("Mock%sMockRecorder%s", iface.Name, typeParams)
 }
 
 func templateFuncBuildInputSignature(inputs []*ifacereader.Tuple) string {
@@ -252,4 +277,17 @@ func preprocessParams(params []*ifacereader.Tuple, originalVarName bool) []*ifac
 	}
 
 	return populatedParams
+}
+
+func buildTypeParams(typeParams []*ifacereader.TypeParam, transform func(*ifacereader.TypeParam) string) string {
+	if len(typeParams) == 0 {
+		return ""
+	}
+
+	builtTypeParams := make([]string, 0, len(typeParams))
+	for _, typeParam := range typeParams {
+		builtTypeParams = append(builtTypeParams, transform(typeParam))
+	}
+
+	return "[" + strings.Join(builtTypeParams, ", ") + "]"
 }
