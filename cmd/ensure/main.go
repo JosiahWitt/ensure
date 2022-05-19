@@ -16,7 +16,7 @@ import (
 //nolint:gochecknoglobals // Allows injecting the version
 // Version of the CLI.
 // Should be tied to the release version.
-var Version = "0.3.0"
+var Version = "0.3.1"
 
 func main() {
 	if err := run(); err != nil {
