@@ -12,6 +12,14 @@ linters:
     - interfacer
     - scopelint
     - varnamelen
+    - exhaustruct
+    # Deprecated:
+    - nosnakecase
+    - deadcode
+    - ifshort
+    - structcheck
+    - varcheck
+    - exhaustivestruct
 
 linters-settings:
   lll:
@@ -28,15 +36,9 @@ issues:
         - goerr113
         - dupl
         - paralleltest
-        - exhaustivestruct
         - gocognit
         - cyclop
         - forcetypeassert
         - ifshort
         - thelper
         - maintidx
-
-    # erk types don't need to be exhaustive
-    - text: ".*in erk.*"
-      linters:
-        - exhaustivestruct

@@ -53,11 +53,11 @@ func (m *MockThingable[T, V]) Identity(_in T) T {
 //
 // Inputs:
 //
-//  in T
+//	in T
 //
 // Outputs:
 //
-//  T
+//	T
 func (mr *MockThingableMockRecorder[T, V]) Identity(_in interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_in}
@@ -78,11 +78,11 @@ func (m *MockThingable[T, V]) Transform(_in T) V {
 //
 // Inputs:
 //
-//  in T
+//	in T
 //
 // Outputs:
 //
-//  V
+//	V
 func (mr *MockThingableMockRecorder[T, V]) Transform(_in interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_in}

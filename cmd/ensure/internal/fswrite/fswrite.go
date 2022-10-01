@@ -2,7 +2,6 @@
 package fswrite
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -20,9 +19,9 @@ type FSWrite struct{}
 
 var _ Writable = &FSWrite{}
 
-// WriteFile wraps ioutil.WriteFile.
+// WriteFile wraps os.WriteFile.
 func (*FSWrite) WriteFile(filename string, data string, perm os.FileMode) error {
-	return ioutil.WriteFile(filename, []byte(data), perm)
+	return os.WriteFile(filename, []byte(data), perm)
 }
 
 // MkdirAll wraps os.MkdirAll.

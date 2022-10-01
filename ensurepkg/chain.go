@@ -14,6 +14,7 @@ import (
 )
 
 // Mutex to synchronize accessing deep.
+//
 //nolint:gochecknoglobals // Deep global variables need a global mutex.
 var deepGlobalMu sync.Mutex
 
@@ -130,11 +131,12 @@ func (c *Chain) IsNotEmpty() {
 // If both the actual and expected are strings, strings.Contains(...) is used.
 //
 // For example:
-//  ensure("abc").Contains("b") // Succeeds
-//  ensure("abc").Contains("z") // Fails
 //
-//  ensure([]string{"abc", "xyz"}).Contains("xyz") // Succeeds
-//  ensure([]string{"abc", "xyz"}).Contains("y") // Fails
+//	ensure("abc").Contains("b") // Succeeds
+//	ensure("abc").Contains("z") // Fails
+//
+//	ensure([]string{"abc", "xyz"}).Contains("xyz") // Succeeds
+//	ensure([]string{"abc", "xyz"}).Contains("y") // Fails
 func (c *Chain) Contains(expected interface{}) {
 	c.t.Helper()
 	c.markRun()
@@ -159,11 +161,12 @@ func (c *Chain) Contains(expected interface{}) {
 // If both the actual and expected are strings, strings.Contains(...) is used.
 //
 // For example:
-//  ensure("abc").DoesNotContain("b") // Fails
-//  ensure("abc").DoesNotContain("z") // Succeeds
 //
-//  ensure([]string{"abc", "xyz"}).DoesNotContain("xyz") // Fails
-//  ensure([]string{"abc", "xyz"}).DoesNotContain("y") // Succeeds
+//	ensure("abc").DoesNotContain("b") // Fails
+//	ensure("abc").DoesNotContain("z") // Succeeds
+//
+//	ensure([]string{"abc", "xyz"}).DoesNotContain("xyz") // Fails
+//	ensure([]string{"abc", "xyz"}).DoesNotContain("y") // Succeeds
 func (c *Chain) DoesNotContain(expected interface{}) {
 	c.t.Helper()
 	c.markRun()

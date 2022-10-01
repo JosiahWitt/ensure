@@ -51,11 +51,11 @@ func (m *MockNoopable) Noop() {
 //
 // Inputs:
 //
-//  none
+//	none
 //
 // Outputs:
 //
-//  none
+//	none
 func (mr *MockNoopableMockRecorder) Noop() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{}

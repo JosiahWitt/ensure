@@ -12,8 +12,15 @@ linters:
     - interfacer
     - scopelint
     - varnamelen
-    - exhaustivestruct
     - gofumpt
+    - exhaustruct
+    # Deprecated:
+    - nosnakecase
+    - deadcode
+    - ifshort
+    - structcheck
+    - varcheck
+    - exhaustivestruct
 
 linters-settings:
   lll:
@@ -48,8 +55,3 @@ issues:
       linters:
         - revive
         - stylecheck
-
-    # erk types don't need to be exhaustive
-    - text: ".*in erk.*"
-      linters:
-        - exhaustivestruct

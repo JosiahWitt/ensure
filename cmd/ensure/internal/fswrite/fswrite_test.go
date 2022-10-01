@@ -1,7 +1,6 @@
 package fswrite_test
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,7 +20,7 @@ func TestWriteFile(t *testing.T) {
 	err := fsWrite.WriteFile(fileName, contents, 0655)
 	ensure(err).IsNotError()
 
-	actualContents, err := ioutil.ReadFile(fileName)
+	actualContents, err := os.ReadFile(fileName)
 	ensure(err).IsNotError()
 	ensure(string(actualContents)).Equals(contents)
 }
@@ -35,7 +34,7 @@ func TestMkdirAll(t *testing.T) {
 	ensure(err).IsNotError()
 
 	// Ensure we can write to the directory
-	err = ioutil.WriteFile(filepath.Join(dirName, "file.txt"), []byte("testing"), 0600)
+	err = os.WriteFile(filepath.Join(dirName, "file.txt"), []byte("testing"), 0600)
 	ensure(err).IsNotError()
 }
 

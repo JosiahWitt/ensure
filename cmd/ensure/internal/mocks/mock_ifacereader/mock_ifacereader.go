@@ -53,13 +53,13 @@ func (m *MockReadable) ReadPackages(_pkgDetails []*ifacereader.PackageDetails, _
 //
 // Inputs:
 //
-//  pkgDetails []*ifacereader.PackageDetails
-//  pkgNameGen ifacereader.PackageNameGenerator
+//	pkgDetails []*ifacereader.PackageDetails
+//	pkgNameGen ifacereader.PackageNameGenerator
 //
 // Outputs:
 //
-//  []*ifacereader.Package
-//  error
+//	[]*ifacereader.Package
+//	error
 func (mr *MockReadableMockRecorder) ReadPackages(_pkgDetails interface{}, _pkgNameGen interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_pkgDetails, _pkgNameGen}

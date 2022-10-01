@@ -2,7 +2,7 @@ package mockwrite_test
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"log"
 	"testing"
 
@@ -322,7 +322,7 @@ func TestTidyMocks(t *testing.T) {
 
 	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
 		entry := table[i]
-		entry.Subject.Logger = log.New(ioutil.Discard, "", 0)
+		entry.Subject.Logger = log.New(io.Discard, "", 0)
 
 		err := entry.Subject.TidyMocks(entry.Config, entry.Packages)
 		ensure(err).IsError(entry.ExpectedError)

@@ -51,11 +51,11 @@ func (m *MockTransformable) TransformString(_str string) string {
 //
 // Inputs:
 //
-//  str string
+//	str string
 //
 // Outputs:
 //
-//  string
+//	string
 func (mr *MockTransformableMockRecorder) TransformString(_str interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_str}

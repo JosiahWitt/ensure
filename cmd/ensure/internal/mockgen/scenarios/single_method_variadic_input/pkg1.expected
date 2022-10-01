@@ -55,13 +55,13 @@ func (m *MockTransformable) TransformString(_prefix string, _strs ...string) (st
 //
 // Inputs:
 //
-//  prefix string
-//  strs ...string
+//	prefix string
+//	strs ...string
 //
 // Outputs:
 //
-//  string
-//  error
+//	string
+//	error
 func (mr *MockTransformableMockRecorder) TransformString(_prefix interface{}, _strs ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_prefix}

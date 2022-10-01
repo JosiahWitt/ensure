@@ -53,12 +53,12 @@ func (m *MockWritable) ListRecursive(_dir string) ([]string, error) {
 //
 // Inputs:
 //
-//  dir string
+//	dir string
 //
 // Outputs:
 //
-//  []string
-//  error
+//	[]string
+//	error
 func (mr *MockWritableMockRecorder) ListRecursive(_dir interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_dir}
@@ -79,12 +79,12 @@ func (m *MockWritable) MkdirAll(_path string, _perm fs.FileMode) error {
 //
 // Inputs:
 //
-//  path string
-//  perm fs.FileMode
+//	path string
+//	perm fs.FileMode
 //
 // Outputs:
 //
-//  error
+//	error
 func (mr *MockWritableMockRecorder) MkdirAll(_path interface{}, _perm interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_path, _perm}
@@ -105,11 +105,11 @@ func (m *MockWritable) RemoveAll(_paths string) error {
 //
 // Inputs:
 //
-//  paths string
+//	paths string
 //
 // Outputs:
 //
-//  error
+//	error
 func (mr *MockWritableMockRecorder) RemoveAll(_paths interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_paths}
@@ -130,13 +130,13 @@ func (m *MockWritable) WriteFile(_filename string, _data string, _perm fs.FileMo
 //
 // Inputs:
 //
-//  filename string
-//  data string
-//  perm fs.FileMode
+//	filename string
+//	data string
+//	perm fs.FileMode
 //
 // Outputs:
 //
-//  error
+//	error
 func (mr *MockWritableMockRecorder) WriteFile(_filename interface{}, _data interface{}, _perm interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_filename, _data, _perm}

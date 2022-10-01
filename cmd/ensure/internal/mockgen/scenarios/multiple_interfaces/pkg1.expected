@@ -52,13 +52,13 @@ func (m *MockStringTransformable) TransformString(_prefix string, _str string) (
 //
 // Inputs:
 //
-//  prefix string
-//  str string
+//	prefix string
+//	str string
 //
 // Outputs:
 //
-//  string
-//  error
+//	string
+//	error
 func (mr *MockStringTransformableMockRecorder) TransformString(_prefix interface{}, _str interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_prefix, _str}
@@ -107,11 +107,11 @@ func (m *MockNumberTransformable) TransformInt(_i int) int {
 //
 // Inputs:
 //
-//  i int
+//	i int
 //
 // Outputs:
 //
-//  int
+//	int
 func (mr *MockNumberTransformableMockRecorder) TransformInt(_i interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_i}
@@ -132,11 +132,11 @@ func (m *MockNumberTransformable) TransformFloat64(_f float64) float64 {
 //
 // Inputs:
 //
-//  f float64
+//	f float64
 //
 // Outputs:
 //
-//  float64
+//	float64
 func (mr *MockNumberTransformableMockRecorder) TransformFloat64(_f interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_f}

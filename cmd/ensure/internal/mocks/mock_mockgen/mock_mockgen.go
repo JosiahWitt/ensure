@@ -55,13 +55,13 @@ func (m *MockGenerator) GenerateMocks(_pkgs []*ifacereader.Package, _imports *un
 //
 // Inputs:
 //
-//  pkgs []*ifacereader.Package
-//  imports *uniqpkg.UniquePackagePaths
+//	pkgs []*ifacereader.Package
+//	imports *uniqpkg.UniquePackagePaths
 //
 // Outputs:
 //
-//  []*mockgen.PackageMock
-//  error
+//	[]*mockgen.PackageMock
+//	error
 func (mr *MockGeneratorMockRecorder) GenerateMocks(_pkgs interface{}, _imports interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_pkgs, _imports}

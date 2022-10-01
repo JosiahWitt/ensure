@@ -53,12 +53,12 @@ func (m *MockReadFileFS) Open(_name string) (fs.File, error) {
 //
 // Inputs:
 //
-//  name string
+//	name string
 //
 // Outputs:
 //
-//  fs.File
-//  error
+//	fs.File
+//	error
 func (mr *MockReadFileFSMockRecorder) Open(_name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_name}
@@ -80,12 +80,12 @@ func (m *MockReadFileFS) ReadFile(_name string) ([]byte, error) {
 //
 // Inputs:
 //
-//  name string
+//	name string
 //
 // Outputs:
 //
-//  []byte
-//  error
+//	[]byte
+//	error
 func (mr *MockReadFileFSMockRecorder) ReadFile(_name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_name}

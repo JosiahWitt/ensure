@@ -53,12 +53,12 @@ func (m *MockLoaderIface) LoadConfig(_pwd string) (*ensurefile.Config, error) {
 //
 // Inputs:
 //
-//  pwd string
+//	pwd string
 //
 // Outputs:
 //
-//  *ensurefile.Config
-//  error
+//	*ensurefile.Config
+//	error
 func (mr *MockLoaderIfaceMockRecorder) LoadConfig(_pwd interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_pwd}
