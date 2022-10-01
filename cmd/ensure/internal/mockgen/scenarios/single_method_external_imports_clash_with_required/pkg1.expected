@@ -53,12 +53,12 @@ func (m *MockDoable) Do(_thing *reflect.Thing, _other *gomock.Other) {
 //
 // Inputs:
 //
-//  thing *reflect.Thing
-//  other *gomock.Other
+//	thing *reflect.Thing
+//	other *gomock.Other
 //
 // Outputs:
 //
-//  none
+//	none
 func (mr *MockDoableMockRecorder) Do(_thing interface{}, _other interface{}) *gomock2.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_thing, _other}

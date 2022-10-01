@@ -51,11 +51,11 @@ func (m *MockIdentifier[T]) Identity(_in T) T {
 //
 // Inputs:
 //
-//  in T
+//	in T
 //
 // Outputs:
 //
-//  T
+//	T
 func (mr *MockIdentifierMockRecorder[T]) Identity(_in interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_in}

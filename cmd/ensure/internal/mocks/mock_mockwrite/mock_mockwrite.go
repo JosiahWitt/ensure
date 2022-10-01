@@ -54,12 +54,12 @@ func (m *MockWritable) TidyMocks(_config *ensurefile.Config, _packages []*ifacer
 //
 // Inputs:
 //
-//  config *ensurefile.Config
-//  packages []*ifacereader.Package
+//	config *ensurefile.Config
+//	packages []*ifacereader.Package
 //
 // Outputs:
 //
-//  error
+//	error
 func (mr *MockWritableMockRecorder) TidyMocks(_config interface{}, _packages interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_config, _packages}
@@ -80,12 +80,12 @@ func (m *MockWritable) WriteMocks(_config *ensurefile.Config, _mocks []*mockgen.
 //
 // Inputs:
 //
-//  config *ensurefile.Config
-//  mocks []*mockgen.PackageMock
+//	config *ensurefile.Config
+//	mocks []*mockgen.PackageMock
 //
 // Outputs:
 //
-//  error
+//	error
 func (mr *MockWritableMockRecorder) WriteMocks(_config interface{}, _mocks interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_config, _mocks}

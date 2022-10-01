@@ -83,11 +83,11 @@ func (m *{{buildMockStructName $iface}}) {{$method.Name}}({{buildInputSignature 
 //
 // Inputs:
 //
-//  {{buildParamsDoc $method.Inputs}}
+//	{{buildParamsDoc $method.Inputs}}
 //
 // Outputs:
 //
-//  {{buildParamsDoc $method.Outputs}}
+//	{{buildParamsDoc $method.Outputs}}
 func (mr *{{buildMockRecorderStructName $iface}}) {{$method.Name}}({{buildMockInputSignature $method.Inputs}}) *{{$params.GoMockPackageName}}.Call {
 	mr.mock.ctrl.T.Helper()
 	{{buildInputsSlice $method.Inputs}}
@@ -252,7 +252,7 @@ func templateFuncBuildParamsDoc(params []*ifacereader.Tuple) string {
 		builtParams = append(builtParams, builtParam)
 	}
 
-	return strings.Join(builtParams, "\n//  ")
+	return strings.Join(builtParams, "\n//	")
 }
 
 func preprocessParams(params []*ifacereader.Tuple, originalVarName bool) []*ifacereader.Tuple {

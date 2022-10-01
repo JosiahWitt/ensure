@@ -53,12 +53,12 @@ func (m *MockTransformable) Transform(_user *external1.User, _message *external2
 //
 // Inputs:
 //
-//  user *external1.User
-//  message *external2.Message
+//	user *external1.User
+//	message *external2.Message
 //
 // Outputs:
 //
-//  external1.String
+//	external1.String
 func (mr *MockTransformableMockRecorder) Transform(_user interface{}, _message interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_user, _message}

@@ -52,11 +52,11 @@ func (m *MockT) Cleanup(_arg0 func()) {
 //
 // Inputs:
 //
-//  func()
+//	func()
 //
 // Outputs:
 //
-//  none
+//	none
 func (mr *MockTMockRecorder) Cleanup(_arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_arg0}
@@ -80,12 +80,12 @@ func (m *MockT) Errorf(_format string, _args ...interface{}) {
 //
 // Inputs:
 //
-//  format string
-//  args ...interface{}
+//	format string
+//	args ...interface{}
 //
 // Outputs:
 //
-//  none
+//	none
 func (mr *MockTMockRecorder) Errorf(_format interface{}, _args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_format}
@@ -112,12 +112,12 @@ func (m *MockT) Fatalf(_format string, _args ...interface{}) {
 //
 // Inputs:
 //
-//  format string
-//  args ...interface{}
+//	format string
+//	args ...interface{}
 //
 // Outputs:
 //
-//  none
+//	none
 func (mr *MockTMockRecorder) Fatalf(_format interface{}, _args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_format}
@@ -141,11 +141,11 @@ func (m *MockT) Helper() {
 //
 // Inputs:
 //
-//  none
+//	none
 //
 // Outputs:
 //
-//  none
+//	none
 func (mr *MockTMockRecorder) Helper() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{}
@@ -169,12 +169,12 @@ func (m *MockT) Logf(_format string, _args ...interface{}) {
 //
 // Inputs:
 //
-//  format string
-//  args ...interface{}
+//	format string
+//	args ...interface{}
 //
 // Outputs:
 //
-//  none
+//	none
 func (mr *MockTMockRecorder) Logf(_format interface{}, _args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_format}
@@ -198,12 +198,12 @@ func (m *MockT) Run(_name string, _f func(t *testing.T)) bool {
 //
 // Inputs:
 //
-//  name string
-//  f func(t *testing.T)
+//	name string
+//	f func(t *testing.T)
 //
 // Outputs:
 //
-//  bool
+//	bool
 func (mr *MockTMockRecorder) Run(_name interface{}, _f interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	inputs := []interface{}{_name, _f}
