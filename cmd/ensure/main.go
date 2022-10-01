@@ -13,9 +13,10 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockwrite"
 )
 
-//nolint:gochecknoglobals // Allows injecting the version
 // Version of the CLI.
 // Should be tied to the release version.
+//
+//nolint:gochecknoglobals // Allows injecting the version
 var Version = "0.3.1"
 
 func main() {

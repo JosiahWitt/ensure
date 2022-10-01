@@ -80,29 +80,30 @@ type tableEntry struct {
 // The fn is executed for each entry, with a scoped ensure instance and an index for an entry in the table.
 //
 // For example:
-//  table := []struct {
-//    Name    string
-//    Input   string
-//    IsEmpty bool
-//  }{
-//    {
-//      Name:    "with non empty input",
-//      Input:   "my string",
-//      IsEmpty: false,
-//    },
-//    {
-//      Name:    "with empty input",
-//      Input:   "",
-//      IsEmpty: true,
-//    },
-//  }
 //
-//  ensure.RunTableByIndex(table, func(ensure Ensure, i int) {
-//    entry := table[i]
+//	table := []struct {
+//	  Name    string
+//	  Input   string
+//	  IsEmpty bool
+//	}{
+//	  {
+//	    Name:    "with non empty input",
+//	    Input:   "my string",
+//	    IsEmpty: false,
+//	  },
+//	  {
+//	    Name:    "with empty input",
+//	    Input:   "",
+//	    IsEmpty: true,
+//	  },
+//	}
 //
-//    isEmpty := strs.IsEmpty(entry.Input)
-//    ensure(isEmpty).Equals(entry.IsEmpty)
-//  })
+//	ensure.RunTableByIndex(table, func(ensure Ensure, i int) {
+//	  entry := table[i]
+//
+//	  isEmpty := strs.IsEmpty(entry.Input)
+//	  ensure(isEmpty).Equals(entry.IsEmpty)
+//	})
 //
 // Support for mocks is also included.
 // Please see the README for an example.
