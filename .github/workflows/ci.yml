@@ -58,13 +58,13 @@ jobs:
       - name: Lint Ensure Package
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.45.2
+          version: v1.49.0
           skip-go-installation: true
 
       - name: Lint Ensure CLI
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.45.2
+          version: v1.49.0
           skip-go-installation: true
           working-directory: cmd/ensure
 
