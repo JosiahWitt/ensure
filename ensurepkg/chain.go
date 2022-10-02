@@ -83,12 +83,8 @@ func (c *Chain) Equals(expected interface{}) {
 
 	results := checkEquality(c.actual, expected)
 	if len(results) > 0 {
-		errors := "Actual does not equal expected:"
-		for _, result := range results {
-			errors += "\n - " + result
-		}
-
-		c.t.Fatalf("\n%s\n\nACTUAL:\n%s\n\nEXPECTED:\n%s", errors, prettyFormat(c.actual), prettyFormat(expected))
+		format, args := formatInequalityMessage(results, c.actual, expected)
+		c.t.Fatalf(format, args...)
 	}
 }
 
@@ -267,6 +263,15 @@ func contains(items, value interface{}) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func formatInequalityMessage(diff []string, actual, expected interface{}) (string, []interface{}) {
+	errors := "Actual does not equal expected:"
+	for _, result := range diff {
+		errors += "\n - " + result
+	}
+
+	return "\n%s\n\nACTUAL:\n%s\n\nEXPECTED:\n%s", []interface{}{errors, prettyFormat(actual), prettyFormat(expected)}
 }
 
 func prettyFormat(value interface{}) string {
