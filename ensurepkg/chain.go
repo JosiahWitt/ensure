@@ -7,10 +7,18 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"unicode/utf8"
 
 	"github.com/go-test/deep"
 	"github.com/kr/pretty"
 	"github.com/kr/text"
+)
+
+const (
+	indent = "  "
+
+	typeString    = "string"
+	typeByteSlice = "[]byte"
 )
 
 // Mutex to synchronize accessing deep.
@@ -83,12 +91,8 @@ func (c *Chain) Equals(expected interface{}) {
 
 	results := checkEquality(c.actual, expected)
 	if len(results) > 0 {
-		errors := "Actual does not equal expected:"
-		for _, result := range results {
-			errors += "\n - " + result
-		}
-
-		c.t.Fatalf("\n%s\n\nACTUAL:\n%s\n\nEXPECTED:\n%s", errors, prettyFormat(c.actual), prettyFormat(expected))
+		format, args := formatInequalityMessage(results, c.actual, expected)
+		c.t.Fatalf(format, args...)
 	}
 }
 
@@ -269,24 +273,61 @@ func contains(items, value interface{}) (bool, error) {
 	return false, nil
 }
 
+func formatInequalityMessage(diff []string, actual, expected interface{}) (string, []interface{}) {
+	const actualVsExpected = "ACTUAL:\n%s\n\nEXPECTED:\n%s"
+
+	actualStr, actualType, actualIsStr := isStringLike(actual)
+	expectedStr, expectedType, expectedIsStr := isStringLike(expected)
+	if actualIsStr && expectedIsStr {
+		args := []interface{}{
+			actualType,
+			expectedType,
+			indent + prettyFormatString(actualStr, actualType),
+			indent + prettyFormatString(expectedStr, expectedType),
+		}
+
+		if actualType != expectedType {
+			return "\nTypes provided to Equals are different: got %s, expected %s\n\n" + actualVsExpected, args
+		}
+
+		return "\nActual %s does not equal expected %s:\n\n" + actualVsExpected, args
+	}
+
+	errors := "Actual does not equal expected:"
+	for _, result := range diff {
+		errors += "\n - " + result
+	}
+
+	return "\n%s\n\n" + actualVsExpected, []interface{}{
+		errors,
+		prettyFormat(actual),
+		prettyFormat(expected),
+	}
+}
+
 func prettyFormat(value interface{}) string {
-	return text.Indent(prettyFormatValue(value), "  ")
+	return text.Indent(prettyFormatValue(value), indent)
 }
 
 func prettyFormatValue(value interface{}) string {
 	if str, ok := value.(string); ok {
-		return prettyFormatString(str)
+		return prettyFormatString(str, typeString)
 	}
 
 	return pretty.Sprint(value)
 }
 
-func prettyFormatString(str string) string {
+func prettyFormatString(str string, valType string) string {
 	if str == "" {
-		return "(empty string)"
+		return "(empty " + valType + ")"
 	}
 
-	return strconv.Quote(str)
+	quotedString := strconv.Quote(str)
+	if valType != typeString {
+		return valType + "(" + quotedString + ")"
+	}
+
+	return quotedString
 }
 
 func checkEquality(actual, expected interface{}) []string {
@@ -301,4 +342,16 @@ func checkEquality(actual, expected interface{}) []string {
 	deep.NilSlicesAreEmpty = false
 
 	return deep.Equal(actual, expected)
+}
+
+func isStringLike(value interface{}) (string, string, bool) {
+	if str, ok := value.(string); ok {
+		return str, typeString, true
+	}
+
+	if bytes, ok := value.([]byte); ok && utf8.Valid(bytes) {
+		return string(bytes), typeByteSlice, true
+	}
+
+	return "", "", false
 }

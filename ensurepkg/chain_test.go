@@ -170,14 +170,6 @@ func TestChainEquals(t *testing.T) {
 		ensure(nil).Equals(nil)
 	})
 
-	t.Run("when strings are equal", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
-
-		ensure := ensure.New(mockT)
-		ensure("abc").Equals("abc")
-	})
-
 	t.Run("when nil pointer equals nil", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
@@ -329,58 +321,6 @@ func TestChainEquals(t *testing.T) {
 			})
 	})
 
-	t.Run("when strings not equal: expected empty string", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n - abc != ",
-			`  "abc"`,
-			"  (empty string)",
-		).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure("abc").Equals("")
-	})
-
-	t.Run("when strings not equal: actual empty string", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n -  != abc",
-			"  (empty string)",
-			`  "abc"`,
-		).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure("").Equals("abc")
-	})
-
-	t.Run("when strings not equal: expected contains double quotes, newlines, and tabs", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n - abc\n\"xyz\"\n\tqwerty != abc",
-			`  "abc\n\"xyz\"\n\tqwerty"`, // Formatted with quotes and escaped control characters
-			`  "abc"`,
-		).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure("abc\n\"xyz\"\n\tqwerty").Equals("abc")
-	})
-
-	t.Run("when strings not equal: actual contains double quotes, newlines, and tabs", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n - abc != abc\n\"xyz\"\n\tqwerty",
-			`  "abc"`,
-			`  "abc\n\"xyz\"\n\tqwerty"`, // Formatted with quotes and escaped control characters
-		).After(
-			mockT.EXPECT().Helper(),
-		)
-
-		ensure := ensure.New(mockT)
-		ensure("abc").Equals("abc\n\"xyz\"\n\tqwerty")
-	})
-
 	t.Run("when concurrent", func(t *testing.T) {
 		mockT := setupMockT(t)
 
@@ -410,6 +350,294 @@ func TestChainEquals(t *testing.T) {
 		}()
 
 		wg.Wait()
+	})
+
+	t.Run("string-like equality", func(t *testing.T) {
+		const (
+			differentTypesErrorFormat = "\nTypes provided to Equals are different: got %s, expected %s\n\nACTUAL:\n%s\n\nEXPECTED:\n%s"
+			inequalStringErrorFormat  = "\nActual %s does not equal expected %s:\n\nACTUAL:\n%s\n\nEXPECTED:\n%s"
+		)
+
+		t.Run("strings", func(t *testing.T) {
+			t.Run("when strings are equal", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Helper()
+
+				ensure := ensure.New(mockT)
+				ensure("Hello, world!").Equals("Hello, world!")
+			})
+
+			t.Run("when strings not equal: expected empty string", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Fatalf(inequalStringErrorFormat, "string", "string",
+					`  "abc"`,
+					"  (empty string)",
+				).After(
+					mockT.EXPECT().Helper(),
+				)
+
+				ensure := ensure.New(mockT)
+				ensure("abc").Equals("")
+			})
+
+			t.Run("when strings not equal: actual empty string", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Fatalf(inequalStringErrorFormat, "string", "string",
+					"  (empty string)",
+					`  "abc"`,
+				).After(
+					mockT.EXPECT().Helper(),
+				)
+
+				ensure := ensure.New(mockT)
+				ensure("").Equals("abc")
+			})
+
+			t.Run("when strings not equal: expected contains double quotes, newlines, and tabs", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Fatalf(inequalStringErrorFormat, "string", "string",
+					`  "abc\n\"xyz\"\n\tqwerty"`, // Formatted with quotes and escaped control characters
+					`  "abc"`,
+				).After(
+					mockT.EXPECT().Helper(),
+				)
+
+				ensure := ensure.New(mockT)
+				ensure("abc\n\"xyz\"\n\tqwerty").Equals("abc")
+			})
+
+			t.Run("when strings not equal: actual contains double quotes, newlines, and tabs", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Fatalf(inequalStringErrorFormat, "string", "string",
+					`  "abc"`,
+					`  "abc\n\"xyz\"\n\tqwerty"`, // Formatted with quotes and escaped control characters
+				).After(
+					mockT.EXPECT().Helper(),
+				)
+
+				ensure := ensure.New(mockT)
+				ensure("abc").Equals("abc\n\"xyz\"\n\tqwerty")
+			})
+		})
+
+		t.Run("[]bytes", func(t *testing.T) {
+			t.Run("when non-string byte slices are equal", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Helper()
+
+				ensure := ensure.New(mockT)
+				ensure([]byte{1, 2, 128}).Equals([]byte{1, 2, 128})
+			})
+
+			t.Run("when non-string byte slices are not equal", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Fatalf(errorMessageFormat, "Actual does not equal expected:\n - slice[2]: 128 != 129",
+					"  []uint8{0x1, 0x2, 0x80}",
+					"  []uint8{0x1, 0x2, 0x81}",
+				).After(
+					mockT.EXPECT().Helper(),
+				)
+
+				ensure := ensure.New(mockT)
+				ensure([]byte{1, 2, 128}).Equals([]byte{1, 2, 129})
+			})
+
+			t.Run("when string byte slices are equal", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Helper()
+
+				ensure := ensure.New(mockT)
+				ensure([]byte("Hello, world!")).Equals([]byte("Hello, world!"))
+			})
+
+			t.Run("when string byte slices not equal: expected empty byte slice", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Fatalf(inequalStringErrorFormat, "[]byte", "[]byte",
+					`  []byte("abc")`,
+					"  (empty []byte)",
+				).After(
+					mockT.EXPECT().Helper(),
+				)
+
+				ensure := ensure.New(mockT)
+				ensure([]byte("abc")).Equals([]byte(""))
+			})
+
+			t.Run("when string byte slices not equal: actual empty byte slice", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Fatalf(inequalStringErrorFormat, "[]byte", "[]byte",
+					"  (empty []byte)",
+					`  []byte("abc")`,
+				).After(
+					mockT.EXPECT().Helper(),
+				)
+
+				ensure := ensure.New(mockT)
+				ensure([]byte("")).Equals([]byte("abc"))
+			})
+
+			t.Run("when string byte slices not equal: expected contains double quotes, newlines, and tabs", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Fatalf(inequalStringErrorFormat, "[]byte", "[]byte",
+					`  []byte("abc\n\"xyz\"\n\tqwerty")`, // Formatted with quotes and escaped control characters
+					`  []byte("abc")`,
+				).After(
+					mockT.EXPECT().Helper(),
+				)
+
+				ensure := ensure.New(mockT)
+				ensure([]byte("abc\n\"xyz\"\n\tqwerty")).Equals([]byte("abc"))
+			})
+
+			t.Run("when string byte slices not equal: actual contains double quotes, newlines, and tabs", func(t *testing.T) {
+				mockT := setupMockTWithCleanupCheck(t)
+				mockT.EXPECT().Fatalf(inequalStringErrorFormat, "[]byte", "[]byte",
+					`  []byte("abc")`,
+					`  []byte("abc\n\"xyz\"\n\tqwerty")`, // Formatted with quotes and escaped control characters
+				).After(
+					mockT.EXPECT().Helper(),
+				)
+
+				ensure := ensure.New(mockT)
+				ensure([]byte("abc")).Equals([]byte("abc\n\"xyz\"\n\tqwerty"))
+			})
+		})
+
+		t.Run("mixed strings and []bytes", func(t *testing.T) {
+			t.Run("when received []byte and expected string", func(t *testing.T) {
+				t.Run("and both are empty", func(t *testing.T) {
+					mockT := setupMockTWithCleanupCheck(t)
+					mockT.EXPECT().Fatalf(differentTypesErrorFormat, "[]byte", "string",
+						"  (empty []byte)",
+						"  (empty string)",
+					).After(
+						mockT.EXPECT().Helper(),
+					)
+
+					ensure := ensure.New(mockT)
+					ensure([]byte("")).Equals("")
+				})
+
+				t.Run("and actual is empty", func(t *testing.T) {
+					mockT := setupMockTWithCleanupCheck(t)
+					mockT.EXPECT().Fatalf(differentTypesErrorFormat, "[]byte", "string",
+						"  (empty []byte)",
+						`  "Hello, World!"`,
+					).After(
+						mockT.EXPECT().Helper(),
+					)
+
+					ensure := ensure.New(mockT)
+					ensure([]byte("")).Equals("Hello, World!")
+				})
+
+				t.Run("and expected is empty", func(t *testing.T) {
+					mockT := setupMockTWithCleanupCheck(t)
+					mockT.EXPECT().Fatalf(differentTypesErrorFormat, "[]byte", "string",
+						`  []byte("Hello, World!")`,
+						"  (empty string)",
+					).After(
+						mockT.EXPECT().Helper(),
+					)
+
+					ensure := ensure.New(mockT)
+					ensure([]byte("Hello, World!")).Equals("")
+				})
+
+				t.Run("and both are present and equal", func(t *testing.T) {
+					mockT := setupMockTWithCleanupCheck(t)
+					mockT.EXPECT().Fatalf(differentTypesErrorFormat, "[]byte", "string",
+						`  []byte("Hello, World!")`,
+						`  "Hello, World!"`,
+					).After(
+						mockT.EXPECT().Helper(),
+					)
+
+					ensure := ensure.New(mockT)
+					ensure([]byte("Hello, World!")).Equals("Hello, World!")
+				})
+
+				t.Run("and both are present and not equal", func(t *testing.T) {
+					mockT := setupMockTWithCleanupCheck(t)
+					mockT.EXPECT().Fatalf(differentTypesErrorFormat, "[]byte", "string",
+						`  []byte("Hello")`,
+						`  "World"`,
+					).After(
+						mockT.EXPECT().Helper(),
+					)
+
+					ensure := ensure.New(mockT)
+					ensure([]byte("Hello")).Equals("World")
+				})
+			})
+
+			t.Run("when received string and expected []byte", func(t *testing.T) {
+				t.Run("and both are empty", func(t *testing.T) {
+					mockT := setupMockTWithCleanupCheck(t)
+					mockT.EXPECT().Fatalf(differentTypesErrorFormat, "string", "[]byte",
+						"  (empty string)",
+						"  (empty []byte)",
+					).After(
+						mockT.EXPECT().Helper(),
+					)
+
+					ensure := ensure.New(mockT)
+					ensure("").Equals([]byte(""))
+				})
+
+				t.Run("and actual is empty", func(t *testing.T) {
+					mockT := setupMockTWithCleanupCheck(t)
+					mockT.EXPECT().Fatalf(differentTypesErrorFormat, "string", "[]byte",
+						"  (empty string)",
+						`  []byte("Hello, World!")`,
+					).After(
+						mockT.EXPECT().Helper(),
+					)
+
+					ensure := ensure.New(mockT)
+					ensure("").Equals([]byte("Hello, World!"))
+				})
+
+				t.Run("and expected is empty", func(t *testing.T) {
+					mockT := setupMockTWithCleanupCheck(t)
+					mockT.EXPECT().Fatalf(differentTypesErrorFormat, "string", "[]byte",
+						`  "Hello, World!"`,
+						"  (empty []byte)",
+					).After(
+						mockT.EXPECT().Helper(),
+					)
+
+					ensure := ensure.New(mockT)
+					ensure("Hello, World!").Equals([]byte(""))
+				})
+
+				t.Run("and both are present and equal", func(t *testing.T) {
+					mockT := setupMockTWithCleanupCheck(t)
+					mockT.EXPECT().Fatalf(differentTypesErrorFormat, "string", "[]byte",
+						`  "Hello, World!"`,
+						`  []byte("Hello, World!")`,
+					).After(
+						mockT.EXPECT().Helper(),
+					)
+
+					ensure := ensure.New(mockT)
+					ensure("Hello, World!").Equals([]byte("Hello, World!"))
+				})
+
+				t.Run("and both are present and not equal", func(t *testing.T) {
+					mockT := setupMockTWithCleanupCheck(t)
+					mockT.EXPECT().Fatalf(differentTypesErrorFormat, "string", "[]byte",
+						`  "Hello"`,
+						`  []byte("World")`,
+					).After(
+						mockT.EXPECT().Helper(),
+					)
+
+					ensure := ensure.New(mockT)
+					ensure("Hello").Equals([]byte("World"))
+				})
+			})
+		})
 	})
 }
 
