@@ -13,6 +13,7 @@ linters:
     - scopelint
     - varnamelen
     - exhaustruct
+    - ireturn
     # Deprecated:
     - nosnakecase
     - deadcode
