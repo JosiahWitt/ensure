@@ -232,9 +232,13 @@ func isNil(value interface{}) bool {
 		return true
 	}
 
-	reflection := reflect.ValueOf(value)
-	isNilPointer := reflection.Kind() == reflect.Ptr && reflection.IsNil()
-	return isNilPointer
+	//nolint:exhaustive // We don't want to be exhaustive here
+	switch val := reflect.ValueOf(value); val.Kind() {
+	case reflect.Ptr, reflect.Slice, reflect.Map, reflect.Func, reflect.Chan:
+		return val.IsNil()
+	default:
+		return false
+	}
 }
 
 func lengthOf(value interface{}) (int, error) {

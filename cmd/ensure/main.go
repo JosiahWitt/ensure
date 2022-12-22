@@ -17,7 +17,7 @@ import (
 // Should be tied to the release version.
 //
 //nolint:gochecknoglobals // Allows injecting the version
-var Version = "0.3.1"
+var Version = "0.3.3"
 
 func main() {
 	if err := run(); err != nil {
@@ -39,7 +39,7 @@ func run() error {
 
 		Logger:           logger,
 		Getwd:            os.Getwd,
-		EnsureFileLoader: &ensurefile.Loader{FS: os.DirFS("")},
+		EnsureFileLoader: &ensurefile.Loader{FS: os.DirFS("/")},
 		InterfaceReader:  &ifacereader.InterfaceReader{},
 		MockGenerator:    mockGen,
 		MockWriter: &mockwrite.MockWriter{

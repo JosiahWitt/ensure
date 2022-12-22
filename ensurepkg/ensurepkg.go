@@ -25,7 +25,7 @@ type T interface {
 // Ensure also has methods that can be called directly.
 type Ensure func(actual interface{}) *Chain
 
-// Chain assetions to the ensure function call.
+// Chain assertions to the ensure function call.
 type Chain struct {
 	t      T
 	actual interface{}
