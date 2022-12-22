@@ -13,12 +13,12 @@ func (c *Chain) IsError(expected error) {
 	c.t.Helper()
 	c.markRun()
 
-	if c.actual == nil && expected == nil {
+	if isNil(c.actual) && isNil(expected) {
 		return
 	}
 
 	actual, ok := c.actual.(error)
-	if !ok && c.actual != nil {
+	if !ok && !isNil(c.actual) {
 		c.t.Fatalf("Got type %T, expected error: \"%v\"", c.actual, expected)
 		return
 	}
@@ -41,13 +41,13 @@ func (c *Chain) MatchesAllErrors(expectedErrors ...error) {
 	c.markRun()
 
 	actual, ok := c.actual.(error)
-	if !ok && c.actual != nil {
+	if !ok && !isNil(c.actual) {
 		c.t.Fatalf("Got type %T, expected an error", c.actual)
 		return
 	}
 
 	if len(expectedErrors) == 0 {
-		if c.actual != nil {
+		if !isNil(c.actual) {
 			c.t.Fatalf("\nExpected no error, but got: %s", buildActualErrorOutput(actual))
 		}
 

@@ -77,6 +77,8 @@ func TestChainIsFalse(t *testing.T) {
 }
 
 func TestChainIsNil(t *testing.T) {
+	const failureFormat = "Got %+v, expected nil"
+
 	t.Run("when nil", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 		mockT.EXPECT().Helper()
@@ -85,26 +87,167 @@ func TestChainIsNil(t *testing.T) {
 		ensure(nil).IsNil()
 	})
 
-	t.Run("when nil pointer", func(t *testing.T) {
-		mockT := setupMockTWithCleanupCheck(t)
-		mockT.EXPECT().Helper()
-
-		var nilPtr *string
-
-		ensure := ensure.New(mockT)
-		ensure(nilPtr).IsNil()
-	})
-
-	t.Run("when not nil", func(t *testing.T) {
+	t.Run("not nilable", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 
 		const val = "not nil"
-		mockT.EXPECT().Fatalf("Got %+v, expected nil", val).After(
+		mockT.EXPECT().Fatalf(failureFormat, val).After(
 			mockT.EXPECT().Helper(),
 		)
 
 		ensure := ensure.New(mockT)
 		ensure(val).IsNil()
+	})
+
+	t.Run("pointer", func(t *testing.T) {
+		t.Run("when nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+			mockT.EXPECT().Helper()
+
+			var ptr *string
+
+			ensure := ensure.New(mockT)
+			ensure(ptr).IsNil()
+		})
+
+		t.Run("when not nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+
+			val := "not nil"
+			ptr := &val
+
+			mockT.EXPECT().Fatalf(failureFormat, ptr).After(
+				mockT.EXPECT().Helper(),
+			)
+
+			ensure := ensure.New(mockT)
+			ensure(ptr).IsNil()
+		})
+	})
+
+	t.Run("slice", func(t *testing.T) {
+		t.Run("when nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+			mockT.EXPECT().Helper()
+
+			var nilSlice []string
+
+			ensure := ensure.New(mockT)
+			ensure(nilSlice).IsNil()
+		})
+
+		t.Run("when not nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+
+			slice := []string{}
+
+			mockT.EXPECT().Fatalf(failureFormat, slice).After(
+				mockT.EXPECT().Helper(),
+			)
+
+			ensure := ensure.New(mockT)
+			ensure(slice).IsNil()
+		})
+	})
+
+	t.Run("map", func(t *testing.T) {
+		t.Run("when nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+			mockT.EXPECT().Helper()
+
+			var nilMap map[string]string
+
+			ensure := ensure.New(mockT)
+			ensure(nilMap).IsNil()
+		})
+
+		t.Run("when not nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+
+			m := map[string]string{}
+
+			mockT.EXPECT().Fatalf(failureFormat, m).After(
+				mockT.EXPECT().Helper(),
+			)
+
+			ensure := ensure.New(mockT)
+			ensure(m).IsNil()
+		})
+	})
+
+	t.Run("func", func(t *testing.T) {
+		t.Run("when nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+			mockT.EXPECT().Helper()
+
+			var nilFunc func(string) string
+
+			ensure := ensure.New(mockT)
+			ensure(nilFunc).IsNil()
+		})
+
+		t.Run("when not nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+
+			f := func(s string) string { return "hello, " + s }
+
+			mockT.EXPECT().Fatalf(failureFormat, gomock.Any()).After(
+				mockT.EXPECT().Helper(),
+			)
+
+			ensure := ensure.New(mockT)
+			ensure(f).IsNil()
+		})
+	})
+
+	t.Run("chan", func(t *testing.T) {
+		t.Run("when nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+			mockT.EXPECT().Helper()
+
+			var nilChan chan string
+
+			ensure := ensure.New(mockT)
+			ensure(nilChan).IsNil()
+		})
+
+		t.Run("when not nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+
+			c := make(chan string)
+
+			mockT.EXPECT().Fatalf(failureFormat, c).After(
+				mockT.EXPECT().Helper(),
+			)
+
+			ensure := ensure.New(mockT)
+			ensure(c).IsNil()
+		})
+	})
+
+	t.Run("interface", func(t *testing.T) {
+		t.Run("when nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+			mockT.EXPECT().Helper()
+
+			var nilInterface interface{ Hello(string) string }
+
+			ensure := ensure.New(mockT)
+			ensure(nilInterface).IsNil()
+		})
+
+		t.Run("when not nil", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+
+			var iface interface{ Hello(string) string } = &ExampleGreeter{}
+
+			mockT.EXPECT().Fatalf(failureFormat, iface).After(
+				mockT.EXPECT().Helper(),
+			)
+
+			ensure := ensure.New(mockT)
+			ensure(iface).IsNil()
+		})
 	})
 }
 
@@ -987,4 +1130,10 @@ type ExamplePerson struct {
 
 func (p ExamplePerson) ExpectedOutput() string {
 	return text.Indent(pretty.Sprint(p), "  ")
+}
+
+type ExampleGreeter struct{}
+
+func (*ExampleGreeter) Hello(s string) string {
+	return "hello, " + s
 }

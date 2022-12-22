@@ -83,6 +83,14 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			ensure := ensure.New(mockT)
 			ensure(nil).MatchesAllErrors(errs...)
 		})
+
+		t.Run("when nil underlying slice error and expected no errors", func(t *testing.T) {
+			mockT := setupMockTWithCleanupCheck(t)
+			mockT.EXPECT().Helper()
+
+			ensure := ensure.New(mockT)
+			ensure(testSliceError(nil)).MatchesAllErrors()
+		})
 	})
 
 	t.Run("when one expected error", func(t *testing.T) {
@@ -113,9 +121,9 @@ func TestChainMatchesAllErrors(t *testing.T) {
 			const errMsg = "my error"
 
 			ensure := ensure.New(mockT)
-			ensure(TestError{Unique: 1, Message: errMsg}).MatchesAllErrors(
-				TestError{Unique: 2, Message: errMsg},
-				TestError{Unique: 3, Message: errMsg},
+			ensure(testError{Unique: 1, Message: errMsg}).MatchesAllErrors(
+				testError{Unique: 2, Message: errMsg},
+				testError{Unique: 3, Message: errMsg},
 			)
 		})
 
@@ -159,9 +167,9 @@ func TestChainMatchesAllErrors(t *testing.T) {
 		t.Run("when not equal: different errors by Is method", func(t *testing.T) {
 			mockT := setupMockTWithCleanupCheck(t)
 
-			err1 := TestError{Unique: 1, Message: "error message 1"}
-			err2 := TestError{Unique: 2, Message: "error message 2"}
-			err3 := TestError{Unique: 3, Message: "error message 3"}
+			err1 := testError{Unique: 1, Message: "error message 1"}
+			err2 := testError{Unique: 2, Message: "error message 2"}
+			err3 := testError{Unique: 3, Message: "error message 3"}
 
 			mockT.EXPECT().Fatalf(errorFormat, err1.Error(), "\n\t  ❌ error message 2\n\t  ❌ error message 3").After(
 				mockT.EXPECT().Helper(),
@@ -174,8 +182,8 @@ func TestChainMatchesAllErrors(t *testing.T) {
 		t.Run("when some not equal: different errors by Is method", func(t *testing.T) {
 			mockT := setupMockTWithCleanupCheck(t)
 
-			err1 := TestError{Unique: 1, Message: "error message 1"}
-			err2 := TestError{Unique: 2, Message: "error message 2"}
+			err1 := testError{Unique: 1, Message: "error message 1"}
+			err2 := testError{Unique: 2, Message: "error message 2"}
 
 			mockT.EXPECT().Fatalf(errorFormat, err1.Error(), "\n\t  ❌ error message 2\n\t  ✅ error message 1").After(
 				mockT.EXPECT().Helper(),
@@ -355,7 +363,7 @@ func sharedIsErrorTests(t *testing.T, run func(mockT *mock_ensurepkg.MockT, chai
 		const errMsg = "my error"
 
 		ensure := ensure.New(mockT)
-		run(mockT, ensure(TestError{Unique: 1, Message: errMsg}), TestError{Unique: 2, Message: errMsg})
+		run(mockT, ensure(testError{Unique: 1, Message: errMsg}), testError{Unique: 2, Message: errMsg})
 	})
 
 	t.Run("when both are nil", func(t *testing.T) {
@@ -364,6 +372,22 @@ func sharedIsErrorTests(t *testing.T, run func(mockT *mock_ensurepkg.MockT, chai
 
 		ensure := ensure.New(mockT)
 		run(mockT, ensure(nil), nil)
+	})
+
+	t.Run("when both are nil, but actual is an underlying slice type", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Helper()
+
+		ensure := ensure.New(mockT)
+		run(mockT, ensure(testSliceError(nil)), nil)
+	})
+
+	t.Run("when both are nil, but expected is an underlying slice type", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		mockT.EXPECT().Helper()
+
+		ensure := ensure.New(mockT)
+		run(mockT, ensure(nil), testSliceError(nil))
 	})
 
 	t.Run("when not equal: two different errors by reference", func(t *testing.T) {
@@ -383,8 +407,8 @@ func sharedIsErrorTests(t *testing.T, run func(mockT *mock_ensurepkg.MockT, chai
 	t.Run("when not equal: two different errors by Is method", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 
-		err1 := TestError{Unique: 1, Message: "error message 1"}
-		err2 := TestError{Unique: 2, Message: "error message 2"}
+		err1 := testError{Unique: 1, Message: "error message 1"}
+		err2 := testError{Unique: 2, Message: "error message 2"}
 		mockT.EXPECT().Fatalf(errorFormat, err1.Error(), err2.Error()).After(
 			mockT.EXPECT().Helper(),
 		)
@@ -517,13 +541,13 @@ func TestChainIsNotError(t *testing.T) {
 	})
 }
 
-type TestError struct {
+type testError struct {
 	Message string
 	Unique  int
 }
 
-func (t TestError) Is(err error) bool {
-	inputErr := TestError{Unique: 1}
+func (t testError) Is(err error) bool {
+	inputErr := testError{Unique: 1}
 	if errors.As(err, &inputErr) {
 		return inputErr.Message == t.Message
 	}
@@ -531,6 +555,13 @@ func (t TestError) Is(err error) bool {
 	return false
 }
 
-func (t TestError) Error() string {
+func (t testError) Error() string {
 	return t.Message
+}
+
+//nolint:errname // We don't want to pluralize this
+type testSliceError []error
+
+func (t testSliceError) Error() string {
+	return fmt.Sprintf("%v", []error(t))
 }
