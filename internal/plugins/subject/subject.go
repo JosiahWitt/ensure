@@ -29,8 +29,8 @@ var _ plugins.TablePlugin = &TablePlugin{}
 
 // ParseEntryType is called during the first pass of plugin initialization.
 // It is responsible for making sure the type is as expected.
-func (t *TablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableEntryPlugin, error) {
-	p := &TableEntryPlugin{}
+func (t *TablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableEntryHooks, error) {
+	h := &TableEntryHooks{}
 
 	subjectStruct, ok := entryType.FieldByName(id.Subject)
 	if ok {
@@ -43,12 +43,12 @@ func (t *TablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableEntry
 			return nil, err
 		}
 
-		p.hasSubject = true
-		p.subjectMocks = subjectMocks
-		p.structFields = structFieldsResult
+		h.hasSubject = true
+		h.subjectMocks = subjectMocks
+		h.structFields = structFieldsResult
 	}
 
-	return p, nil
+	return h, nil
 }
 
 func validateSubjectFieldType(subjectStruct *reflect.StructField) error {
@@ -125,55 +125,33 @@ func (t *TablePlugin) mocksForSubject(subjectStruct *reflect.StructField) (map[s
 	return subjectMocks, structFieldsResult, nil
 }
 
-type shared struct {
+// TableEntryHooks exposes the before and after hooks for each entry in the table.
+type TableEntryHooks struct {
+	plugins.NoopAfterEntry
+
 	hasSubject   bool
 	subjectMocks map[string]*mocks.Mock
 	structFields *iterate.StructFieldsResult
-}
-
-// TableEntryPlugin is called for each entry in the table.
-type TableEntryPlugin struct {
-	shared
-}
-
-var _ plugins.TableEntryPlugin = &TableEntryPlugin{}
-
-// ParseEntryValue parses the value associated with the entry.
-func (p *TableEntryPlugin) ParseEntryValue(entryValue reflect.Value, i int) (plugins.TableEntryHooks, error) {
-	return &TableEntryHooks{
-		shared: p.shared,
-		value:  entryValue.FieldByName(id.Subject),
-		index:  i,
-	}, nil
-}
-
-// TableEntryHooks exposes the before and after hooks for each entry in the table.
-type TableEntryHooks struct {
-	shared
-	value reflect.Value
-	index int
 }
 
 var _ plugins.TableEntryHooks = &TableEntryHooks{}
 
 // BeforeEntry is called before the test is run for the table entry.
 // It initializes the Subject and fills in any matching mocks.
-func (h *TableEntryHooks) BeforeEntry(*testctx.Context) error {
+func (h *TableEntryHooks) BeforeEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error {
 	if !h.hasSubject {
 		return nil
 	}
 
-	h.structFields.InitializeStruct(h.value, func(fieldPath string, field reflect.Value) {
+	subjectField := entryValue.FieldByName(id.Subject)
+	h.structFields.InitializeStruct(subjectField, func(fieldPath string, field reflect.Value) {
 		mock, ok := h.subjectMocks[fieldPath]
 		if !ok {
 			return
 		}
 
-		field.Set(mock.ValueByEntryIndex(h.index))
+		field.Set(mock.ValueByEntryIndex(i))
 	})
 
 	return nil
 }
-
-// AfterEntry is called after the test is run for the table entry.
-func (*TableEntryHooks) AfterEntry(*testctx.Context) error { return nil }

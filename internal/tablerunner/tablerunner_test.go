@@ -18,19 +18,19 @@ func TestBuildTable(t *testing.T) {
 	ensure := ensure.New(t)
 
 	successfulPlugins := []plugins.TablePlugin{
-		mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryPlugin, error) {
+		mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryHooks, error) {
 			return nil, nil
 		}),
-		mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryPlugin, error) {
+		mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryHooks, error) {
 			return nil, nil
 		}),
 	}
 
 	failingPlugins := []plugins.TablePlugin{
-		mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryPlugin, error) {
+		mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryHooks, error) {
 			return nil, stringerr.Newf("not good")
 		}),
-		mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryPlugin, error) {
+		mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryHooks, error) {
 			return nil, stringerr.Newf("nope")
 		}),
 	}
@@ -229,27 +229,21 @@ func TestBuildTable(t *testing.T) {
 	}
 }
 
-type mockTablePlugin func(entryType reflect.Type) (plugins.TableEntryPlugin, error)
+type mockTablePlugin func(entryType reflect.Type) (plugins.TableEntryHooks, error)
 
-func (fn mockTablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableEntryPlugin, error) {
+func (fn mockTablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableEntryHooks, error) {
 	return fn(entryType)
 }
 
-type mockEntryPlugin func(entryValue reflect.Value, i int) (plugins.TableEntryHooks, error)
-
-func (fn mockEntryPlugin) ParseEntryValue(entryValue reflect.Value, i int) (plugins.TableEntryHooks, error) {
-	return fn(entryValue, i)
-}
-
 type mockEntryHooks struct {
-	before func(*testctx.Context) error
-	after  func(*testctx.Context) error
+	before func(*testctx.Context, reflect.Value, int) error
+	after  func(*testctx.Context, reflect.Value, int) error
 }
 
-func (m *mockEntryHooks) BeforeEntry(t *testctx.Context) error {
-	return m.before(t)
+func (m *mockEntryHooks) BeforeEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+	return m.before(ctx, entryValue, i)
 }
 
-func (m *mockEntryHooks) AfterEntry(t *testctx.Context) error {
-	return m.after(t)
+func (m *mockEntryHooks) AfterEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+	return m.after(ctx, entryValue, i)
 }

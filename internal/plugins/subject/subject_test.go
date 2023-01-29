@@ -1116,18 +1116,15 @@ func TestParseEntryValue(t *testing.T) {
 		entry := table[i]
 
 		plugin := subject.New(entry.MocksInput)
-		tableEntryPlugin, err := plugin.ParseEntryType(reflect.TypeOf(entry.Table).Elem())
+		tableEntryHooks, err := plugin.ParseEntryType(reflect.TypeOf(entry.Table).Elem())
 		ensure(err).IsNotError()
 
 		tableVal := reflect.ValueOf(entry.Table)
 		for i := 0; i < tableVal.Len(); i++ {
 			entryVal := tableVal.Index(i)
 
-			tableEntryHooks, err := tableEntryPlugin.ParseEntryValue(entryVal, i)
-			ensure(err).IsNotError()
-
-			ensure(tableEntryHooks.BeforeEntry(nil)).IsNotError()
-			ensure(tableEntryHooks.AfterEntry(nil)).IsNotError()
+			ensure(tableEntryHooks.BeforeEntry(nil, entryVal, i)).IsNotError()
+			ensure(tableEntryHooks.AfterEntry(nil, entryVal, i)).IsNotError()
 		}
 
 		ensure(entry.Table).Equals(entry.ExpectedTable)

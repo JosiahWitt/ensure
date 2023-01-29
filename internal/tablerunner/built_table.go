@@ -14,7 +14,7 @@ type BuiltTable struct {
 	tableType reflect.Type
 	isPointer bool
 
-	plugins []plugins.TableEntryPlugin
+	entryHooks []plugins.TableEntryHooks
 }
 
 // Run executes each entry in the table. It uses runEntry to handle wrapping each entry in its own testing.T Run block.
@@ -30,56 +30,31 @@ func (bt *BuiltTable) Run(outerT testctx.T, runEntry func(name string, callback 
 		}
 
 		name := fieldVal.FieldByName(nameField).String()
-		runEntry(name, func(t *testctx.Context, callback func(int)) {
-			t.T.Helper()
+		runEntry(name, func(ctx *testctx.Context, callback func(int)) {
+			ctx.T.Helper()
 
-			entryPlugins, err := bt.buildPlugins(fieldVal, i)
-			if err != nil {
-				t.T.Fatalf(err.Error())
-				return
-			}
-
-			if err := runEntryPlugins(entryPlugins, t, plugins.TableEntryHooks.BeforeEntry); err != nil {
-				t.T.Fatalf(err.Error())
+			if err := bt.runEntryHooks(ctx, fieldVal, i, plugins.TableEntryHooks.BeforeEntry); err != nil {
+				ctx.T.Fatalf(err.Error())
 				return
 			}
 
 			callback(i)
 
-			if err := runEntryPlugins(entryPlugins, t, plugins.TableEntryHooks.AfterEntry); err != nil {
-				t.T.Fatalf(err.Error())
+			if err := bt.runEntryHooks(ctx, fieldVal, i, plugins.TableEntryHooks.AfterEntry); err != nil {
+				ctx.T.Fatalf(err.Error())
 				return
 			}
 		})
 	}
 }
 
-func (bt *BuiltTable) buildPlugins(fieldVal reflect.Value, i int) ([]plugins.TableEntryHooks, error) {
-	entryPlugins := make([]plugins.TableEntryHooks, 0, len(bt.plugins))
+type runEntryHook func(entryHooks plugins.TableEntryHooks, ctx *testctx.Context, entryValue reflect.Value, i int) error
+
+func (bt *BuiltTable) runEntryHooks(ctx *testctx.Context, entryValue reflect.Value, i int, run runEntryHook) error {
 	errs := []error{}
 
-	for _, plugin := range bt.plugins {
-		entryPlugin, err := plugin.ParseEntryValue(fieldVal, i)
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
-
-		entryPlugins = append(entryPlugins, entryPlugin)
-	}
-
-	if len(errs) > 0 {
-		return nil, stringerr.NewGroup("Errors parsing table entry", errs)
-	}
-
-	return entryPlugins, nil
-}
-
-func runEntryPlugins(plugins []plugins.TableEntryHooks, t *testctx.Context, run func(plugins.TableEntryHooks, *testctx.Context) error) error {
-	errs := []error{}
-
-	for _, plugin := range plugins {
-		if err := run(plugin, t); err != nil {
+	for _, hook := range bt.entryHooks {
+		if err := run(hook, ctx, entryValue, i); err != nil {
 			errs = append(errs, err)
 			continue
 		}

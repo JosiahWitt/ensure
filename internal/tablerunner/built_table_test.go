@@ -42,39 +42,37 @@ func TestBuiltTableRun(t *testing.T) {
 
 	buildPlugins := func(plugin1Before, plugin1After, plugin2Before, plugin2After hookFunc) []plugins.TablePlugin {
 		return []plugins.TablePlugin{
-			mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryPlugin, error) {
-				return mockEntryPlugin(func(entryValue reflect.Value, i int) (plugins.TableEntryHooks, error) {
-					name := entryValue.FieldByName("Name").String()
-					return &mockEntryHooks{
-						before: func(t *testctx.Context) error {
-							assertTestContext(t, i)
-							state = append(state, fmt.Sprintf("plugin1_before_%d_%s", i, name))
-							return plugin1Before(i, name)
-						},
-						after: func(t *testctx.Context) error {
-							assertTestContext(t, i)
-							state = append(state, fmt.Sprintf("plugin1_after_%d_%s", i, name))
-							return plugin1After(i, name)
-						},
-					}, nil
-				}), nil
+			mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryHooks, error) {
+				return &mockEntryHooks{
+					before: func(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+						assertTestContext(ctx, i)
+						name := entryValue.FieldByName("Name").String()
+						state = append(state, fmt.Sprintf("plugin1_before_%d_%s", i, name))
+						return plugin1Before(i, name)
+					},
+					after: func(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+						assertTestContext(ctx, i)
+						name := entryValue.FieldByName("Name").String()
+						state = append(state, fmt.Sprintf("plugin1_after_%d_%s", i, name))
+						return plugin1After(i, name)
+					},
+				}, nil
 			}),
-			mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryPlugin, error) {
-				return mockEntryPlugin(func(entryValue reflect.Value, i int) (plugins.TableEntryHooks, error) {
-					name := entryValue.FieldByName("Name").String()
-					return &mockEntryHooks{
-						before: func(t *testctx.Context) error {
-							assertTestContext(t, i)
-							state = append(state, fmt.Sprintf("plugin2_before_%d_%s", i, name))
-							return plugin2Before(i, name)
-						},
-						after: func(t *testctx.Context) error {
-							assertTestContext(t, i)
-							state = append(state, fmt.Sprintf("plugin2_after_%d_%s", i, name))
-							return plugin2After(i, name)
-						},
-					}, nil
-				}), nil
+			mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryHooks, error) {
+				return &mockEntryHooks{
+					before: func(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+						assertTestContext(ctx, i)
+						name := entryValue.FieldByName("Name").String()
+						state = append(state, fmt.Sprintf("plugin2_before_%d_%s", i, name))
+						return plugin2Before(i, name)
+					},
+					after: func(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+						assertTestContext(ctx, i)
+						name := entryValue.FieldByName("Name").String()
+						state = append(state, fmt.Sprintf("plugin2_after_%d_%s", i, name))
+						return plugin2After(i, name)
+					},
+				}, nil
 			}),
 		}
 	}
@@ -121,7 +119,7 @@ func TestBuiltTableRun(t *testing.T) {
 			Table: []ExampleEntry{{Name: "First"}, {Name: ""}, {Name: "Last"}},
 
 			ExpectedNames:  []string{"First", "", "Last"},
-			ExpectedFatals: map[int]string{1: "Errors parsing table entry:\n - table[1].Name is empty"},
+			ExpectedFatals: map[int]string{1: "Errors running plugins:\n - table[1].Name is empty"},
 			ExpectedRuns:   []int{0, 2},
 		},
 		{
@@ -129,7 +127,7 @@ func TestBuiltTableRun(t *testing.T) {
 			Table: []ExampleEntry{{Name: "First"}, {Name: "First"}, {Name: "Last"}},
 
 			ExpectedNames:  []string{"First", "First", "Last"},
-			ExpectedFatals: map[int]string{1: "Errors parsing table entry:\n - table[1].Name duplicates table[0].Name: First"},
+			ExpectedFatals: map[int]string{1: "Errors running plugins:\n - table[1].Name duplicates table[0].Name: First"},
 			ExpectedRuns:   []int{0, 2},
 		},
 
