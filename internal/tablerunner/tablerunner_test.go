@@ -11,6 +11,7 @@ import (
 	"github.com/JosiahWitt/ensure/internal/plugins"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
 	"github.com/JosiahWitt/ensure/internal/tablerunner"
+	"github.com/JosiahWitt/ensure/internal/testctx"
 )
 
 func TestBuildTable(t *testing.T) {
@@ -241,14 +242,14 @@ func (fn mockEntryPlugin) ParseEntryValue(entryValue reflect.Value, i int) (plug
 }
 
 type mockEntryHooks struct {
-	before func() error
-	after  func() error
+	before func(*testctx.Context) error
+	after  func(*testctx.Context) error
 }
 
-func (m *mockEntryHooks) BeforeEntry() error {
-	return m.before()
+func (m *mockEntryHooks) BeforeEntry(t *testctx.Context) error {
+	return m.before(t)
 }
 
-func (m *mockEntryHooks) AfterEntry() error {
-	return m.after()
+func (m *mockEntryHooks) AfterEntry(t *testctx.Context) error {
+	return m.after(t)
 }

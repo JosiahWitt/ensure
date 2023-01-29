@@ -1126,8 +1126,8 @@ func TestParseEntryValue(t *testing.T) {
 			tableEntryHooks, err := tableEntryPlugin.ParseEntryValue(entryVal, i)
 			ensure(err).IsNotError()
 
-			ensure(tableEntryHooks.BeforeEntry()).IsNotError()
-			ensure(tableEntryHooks.AfterEntry()).IsNotError()
+			ensure(tableEntryHooks.BeforeEntry(nil)).IsNotError()
+			ensure(tableEntryHooks.AfterEntry(nil)).IsNotError()
 		}
 
 		ensure(entry.Table).Equals(entry.ExpectedTable)

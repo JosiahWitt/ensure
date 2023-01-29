@@ -8,12 +8,6 @@ import (
 	"github.com/JosiahWitt/ensure/internal/stringerr"
 )
 
-// T contains the methods used from [testing.T].
-type T interface {
-	Helper()
-	Fatalf(format string, args ...interface{})
-}
-
 // BuildTable prepares the table to be run, surfacing any errors encountered while parsing the table.
 func BuildTable(rawTable interface{}, tablePlugins []plugins.TablePlugin) (*BuiltTable, error) {
 	tableVal := reflect.ValueOf(rawTable)

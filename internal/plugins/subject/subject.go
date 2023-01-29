@@ -10,6 +10,7 @@ import (
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/iterate"
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/mocks"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
+	"github.com/JosiahWitt/ensure/internal/testctx"
 )
 
 // New uses the collection of mocks to initialize and populate the Subject field in a test entry.
@@ -157,7 +158,7 @@ var _ plugins.TableEntryHooks = &TableEntryHooks{}
 
 // BeforeEntry is called before the test is run for the table entry.
 // It initializes the Subject and fills in any matching mocks.
-func (h *TableEntryHooks) BeforeEntry() error {
+func (h *TableEntryHooks) BeforeEntry(*testctx.Context) error {
 	if !h.hasSubject {
 		return nil
 	}
@@ -175,4 +176,4 @@ func (h *TableEntryHooks) BeforeEntry() error {
 }
 
 // AfterEntry is called after the test is run for the table entry.
-func (*TableEntryHooks) AfterEntry() error { return nil }
+func (*TableEntryHooks) AfterEntry(*testctx.Context) error { return nil }

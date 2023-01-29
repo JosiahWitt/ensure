@@ -1,7 +1,11 @@
 // Package plugins contains interfaces and helpers related to internal plugins for ensure.
 package plugins
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/JosiahWitt/ensure/internal/testctx"
+)
 
 // TablePlugin is a plugin for table-driven tests run using ensure.
 type TablePlugin interface {
@@ -17,6 +21,6 @@ type TableEntryPlugin interface {
 // TableEntryHooks are hooks that run for a particular entry in table-driven tests run using ensure.
 // It is exposed from [TableEntryPlugin].
 type TableEntryHooks interface {
-	BeforeEntry() error
-	AfterEntry() error
+	BeforeEntry(*testctx.Context) error
+	AfterEntry(*testctx.Context) error
 }

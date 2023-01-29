@@ -15,12 +15,16 @@ func TestAllAddMock(t *testing.T) {
 
 	ensure.Run("adds mock", func(ensure ensurepkg.Ensure) {
 		m := mocks.All{}
-		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
-		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
+		m1 := m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
+		m2 := m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
 
+		ensure(m1.Path).Equals("a")
+		ensure(m1.Optional).Equals(true)
 		ensure(m.Slice()[0].Path).Equals("a")
 		ensure(m.Slice()[0].Optional).Equals(true)
 
+		ensure(m2.Path).Equals("b")
+		ensure(m2.Optional).Equals(false)
 		ensure(m.Slice()[1].Path).Equals("b")
 		ensure(m.Slice()[1].Optional).Equals(false)
 

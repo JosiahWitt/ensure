@@ -21,11 +21,9 @@ func BuildMocks(mockData []*MockData) *mocks.All {
 	m := &mocks.All{}
 
 	for _, md := range mockData {
-		m.AddMock(md.Path, md.Optional, reflect.TypeOf(md.Mock))
-	}
+		mock := m.AddMock(md.Path, md.Optional, reflect.TypeOf(md.Mock))
 
-	for mockIdx, mock := range m.Slice() {
-		for valIdx, val := range mockData[mockIdx].Values {
+		for valIdx, val := range md.Values {
 			mock.SetValueByEntryIndex(valIdx, reflect.ValueOf(val))
 		}
 	}
