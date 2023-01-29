@@ -9,6 +9,8 @@ import (
 	"github.com/JosiahWitt/ensure/ensurepkg"
 	"github.com/JosiahWitt/ensure/internal/plugins"
 	"github.com/JosiahWitt/ensure/internal/tablerunner"
+	"github.com/JosiahWitt/ensure/internal/testctx"
+	"github.com/golang/mock/gomock"
 )
 
 type ExampleEntry struct {
@@ -44,11 +46,13 @@ func TestBuiltTableRun(t *testing.T) {
 				return mockEntryPlugin(func(entryValue reflect.Value, i int) (plugins.TableEntryHooks, error) {
 					name := entryValue.FieldByName("Name").String()
 					return &mockEntryHooks{
-						before: func() error {
+						before: func(t *testctx.Context) error {
+							assertTestContext(t, i)
 							state = append(state, fmt.Sprintf("plugin1_before_%d_%s", i, name))
 							return plugin1Before(i, name)
 						},
-						after: func() error {
+						after: func(t *testctx.Context) error {
+							assertTestContext(t, i)
 							state = append(state, fmt.Sprintf("plugin1_after_%d_%s", i, name))
 							return plugin1After(i, name)
 						},
@@ -59,11 +63,13 @@ func TestBuiltTableRun(t *testing.T) {
 				return mockEntryPlugin(func(entryValue reflect.Value, i int) (plugins.TableEntryHooks, error) {
 					name := entryValue.FieldByName("Name").String()
 					return &mockEntryHooks{
-						before: func() error {
+						before: func(t *testctx.Context) error {
+							assertTestContext(t, i)
 							state = append(state, fmt.Sprintf("plugin2_before_%d_%s", i, name))
 							return plugin2Before(i, name)
 						},
-						after: func() error {
+						after: func(t *testctx.Context) error {
+							assertTestContext(t, i)
 							state = append(state, fmt.Sprintf("plugin2_after_%d_%s", i, name))
 							return plugin2After(i, name)
 						},
@@ -597,24 +603,24 @@ func (entry *RunEntry) runTable(ensure ensurepkg.Ensure, state *[]string, table 
 	builtTable, err := tablerunner.BuildTable(table, entry.Plugins)
 	ensure(err).IsNotError()
 
-	outerT := &mockT{}
+	outerT := &mockT{unique: -1}
 	names := []string{}
 	fatals := map[int]string{}
 	runs := []int{}
 	i := 0
 
-	builtTable.Run(outerT, func(name string, callback func(tablerunner.T, func(int))) {
+	builtTable.Run(outerT, func(name string, callback func(*testctx.Context, func(int))) {
 		names = append(names, name)
 
-		t := &mockT{}
-		callback(t, func(i int) {
+		ctx, innerT := buildTestContext(i)
+		callback(ctx, func(i int) {
 			runs = append(runs, i)
 		})
 
-		ensure(t.helperCount).Equals(1)
+		ensure(innerT.helperCount).Equals(1)
 
-		if t.fatalMessage != "" {
-			fatals[i] = t.fatalMessage
+		if innerT.fatalMessage != "" {
+			fatals[i] = innerT.fatalMessage
 		}
 
 		i++
@@ -637,6 +643,7 @@ func (entry *RunEntry) runTable(ensure ensurepkg.Ensure, state *[]string, table 
 type mockT struct {
 	helperCount  int
 	fatalMessage string
+	unique       int
 }
 
 func (t *mockT) Helper() { t.helperCount++ }
@@ -647,4 +654,34 @@ func (t *mockT) Fatalf(format string, args ...interface{}) {
 	}
 
 	t.fatalMessage = fmt.Sprintf(format, args...)
+}
+
+func buildTestContext(i int) (*testctx.Context, *mockT) {
+	t := &mockT{unique: i}
+
+	ctx := &testctx.Context{
+		T: t,
+		GoMockController: func() *gomock.Controller {
+			return gomock.NewController(&goMockTestHelper{unique: i})
+		},
+	}
+
+	return ctx, t
+}
+
+type goMockTestHelper struct {
+	gomock.TestHelper
+	unique int
+}
+
+func assertTestContext(actualCtx *testctx.Context, i int) {
+	expected := []int{i, i}
+
+	actualMockT := actualCtx.T.(*mockT)
+	actualGoMockTestHelper := actualCtx.GoMockController().T.(*goMockTestHelper)
+	actual := []int{actualMockT.unique, actualGoMockTestHelper.unique}
+
+	if !reflect.DeepEqual(actual, expected) {
+		panic(fmt.Sprintf("testctx.Context does not equal the expected (GOT %v, EXPECTED %v)", actual, expected))
+	}
 }

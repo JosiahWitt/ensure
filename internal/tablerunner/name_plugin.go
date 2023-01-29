@@ -5,6 +5,7 @@ import (
 
 	"github.com/JosiahWitt/ensure/internal/plugins"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
+	"github.com/JosiahWitt/ensure/internal/testctx"
 )
 
 const nameField = "Name"
@@ -45,5 +46,5 @@ func (p *nameEntryPlugin) ParseEntryValue(entryValue reflect.Value, i int) (plug
 
 type nameEntryPluginHooks struct{}
 
-func (*nameEntryPluginHooks) BeforeEntry() error { return nil }
-func (*nameEntryPluginHooks) AfterEntry() error  { return nil }
+func (*nameEntryPluginHooks) BeforeEntry(*testctx.Context) error { return nil }
+func (*nameEntryPluginHooks) AfterEntry(*testctx.Context) error  { return nil }

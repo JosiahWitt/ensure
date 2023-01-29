@@ -5,6 +5,7 @@ import (
 
 	"github.com/JosiahWitt/ensure/internal/plugins"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
+	"github.com/JosiahWitt/ensure/internal/testctx"
 )
 
 // BuiltTable contains the output from building a table via [BuildTable].
@@ -18,7 +19,7 @@ type BuiltTable struct {
 
 // Run executes each entry in the table. It uses runEntry to handle wrapping each entry in its own testing.T Run block.
 // All plugins are run before and after each entry.
-func (bt *BuiltTable) Run(outerT T, runEntry func(name string, callback func(T, func(int)))) {
+func (bt *BuiltTable) Run(outerT testctx.T, runEntry func(name string, callback func(*testctx.Context, func(int)))) {
 	outerT.Helper()
 
 	for i := 0; i < bt.tableVal.Len(); i++ {
@@ -29,24 +30,24 @@ func (bt *BuiltTable) Run(outerT T, runEntry func(name string, callback func(T, 
 		}
 
 		name := fieldVal.FieldByName(nameField).String()
-		runEntry(name, func(t T, callback func(int)) {
-			t.Helper()
+		runEntry(name, func(t *testctx.Context, callback func(int)) {
+			t.T.Helper()
 
 			entryPlugins, err := bt.buildPlugins(fieldVal, i)
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.T.Fatalf(err.Error())
 				return
 			}
 
-			if err := runEntryPlugins(entryPlugins, plugins.TableEntryHooks.BeforeEntry); err != nil {
-				t.Fatalf(err.Error())
+			if err := runEntryPlugins(entryPlugins, t, plugins.TableEntryHooks.BeforeEntry); err != nil {
+				t.T.Fatalf(err.Error())
 				return
 			}
 
 			callback(i)
 
-			if err := runEntryPlugins(entryPlugins, plugins.TableEntryHooks.AfterEntry); err != nil {
-				t.Fatalf(err.Error())
+			if err := runEntryPlugins(entryPlugins, t, plugins.TableEntryHooks.AfterEntry); err != nil {
+				t.T.Fatalf(err.Error())
 				return
 			}
 		})
@@ -74,11 +75,11 @@ func (bt *BuiltTable) buildPlugins(fieldVal reflect.Value, i int) ([]plugins.Tab
 	return entryPlugins, nil
 }
 
-func runEntryPlugins(plugins []plugins.TableEntryHooks, run func(plugins.TableEntryHooks) error) error {
+func runEntryPlugins(plugins []plugins.TableEntryHooks, t *testctx.Context, run func(plugins.TableEntryHooks, *testctx.Context) error) error {
 	errs := []error{}
 
 	for _, plugin := range plugins {
-		if err := run(plugin); err != nil {
+		if err := run(plugin, t); err != nil {
 			errs = append(errs, err)
 			continue
 		}
