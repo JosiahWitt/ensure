@@ -18,7 +18,7 @@ type PathSet map[string]struct{}
 // AddMock adds the mock to the [All] collection.
 //
 // It panics if a mock with that path was already added.
-func (a *All) AddMock(path string, optional bool, t reflect.Type) {
+func (a *All) AddMock(path string, optional bool, t reflect.Type) *Mock {
 	if prevMock, ok := a.byPath[path]; ok {
 		panic(fmt.Sprintf("mock with path %q was already added: (PREVIOUS TYPE: %v, NEW TYPE: %v)", path, prevMock.t, t))
 	}
@@ -37,6 +37,7 @@ func (a *All) AddMock(path string, optional bool, t reflect.Type) {
 
 	a.byPath[path] = m
 	a.mocks = append(a.mocks, m)
+	return m
 }
 
 func (a *All) len() int {
