@@ -9,18 +9,20 @@ import (
 
 // TablePlugin is a plugin for table-driven tests run using ensure.
 type TablePlugin interface {
-	ParseEntryType(entryType reflect.Type) (TableEntryPlugin, error)
-}
-
-// TableEntryPlugin is a plugin for entries in table-driven tests run using ensure.
-// It is exposed from [TablePlugin].
-type TableEntryPlugin interface {
-	ParseEntryValue(entryValue reflect.Value, i int) (TableEntryHooks, error)
+	ParseEntryType(entryType reflect.Type) (TableEntryHooks, error)
 }
 
 // TableEntryHooks are hooks that run for a particular entry in table-driven tests run using ensure.
-// It is exposed from [TableEntryPlugin].
+// It is exposed from [TablePlugin].
 type TableEntryHooks interface {
-	BeforeEntry(*testctx.Context) error
-	AfterEntry(*testctx.Context) error
+	BeforeEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error
+	AfterEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error
+}
+
+// NoopAfterEntry exposes [AfterEntry] which is a no-op.
+type NoopAfterEntry struct{}
+
+// AfterEntry is called after the test is run for the table entry.
+func (NoopAfterEntry) AfterEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+	return nil
 }

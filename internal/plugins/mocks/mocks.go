@@ -32,8 +32,8 @@ var _ plugins.TablePlugin = &TablePlugin{}
 
 // ParseEntryType is called during the first pass of plugin initialization.
 // It is responsible for making sure the types are as expected.
-func (t *TablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableEntryPlugin, error) {
-	p := &TableEntryPlugin{}
+func (t *TablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableEntryHooks, error) {
+	h := &TableEntryHooks{}
 
 	mocksStruct, ok := entryType.FieldByName(id.Mocks)
 	if ok {
@@ -46,12 +46,12 @@ func (t *TablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableEntry
 			return nil, err
 		}
 
-		p.hasMocks = true
-		p.mockFields = mockFields
-		p.structFields = structFieldsResult
+		h.hasMocks = true
+		h.mockFields = mockFields
+		h.structFields = structFieldsResult
 	}
 
-	return p, nil
+	return h, nil
 }
 
 func validateMocksFieldType(mocksStruct *reflect.StructField) error {
@@ -150,46 +150,26 @@ func parseTag(structTag *reflect.StructTag) (*tag, error) {
 	}
 }
 
-type shared struct {
-	hasMocks     bool
-	mockFields   map[string]*mockField
-	structFields *iterate.StructFieldsResult
-}
-
 type mockField struct {
 	mock *mocks.Mock
 
 	needsGoMockController bool
 }
 
-// TableEntryPlugin is called for each entry in the table.
-type TableEntryPlugin struct {
-	shared
-}
-
-var _ plugins.TableEntryPlugin = &TableEntryPlugin{}
-
-// ParseEntryValue parses the value associated with the entry.
-func (p *TableEntryPlugin) ParseEntryValue(entryValue reflect.Value, i int) (plugins.TableEntryHooks, error) {
-	return &TableEntryHooks{
-		shared: p.shared,
-		value:  entryValue.FieldByName(id.Mocks),
-		index:  i,
-	}, nil
-}
-
 // TableEntryHooks exposes the before and after hooks for each entry in the table.
 type TableEntryHooks struct {
-	shared
-	value reflect.Value
-	index int
+	plugins.NoopAfterEntry
+
+	hasMocks     bool
+	mockFields   map[string]*mockField
+	structFields *iterate.StructFieldsResult
 }
 
 var _ plugins.TableEntryHooks = &TableEntryHooks{}
 
 // BeforeEntry is called before the test is run for the table entry.
 // It initializes the Mocks struct and calls NEW for each of the mocks.
-func (h *TableEntryHooks) BeforeEntry(t *testctx.Context) error {
+func (h *TableEntryHooks) BeforeEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error {
 	if !h.hasMocks {
 		return nil
 	}
@@ -197,7 +177,8 @@ func (h *TableEntryHooks) BeforeEntry(t *testctx.Context) error {
 	// This is only populated the first time it is needed
 	var goMockController reflect.Value
 
-	h.structFields.InitializeStruct(h.value, func(fieldPath string, field reflect.Value) {
+	mocksField := entryValue.FieldByName(id.Mocks)
+	h.structFields.InitializeStruct(mocksField, func(fieldPath string, field reflect.Value) {
 		mockField, ok := h.mockFields[fieldPath]
 		if !ok {
 			return
@@ -206,7 +187,7 @@ func (h *TableEntryHooks) BeforeEntry(t *testctx.Context) error {
 		var ins []reflect.Value
 		if mockField.needsGoMockController {
 			if !goMockController.IsValid() {
-				goMockController = reflect.ValueOf(t.GoMockController())
+				goMockController = reflect.ValueOf(ctx.GoMockController())
 			}
 
 			ins = append(ins, goMockController)
@@ -217,11 +198,8 @@ func (h *TableEntryHooks) BeforeEntry(t *testctx.Context) error {
 		mock := outs[0]
 
 		field.Set(mock)
-		mockField.mock.SetValueByEntryIndex(h.index, mock)
+		mockField.mock.SetValueByEntryIndex(i, mock)
 	})
 
 	return nil
 }
-
-// AfterEntry is called after the test is run for the table entry.
-func (*TableEntryHooks) AfterEntry(*testctx.Context) error { return nil }

@@ -23,17 +23,17 @@ func BuildTable(rawTable interface{}, tablePlugins []plugins.TablePlugin) (*Buil
 
 	defaultPlugins := []plugins.TablePlugin{&namePlugin{}}
 	allPlugins := append(defaultPlugins, tablePlugins...) //nolint:gocritic
-	entryPlugins := make([]plugins.TableEntryPlugin, 0, len(allPlugins))
+	entryHooks := make([]plugins.TableEntryHooks, 0, len(allPlugins))
 	pluginErrs := []error{}
 
 	for _, plugin := range allPlugins {
-		entryPlugin, err := plugin.ParseEntryType(entryType)
+		entryHook, err := plugin.ParseEntryType(entryType)
 		if err != nil {
 			pluginErrs = append(pluginErrs, err)
 			continue
 		}
 
-		entryPlugins = append(entryPlugins, entryPlugin)
+		entryHooks = append(entryHooks, entryHook)
 	}
 
 	if len(pluginErrs) > 0 {
@@ -45,7 +45,7 @@ func BuildTable(rawTable interface{}, tablePlugins []plugins.TablePlugin) (*Buil
 		tableType: tableType,
 		isPointer: isPointer,
 
-		plugins: entryPlugins,
+		entryHooks: entryHooks,
 	}, nil
 }
 

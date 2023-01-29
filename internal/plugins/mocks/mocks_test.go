@@ -768,22 +768,19 @@ func TestParseEntryValue(t *testing.T) {
 		entry := table[i]
 
 		plugin := mocksplugin.New(entry.MocksInput)
-		tableEntryPlugin, err := plugin.ParseEntryType(reflect.TypeOf(entry.Table).Elem())
+		tableEntryHooks, err := plugin.ParseEntryType(reflect.TypeOf(entry.Table).Elem())
 		ensure(err).IsNotError()
 
 		tableVal := reflect.ValueOf(entry.Table)
 		for i := 0; i < tableVal.Len(); i++ {
 			entryVal := tableVal.Index(i)
 
-			tableEntryHooks, err := tableEntryPlugin.ParseEntryValue(entryVal, i)
-			ensure(err).IsNotError()
-
 			ctx := &testctx.Context{
 				GoMockController: func() *gomock.Controller { return goMockController(i) },
 			}
 
-			ensure(tableEntryHooks.BeforeEntry(ctx)).IsNotError()
-			ensure(tableEntryHooks.AfterEntry(ctx)).IsNotError()
+			ensure(tableEntryHooks.BeforeEntry(ctx, entryVal, i)).IsNotError()
+			ensure(tableEntryHooks.AfterEntry(ctx, entryVal, i)).IsNotError()
 		}
 
 		ensure(entry.Table).Equals(entry.ExpectedTable)
