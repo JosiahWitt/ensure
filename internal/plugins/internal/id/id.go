@@ -9,6 +9,8 @@ const (
 	NEW = "NEW"
 
 	Ensure              = "ensure"
+	Ignore              = "-"
+	ExampleIgnore       = "`ensure:\"-\"`"
 	IgnoreUnused        = "ignoreunused"
 	ExampleIgnoreUnused = "`ensure:\"ignoreunused\"`"
 )
