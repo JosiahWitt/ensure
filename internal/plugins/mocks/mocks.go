@@ -169,7 +169,7 @@ var _ plugins.TableEntryHooks = &TableEntryHooks{}
 
 // BeforeEntry is called before the test is run for the table entry.
 // It initializes the Mocks struct and calls NEW for each of the mocks.
-func (h *TableEntryHooks) BeforeEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+func (h *TableEntryHooks) BeforeEntry(ctx testctx.Context, entryValue reflect.Value, i int) error {
 	if !h.hasMocks {
 		return nil
 	}
