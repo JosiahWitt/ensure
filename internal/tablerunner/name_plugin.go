@@ -31,7 +31,7 @@ type nameEntryHooks struct {
 	existingNames map[string]int
 }
 
-func (h *nameEntryHooks) BeforeEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+func (h *nameEntryHooks) BeforeEntry(ctx testctx.Context, entryValue reflect.Value, i int) error {
 	name := entryValue.FieldByName(nameField).String()
 	if name == "" {
 		return stringerr.Newf("table[%d].Name is empty", i)

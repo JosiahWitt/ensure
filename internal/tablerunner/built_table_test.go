@@ -7,6 +7,7 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/plugins"
 	"github.com/JosiahWitt/ensure/internal/tablerunner"
 	"github.com/JosiahWitt/ensure/internal/testctx"
@@ -44,13 +45,13 @@ func TestBuiltTableRun(t *testing.T) {
 		return []plugins.TablePlugin{
 			mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryHooks, error) {
 				return &mockEntryHooks{
-					before: func(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+					before: func(ctx testctx.Context, entryValue reflect.Value, i int) error {
 						assertTestContext(ctx, i)
 						name := entryValue.FieldByName("Name").String()
 						state = append(state, fmt.Sprintf("plugin1_before_%d_%s", i, name))
 						return plugin1Before(i, name)
 					},
-					after: func(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+					after: func(ctx testctx.Context, entryValue reflect.Value, i int) error {
 						assertTestContext(ctx, i)
 						name := entryValue.FieldByName("Name").String()
 						state = append(state, fmt.Sprintf("plugin1_after_%d_%s", i, name))
@@ -60,13 +61,13 @@ func TestBuiltTableRun(t *testing.T) {
 			}),
 			mockTablePlugin(func(entryType reflect.Type) (plugins.TableEntryHooks, error) {
 				return &mockEntryHooks{
-					before: func(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+					before: func(ctx testctx.Context, entryValue reflect.Value, i int) error {
 						assertTestContext(ctx, i)
 						name := entryValue.FieldByName("Name").String()
 						state = append(state, fmt.Sprintf("plugin2_before_%d_%s", i, name))
 						return plugin2Before(i, name)
 					},
-					after: func(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+					after: func(ctx testctx.Context, entryValue reflect.Value, i int) error {
 						assertTestContext(ctx, i)
 						name := entryValue.FieldByName("Name").String()
 						state = append(state, fmt.Sprintf("plugin2_after_%d_%s", i, name))
@@ -602,15 +603,16 @@ func (entry *RunEntry) runTable(ensure ensurepkg.Ensure, state *[]string, table 
 	ensure(err).IsNotError()
 
 	outerT := &mockT{unique: -1}
+	outerCtx := testctx.New(outerT)
 	names := []string{}
 	fatals := map[int]string{}
 	runs := []int{}
 	i := 0
 
-	builtTable.Run(outerT, func(name string, callback func(*testctx.Context, func(int))) {
+	builtTable.Run(outerCtx, func(name string, callback func(testctx.Context, func(int))) {
 		names = append(names, name)
 
-		ctx, innerT := buildTestContext(i)
+		ctx, innerT := buildTestContext(ensure.GoMockController(), i)
 		callback(ctx, func(i int) {
 			runs = append(runs, i)
 		})
@@ -639,6 +641,7 @@ func (entry *RunEntry) runTable(ensure ensurepkg.Ensure, state *[]string, table 
 }
 
 type mockT struct {
+	testctx.T
 	helperCount  int
 	fatalMessage string
 	unique       int
@@ -654,15 +657,13 @@ func (t *mockT) Fatalf(format string, args ...interface{}) {
 	t.fatalMessage = fmt.Sprintf(format, args...)
 }
 
-func buildTestContext(i int) (*testctx.Context, *mockT) {
+func buildTestContext(ctrl *gomock.Controller, i int) (testctx.Context, *mockT) {
 	t := &mockT{unique: i}
+	mockCtrl := gomock.NewController(&goMockTestHelper{unique: i})
 
-	ctx := &testctx.Context{
-		T: t,
-		GoMockController: func() *gomock.Controller {
-			return gomock.NewController(&goMockTestHelper{unique: i})
-		},
-	}
+	ctx := mock_testctx.NewMockContext(ctrl)
+	ctx.EXPECT().T().Return(t).AnyTimes()
+	ctx.EXPECT().GoMockController().Return(mockCtrl).AnyTimes()
 
 	return ctx, t
 }
@@ -672,10 +673,10 @@ type goMockTestHelper struct {
 	unique int
 }
 
-func assertTestContext(actualCtx *testctx.Context, i int) {
+func assertTestContext(actualCtx testctx.Context, i int) {
 	expected := []int{i, i}
 
-	actualMockT := actualCtx.T.(*mockT)
+	actualMockT := actualCtx.T().(*mockT)
 	actualGoMockTestHelper := actualCtx.GoMockController().T.(*goMockTestHelper)
 	actual := []int{actualMockT.unique, actualGoMockTestHelper.unique}
 

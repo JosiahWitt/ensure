@@ -6,11 +6,11 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/mocks"
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/testhelper"
 	mocksplugin "github.com/JosiahWitt/ensure/internal/plugins/mocks"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
-	"github.com/JosiahWitt/ensure/internal/testctx"
 	"github.com/golang/mock/gomock"
 )
 
@@ -775,9 +775,8 @@ func TestParseEntryValue(t *testing.T) {
 		for i := 0; i < tableVal.Len(); i++ {
 			entryVal := tableVal.Index(i)
 
-			ctx := &testctx.Context{
-				GoMockController: func() *gomock.Controller { return goMockController(i) },
-			}
+			ctx := mock_testctx.NewMockContext(ensure.GoMockController())
+			ctx.EXPECT().GoMockController().Return(goMockController(i)).AnyTimes()
 
 			ensure(tableEntryHooks.BeforeEntry(ctx, entryVal, i)).IsNotError()
 			ensure(tableEntryHooks.AfterEntry(ctx, entryVal, i)).IsNotError()

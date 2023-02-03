@@ -236,14 +236,14 @@ func (fn mockTablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableE
 }
 
 type mockEntryHooks struct {
-	before func(*testctx.Context, reflect.Value, int) error
-	after  func(*testctx.Context, reflect.Value, int) error
+	before func(testctx.Context, reflect.Value, int) error
+	after  func(testctx.Context, reflect.Value, int) error
 }
 
-func (m *mockEntryHooks) BeforeEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+func (m *mockEntryHooks) BeforeEntry(ctx testctx.Context, entryValue reflect.Value, i int) error {
 	return m.before(ctx, entryValue, i)
 }
 
-func (m *mockEntryHooks) AfterEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+func (m *mockEntryHooks) AfterEntry(ctx testctx.Context, entryValue reflect.Value, i int) error {
 	return m.after(ctx, entryValue, i)
 }

@@ -7,19 +7,16 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/JosiahWitt/ensure/internal/testctx"
 	"github.com/golang/mock/gomock"
 )
 
+//nolint:gochecknoglobals // This is stored as a variable so we can override it for tests in init_test.go.
+var newTestContext = testctx.New
+
 // T implements a subset of methods on testing.T.
 // More methods may be added to T with a minor ensure release.
-type T interface {
-	Logf(format string, args ...interface{})
-	Errorf(format string, args ...interface{})
-	Fatalf(format string, args ...interface{})
-	Run(name string, f func(t *testing.T)) bool
-	Helper()
-	Cleanup(func())
-}
+type T = testctx.T
 
 // Ensure the actual value is correct using Chain.
 // Ensure also has methods that can be called directly.
@@ -27,15 +24,10 @@ type Ensure func(actual interface{}) *Chain
 
 // Chain assertions to the ensure function call.
 type Chain struct {
-	t      T
+	t      testctx.T
+	ctx    testctx.Context
 	actual interface{}
 	wasRun bool
-
-	memoized *memoized
-}
-
-type memoized struct {
-	goMockController *gomock.Controller
 }
 
 // InternalCreateDoNotCallDirectly should NOT be called directly.
@@ -96,28 +88,25 @@ func (e Ensure) T() *testing.T {
 func (e Ensure) GoMockController() *gomock.Controller {
 	c := e(nil)
 	c.markRun()
-	return c.gomockController()
+	return c.ctx.GoMockController()
 }
 
 func wrap(t T) Ensure {
-	memoized := &memoized{} //nolint:exhaustivestruct
+	// Created outside the callback, so the same context is used across ensure calls
+	ctx := newTestContext(t)
 
 	return func(actual interface{}) *Chain {
 		c := &Chain{
-			t:        t,
-			actual:   actual,
-			memoized: memoized,
-			wasRun:   false,
+			t:      t,
+			ctx:    ctx,
+			actual: actual,
+			wasRun: false,
 		}
 
 		// Cleanup should never call Fatalf, otherwise panics are hidden, and
 		// the Fatal message is displayed instead, which is really tricky for debugging.
 		t.Helper()
 		t.Cleanup(func() {
-			if c.memoized.goMockController != nil {
-				c.memoized.goMockController.Finish()
-			}
-
 			if !c.wasRun {
 				t.Helper()
 				t.Errorf("Found ensure(<actual>) without chained assertion.")
@@ -126,13 +115,4 @@ func wrap(t T) Ensure {
 
 		return c
 	}
-}
-
-func (c *Chain) gomockController() *gomock.Controller {
-	if c.memoized.goMockController != nil {
-		return c.memoized.goMockController
-	}
-
-	c.memoized.goMockController = gomock.NewController(c.t)
-	return c.memoized.goMockController
 }

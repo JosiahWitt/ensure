@@ -5,7 +5,9 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/ensurepkg"
-	"github.com/JosiahWitt/ensure/internal/mocks/github.com/JosiahWitt/ensure/mock_ensurepkg"
+	"github.com/JosiahWitt/ensure/ensurepkg/internal/testhelper"
+	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
+	"github.com/JosiahWitt/ensure/internal/testctx"
 	"github.com/golang/mock/gomock"
 )
 
@@ -36,20 +38,41 @@ func TestNew(t *testing.T) {
 }
 
 func TestNestedNew(t *testing.T) {
-	originalName := t.Name()
-	outerEnsure := ensure.New(t)
+	t.Run("inner and outer scopes use the correct testing scope", func(t *testing.T) {
+		outerMockT := setupMockT(t)
+		outerMockT.EXPECT().Helper().AnyTimes()
+		outerMockT.EXPECT().Cleanup(gomock.Any())
+		outerEnsure := ensure.New(outerMockT)
 
-	t.Run("check nested ensure.New", func(t *testing.T) {
-		innerEnsure := outerEnsure.New(t) // Uses the nested New method
+		innerMockT := setupMockT(t)
+		innerMockT.EXPECT().Helper().AnyTimes()
+		innerMockT.EXPECT().Cleanup(gomock.Any())
+		innerEnsure := outerEnsure.New(innerMockT)
 
-		if outerEnsure.T().Name() == innerEnsure.T().Name() {
-			t.Errorf("The testing context should not be the same between the inner and outer ensure")
-		}
+		outerMockT.EXPECT().Fatalf("still outer")
+		outerEnsure.Failf("still outer")
+
+		innerMockT.EXPECT().Fatalf("inner")
+		innerEnsure.Failf("inner")
 	})
 
-	if outerEnsure.T().Name() != originalName {
-		t.Errorf("The testing context should not be changed when outerEnsure.New() is used")
-	}
+	t.Run("works with a real *testing.T", func(t *testing.T) {
+		testhelper.AllowAnyTestContexts(t)
+		originalName := t.Name()
+		outerEnsure := ensure.New(t)
+
+		t.Run("check nested ensure.New", func(t *testing.T) {
+			innerEnsure := outerEnsure.New(t) // Uses the nested New method
+
+			if outerEnsure.T().Name() == innerEnsure.T().Name() {
+				t.Errorf("The testing context should not be the same between the inner and outer ensure")
+			}
+		})
+
+		if outerEnsure.T().Name() != originalName {
+			t.Errorf("The testing context should not be changed when outerEnsure.New() is used")
+		}
+	})
 }
 
 func TestEnsureFailf(t *testing.T) {
@@ -80,6 +103,7 @@ func TestEnsureT(t *testing.T) {
 	})
 
 	t.Run("when provided a *testing.T instance", func(t *testing.T) {
+		testhelper.AllowAnyTestContexts(t)
 		ensure := ensure.New(t)
 
 		if ensure.T().Name() != t.Name() {
@@ -88,6 +112,7 @@ func TestEnsureT(t *testing.T) {
 	})
 
 	t.Run("when provided a *testing.T instance and using ensure.Run", func(t *testing.T) {
+		testhelper.AllowAnyTestContexts(t)
 		ensure := ensure.New(t)
 		outerName := t.Name()
 
@@ -136,32 +161,6 @@ func TestEnsureCleanupCheck(t *testing.T) {
 		cleanupFn()
 	})
 
-	t.Run("GoMock controller is finished", func(t *testing.T) {
-		mockT := setupMockT(t)
-
-		var cleanupFn func()
-		gomock.InOrder(
-			mockT.EXPECT().Helper(),
-			mockT.EXPECT().Cleanup(gomock.Any()).Do(func(fn func()) {
-				cleanupFn = fn
-			}),
-		)
-
-		mockT.EXPECT().Helper().AnyTimes()
-		mockT.EXPECT().Cleanup(gomock.Any()).AnyTimes()
-
-		ensure := ensure.New(mockT)
-		ctrl := ensure.GoMockController()
-
-		// SomeMethod is never "called", and should be noticed during cleanup
-		exampleType := &exampleTypeWithMethod{}
-		ctrl.RecordCall(exampleType, "SomeMethod", true)
-
-		mockT.EXPECT().Errorf(gomock.Any(), gomock.Any()).AnyTimes().MinTimes(1)
-		mockT.EXPECT().Fatalf(gomock.Any(), gomock.Any()).AnyTimes().MinTimes(1)
-		cleanupFn()
-	})
-
 	t.Run("when test was not run", func(t *testing.T) {
 		mockT := setupMockT(t)
 
@@ -184,13 +183,16 @@ func TestEnsureCleanupCheck(t *testing.T) {
 	})
 }
 
-func setupMockT(t *testing.T) *mock_ensurepkg.MockT {
+func setupMockT(t *testing.T) *mock_testctx.MockT {
 	t.Helper()
 	ctrl := gomock.NewController(t)
-	return mock_ensurepkg.NewMockT(ctrl)
+	mockT := mock_testctx.NewMockT(ctrl)
+
+	testhelper.SetTestContext(t, mockT, testctx.New(mockT))
+	return mockT
 }
 
-func setupMockTWithCleanupCheck(t *testing.T) *mock_ensurepkg.MockT {
+func setupMockTWithCleanupCheck(t *testing.T) *mock_testctx.MockT {
 	t.Helper()
 	mockT := setupMockT(t)
 
@@ -203,7 +205,3 @@ func setupMockTWithCleanupCheck(t *testing.T) *mock_ensurepkg.MockT {
 
 	return mockT
 }
-
-type exampleTypeWithMethod struct{}
-
-func (*exampleTypeWithMethod) SomeMethod(param bool) {}

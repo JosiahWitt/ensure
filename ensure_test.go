@@ -4,13 +4,13 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/internal/mocks/github.com/JosiahWitt/ensure/mock_ensurepkg"
+	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/golang/mock/gomock"
 )
 
 func TestNew(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mockT := mock_ensurepkg.NewMockT(ctrl)
+	mockT := mock_testctx.NewMockT(ctrl)
 	ensure := ensure.New(mockT)
 
 	if ensure == nil {

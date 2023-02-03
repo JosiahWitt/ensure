@@ -75,7 +75,7 @@ var _ plugins.TableEntryHooks = &TableEntryHooks{}
 
 // BeforeEntry is called before the test is run for the table entry.
 // It calls the SetupMocks function with the Mocks field as input.
-func (h *TableEntryHooks) BeforeEntry(ctx *testctx.Context, entryValue reflect.Value, i int) error {
+func (h *TableEntryHooks) BeforeEntry(ctx testctx.Context, entryValue reflect.Value, i int) error {
 	if !h.hasSetupMocks {
 		return nil
 	}

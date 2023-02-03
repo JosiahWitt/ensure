@@ -19,8 +19,9 @@ type BuiltTable struct {
 
 // Run executes each entry in the table. It uses runEntry to handle wrapping each entry in its own testing.T Run block.
 // All plugins are run before and after each entry.
-func (bt *BuiltTable) Run(outerT testctx.T, runEntry func(name string, callback func(*testctx.Context, func(int)))) {
-	outerT.Helper()
+func (bt *BuiltTable) Run(ctx testctx.Context, runEntry func(name string, callback func(testctx.Context, func(int)))) {
+	t := ctx.T()
+	t.Helper()
 
 	for i := 0; i < bt.tableVal.Len(); i++ {
 		fieldVal := bt.tableVal.Index(i)
@@ -30,27 +31,28 @@ func (bt *BuiltTable) Run(outerT testctx.T, runEntry func(name string, callback 
 		}
 
 		name := fieldVal.FieldByName(nameField).String()
-		runEntry(name, func(ctx *testctx.Context, callback func(int)) {
-			ctx.T.Helper()
+		runEntry(name, func(ctx testctx.Context, callback func(int)) {
+			t := ctx.T()
+			t.Helper()
 
 			if err := bt.runEntryHooks(ctx, fieldVal, i, plugins.TableEntryHooks.BeforeEntry); err != nil {
-				ctx.T.Fatalf(err.Error())
+				t.Fatalf(err.Error())
 				return
 			}
 
 			callback(i)
 
 			if err := bt.runEntryHooks(ctx, fieldVal, i, plugins.TableEntryHooks.AfterEntry); err != nil {
-				ctx.T.Fatalf(err.Error())
+				t.Fatalf(err.Error())
 				return
 			}
 		})
 	}
 }
 
-type runEntryHook func(entryHooks plugins.TableEntryHooks, ctx *testctx.Context, entryValue reflect.Value, i int) error
+type runEntryHook func(entryHooks plugins.TableEntryHooks, ctx testctx.Context, entryValue reflect.Value, i int) error
 
-func (bt *BuiltTable) runEntryHooks(ctx *testctx.Context, entryValue reflect.Value, i int, run runEntryHook) error {
+func (bt *BuiltTable) runEntryHooks(ctx testctx.Context, entryValue reflect.Value, i int, run runEntryHook) error {
 	errs := []error{}
 
 	for _, hook := range bt.entryHooks {
