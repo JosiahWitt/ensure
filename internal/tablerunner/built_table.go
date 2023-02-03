@@ -17,9 +17,10 @@ type BuiltTable struct {
 	entryHooks []plugins.TableEntryHooks
 }
 
-// Run executes each entry in the table. It uses runEntry to handle wrapping each entry in its own testing.T Run block.
-// All plugins are run before and after each entry.
-func (bt *BuiltTable) Run(ctx testctx.Context, runEntry func(name string, callback func(testctx.Context, func(int)))) {
+// Run executes each entry in the table inside separate test scopes with the Name of the entry.
+// It executes runEntry for each entry in the table, surfacing the test scope in the context
+// and the index of the entry. All plugins are run before and after each entry.
+func (bt *BuiltTable) Run(ctx testctx.Context, runEntry func(ctx testctx.Context, i int)) {
 	t := ctx.T()
 	t.Helper()
 
@@ -31,7 +32,7 @@ func (bt *BuiltTable) Run(ctx testctx.Context, runEntry func(name string, callba
 		}
 
 		name := fieldVal.FieldByName(nameField).String()
-		runEntry(name, func(ctx testctx.Context, callback func(int)) {
+		ctx.Run(name, func(ctx testctx.Context) {
 			t := ctx.T()
 			t.Helper()
 
@@ -40,7 +41,7 @@ func (bt *BuiltTable) Run(ctx testctx.Context, runEntry func(name string, callba
 				return
 			}
 
-			callback(i)
+			runEntry(ctx, i)
 
 			if err := bt.runEntryHooks(ctx, fieldVal, i, plugins.TableEntryHooks.AfterEntry); err != nil {
 				t.Fatalf(err.Error())
