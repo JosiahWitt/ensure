@@ -2,16 +2,25 @@ package ensurepkg
 
 import (
 	"testing"
+
+	"github.com/JosiahWitt/ensure/internal/testctx"
 )
 
 // Run fn as a subtest called name.
 func (e Ensure) Run(name string, fn func(ensure Ensure)) {
 	c := e(nil)
 	c.t.Helper()
-	c.run(name, fn)
+	c.markRun()
+
+	c.ctx.Run(name, func(ctx testctx.Context) {
+		t := ctx.T()
+		t.Helper()
+		ensure := wrap(t)
+		fn(ensure)
+	})
 }
 
-func (c *Chain) run(name string, fn func(ensure Ensure)) {
+func (c *Chain) deprecatedRun(name string, fn func(ensure Ensure)) {
 	c.t.Helper()
 	c.markRun()
 

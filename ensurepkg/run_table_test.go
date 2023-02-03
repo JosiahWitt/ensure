@@ -6,6 +6,7 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/ensurepkg/internal/testhelper"
 	"github.com/golang/mock/gomock"
 )
 
@@ -24,6 +25,7 @@ type runTableTestEntry struct {
 }
 
 func TestEnsureRunTableByIndex(t *testing.T) {
+	testhelper.AllowAnyTestContexts(t) // TODO: Remove once we refactor these tests
 	runTableTests := runTableTests{}
 
 	groups := []runTableTestEntryGroup{

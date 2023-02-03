@@ -137,7 +137,7 @@ func (e Ensure) RunTableByIndex(table interface{}, fn func(ensure Ensure, i int)
 
 		c := e(nil)
 		c.t.Helper()
-		c.run(entry.name, func(ensure Ensure) {
+		c.deprecatedRun(entry.name, func(ensure Ensure) {
 			c := ensure(nil)
 			c.t.Helper()
 			c.markRun()
@@ -354,7 +354,7 @@ func (entry *tableEntry) prepareMock(mockFieldName string, mockEntry reflect.Val
 
 	// At this point, everything should be correct, so we can blindly execute without worrying about types
 	entry.setupFuncs = append(entry.setupFuncs, func(c *Chain) {
-		gomockCtrl := reflect.ValueOf(c.gomockController())
+		gomockCtrl := reflect.ValueOf(c.ctx.GoMockController())
 
 		input := []reflect.Value{}
 		if newMethodType.NumIn() == 1 {
