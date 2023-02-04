@@ -125,9 +125,9 @@ func TestMockSetValueByEntryIndex(t *testing.T) {
 		m.Slice()[0].SetValueByEntryIndex(5, reflect.ValueOf(&ExampleGreeterMock{"hey"}))
 		m.Slice()[1].SetValueByEntryIndex(1, reflect.ValueOf(&ExampleOtherMock{"over"}))
 		m.Slice()[0].SetValueByEntryIndex(0, reflect.ValueOf(&ExampleGreeterMock{"there"}))
-		ensure(m.Slice()[0].ValueByEntryIndex(0)).Equals(reflect.ValueOf(&ExampleGreeterMock{"hey"}))
-		ensure(m.Slice()[1].ValueByEntryIndex(1)).Equals(reflect.ValueOf(&ExampleOtherMock{"over"}))
-		ensure(m.Slice()[0].ValueByEntryIndex(5)).Equals(reflect.ValueOf(&ExampleGreeterMock{"there"}))
+		ensure(m.Slice()[0].ValueByEntryIndex(0).Interface()).Equals(&ExampleGreeterMock{"there"})
+		ensure(m.Slice()[1].ValueByEntryIndex(1).Interface()).Equals(&ExampleOtherMock{"over"})
+		ensure(m.Slice()[0].ValueByEntryIndex(5).Interface()).Equals(&ExampleGreeterMock{"hey"})
 	})
 
 	ensure.Run("when mock value does not match mock type", func(ensure ensurepkg.Ensure) {
@@ -167,9 +167,9 @@ func TestMockValueByEntryIndex(t *testing.T) {
 		m.Slice()[0].SetValueByEntryIndex(5, reflect.ValueOf(&ExampleGreeterMock{"hey"}))
 		m.Slice()[1].SetValueByEntryIndex(1, reflect.ValueOf(&ExampleOtherMock{"over"}))
 		m.Slice()[0].SetValueByEntryIndex(0, reflect.ValueOf(&ExampleGreeterMock{"there"}))
-		ensure(m.Slice()[0].ValueByEntryIndex(0)).Equals(reflect.ValueOf(&ExampleGreeterMock{"hey"}))
-		ensure(m.Slice()[1].ValueByEntryIndex(1)).Equals(reflect.ValueOf(&ExampleOtherMock{"over"}))
-		ensure(m.Slice()[0].ValueByEntryIndex(5)).Equals(reflect.ValueOf(&ExampleGreeterMock{"there"}))
+		ensure(m.Slice()[0].ValueByEntryIndex(0).Interface()).Equals(&ExampleGreeterMock{"there"})
+		ensure(m.Slice()[1].ValueByEntryIndex(1).Interface()).Equals(&ExampleOtherMock{"over"})
+		ensure(m.Slice()[0].ValueByEntryIndex(5).Interface()).Equals(&ExampleGreeterMock{"hey"})
 	})
 
 	ensure.Run("when mock value is not set for index", func(ensure ensurepkg.Ensure) {
@@ -181,7 +181,7 @@ func TestMockValueByEntryIndex(t *testing.T) {
 		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
 		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
 
-		ensure(m.Slice()[0].ValueByEntryIndex(5)).Equals(reflect.ValueOf(&ExampleGreeterMock{"there"}))
+		ensure(m.Slice()[0].ValueByEntryIndex(5).Interface()).Equals(&ExampleGreeterMock{"there"})
 	})
 }
 
