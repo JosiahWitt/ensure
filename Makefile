@@ -9,4 +9,7 @@ test-coverage:
 	go test ./... -coverprofile=tmp/ensure-pkg.coverage && go tool cover -html=tmp/ensure-pkg.coverage -o=tmp/coverage.html
 
 lint:
+	staticcheck ./...
+	(cd cmd/ensure; staticcheck ./...)
 	golangci-lint run
+	(cd cmd/ensure; golangci-lint run)

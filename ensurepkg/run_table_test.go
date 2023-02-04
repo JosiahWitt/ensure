@@ -297,9 +297,10 @@ func (runTableTests) general() runTableTestEntryGroup {
 
 func (runTableTests) mocksField() runTableTestEntryGroup {
 	type (
+		//lint:ignore U1000 Present for testing purposes
 		TwoValidMocksWithUnexported struct {
 			Valid1      *ExampleMockValid1
-			notExported string //nolint:structcheck,unused // Present for the test
+			notExported string //nolint:structcheck // Present for the test
 			Valid2      *ExampleMockValid2
 		}
 
