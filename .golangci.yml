@@ -21,6 +21,9 @@ linters:
     - structcheck
     - varcheck
     - exhaustivestruct
+    # We run staticcheck separately:
+    - staticcheck
+    - stylecheck
 
 linters-settings:
   lll:
