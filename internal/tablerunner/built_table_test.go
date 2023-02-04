@@ -602,36 +602,43 @@ func (entry *RunEntry) runTable(ensure ensurepkg.Ensure, state *[]string, table 
 	builtTable, err := tablerunner.BuildTable(table, entry.Plugins)
 	ensure(err).IsNotError()
 
-	outerT := &mockT{unique: -1}
-	outerCtx := testctx.New(outerT)
 	names := []string{}
 	fatals := map[int]string{}
 	runs := []int{}
+	ctxIDs := []int{}
 	i := 0
 
-	builtTable.Run(outerCtx, func(name string, callback func(testctx.Context, func(int))) {
-		names = append(names, name)
+	outerT := mock_testctx.NewMockT(ensure.GoMockController())
+	outerT.EXPECT().Helper()
 
-		ctx, innerT := buildTestContext(ensure.GoMockController(), i)
-		callback(ctx, func(i int) {
-			runs = append(runs, i)
-		})
+	outerCtx := mock_testctx.NewMockContext(ensure.GoMockController())
+	outerCtx.EXPECT().T().Return(outerT)
 
-		ensure(innerT.helperCount).Equals(1)
+	outerCtx.EXPECT().Run(gomock.Any(), gomock.Any()).
+		Do(func(name string, fn func(testctx.Context)) {
+			names = append(names, name)
 
-		if innerT.fatalMessage != "" {
-			fatals[i] = innerT.fatalMessage
-		}
+			ctx, innerT := buildTestContext(ensure.GoMockController(), i)
+			innerT.EXPECT().Helper()
+			innerT.EXPECT().Fatalf(gomock.Any(), gomock.Any()).
+				Do(func(msg string, args ...interface{}) {
+					fatals[i] = fmt.Sprintf(msg, args...)
+				}).MaxTimes(1)
 
-		i++
+			fn(&mockCtx{Context: ctx, unique: i + ctxUniqueOffset})
+
+			i++
+		}).AnyTimes()
+
+	builtTable.Run(outerCtx, func(ctx testctx.Context, i int) {
+		ctxIDs = append(ctxIDs, ctx.(*mockCtx).unique)
+		runs = append(runs, i)
 	})
 
-	ensure(outerT.helperCount).Equals(1)
-	ensure(outerT.fatalMessage).IsEmpty()
-
 	ensure(names).Equals(entry.ExpectedNames)
-	ensure(runs).Equals(entry.ExpectedRuns)
 	ensure(fatals).Equals(entry.ExpectedFatals)
+	ensure(runs).Equals(entry.ExpectedRuns)
+	ensure(ctxIDs).Equals(offsetInts(entry.ExpectedRuns, ctxUniqueOffset))
 
 	if entry.ExpectedState != nil {
 		ensure(*state).Equals(entry.ExpectedState)
@@ -640,32 +647,20 @@ func (entry *RunEntry) runTable(ensure ensurepkg.Ensure, state *[]string, table 
 	}
 }
 
+const (
+	ctxUniqueOffset    = 100
+	tUniqueOffset      = 1000
+	goMockUniqueOffset = 10000
+)
+
+type mockCtx struct {
+	testctx.Context
+	unique int
+}
+
 type mockT struct {
 	testctx.T
-	helperCount  int
-	fatalMessage string
-	unique       int
-}
-
-func (t *mockT) Helper() { t.helperCount++ }
-
-func (t *mockT) Fatalf(format string, args ...interface{}) {
-	if t.fatalMessage != "" {
-		panic("double call to Fatalf")
-	}
-
-	t.fatalMessage = fmt.Sprintf(format, args...)
-}
-
-func buildTestContext(ctrl *gomock.Controller, i int) (testctx.Context, *mockT) {
-	t := &mockT{unique: i}
-	mockCtrl := gomock.NewController(&goMockTestHelper{unique: i})
-
-	ctx := mock_testctx.NewMockContext(ctrl)
-	ctx.EXPECT().T().Return(t).AnyTimes()
-	ctx.EXPECT().GoMockController().Return(mockCtrl).AnyTimes()
-
-	return ctx, t
+	unique int
 }
 
 type goMockTestHelper struct {
@@ -673,14 +668,36 @@ type goMockTestHelper struct {
 	unique int
 }
 
-func assertTestContext(actualCtx testctx.Context, i int) {
-	expected := []int{i, i}
+func buildTestContext(ctrl *gomock.Controller, i int) (*mock_testctx.MockContext, *mock_testctx.MockT) {
+	t := mock_testctx.NewMockT(ctrl)
+	mockCtrl := gomock.NewController(&goMockTestHelper{unique: i + goMockUniqueOffset})
 
+	ctx := mock_testctx.NewMockContext(ctrl)
+	ctx.EXPECT().T().Return(&mockT{T: t, unique: i + tUniqueOffset}).AnyTimes()
+	ctx.EXPECT().GoMockController().Return(mockCtrl).AnyTimes()
+
+	return ctx, t
+}
+
+func assertTestContext(actualCtx testctx.Context, i int) {
+	expectedOffsets := []int{ctxUniqueOffset, tUniqueOffset, goMockUniqueOffset}
+	expected := offsetInts(expectedOffsets, i)
+
+	rawActualCtx := actualCtx.(*mockCtx)
 	actualMockT := actualCtx.T().(*mockT)
 	actualGoMockTestHelper := actualCtx.GoMockController().T.(*goMockTestHelper)
-	actual := []int{actualMockT.unique, actualGoMockTestHelper.unique}
+	actual := []int{rawActualCtx.unique, actualMockT.unique, actualGoMockTestHelper.unique}
 
 	if !reflect.DeepEqual(actual, expected) {
 		panic(fmt.Sprintf("testctx.Context does not equal the expected (GOT %v, EXPECTED %v)", actual, expected))
 	}
+}
+
+func offsetInts(ints []int, offset int) []int {
+	offsetInts := make([]int, 0, len(ints))
+	for _, i := range ints {
+		offsetInts = append(offsetInts, i+offset)
+	}
+
+	return offsetInts
 }
