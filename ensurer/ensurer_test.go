@@ -1,11 +1,11 @@
-package ensurepkg_test
+package ensurer_test
 
 import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurepkg"
-	"github.com/JosiahWitt/ensure/ensurepkg/internal/testhelper"
+	"github.com/JosiahWitt/ensure/ensurer"
+	"github.com/JosiahWitt/ensure/ensurer/internal/testhelper"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/testctx"
 	"github.com/golang/mock/gomock"
@@ -30,10 +30,10 @@ func TestNew(t *testing.T) {
 
 		gomock.InOrder(
 			mockT.EXPECT().Helper(),
-			mockT.EXPECT().Fatalf("Do not call `ensurepkg.InternalCreateDoNotCallDirectly(t)` directly. Instead use `ensure.New(t)`."),
+			mockT.EXPECT().Fatalf("Do not call `ensurer.InternalCreateDoNotCallDirectly(t)` directly. Instead use `ensure := ensure.New(t)`."),
 		)
 
-		ensurepkg.InternalCreateDoNotCallDirectly(mockT)
+		ensurer.InternalCreateDoNotCallDirectly(mockT)
 	})
 }
 
@@ -75,7 +75,7 @@ func TestNestedNew(t *testing.T) {
 	})
 }
 
-func TestEnsureFailf(t *testing.T) {
+func TestEFailf(t *testing.T) {
 	mockT := setupMockTWithCleanupCheck(t)
 
 	const message = "my message %s"
@@ -89,7 +89,7 @@ func TestEnsureFailf(t *testing.T) {
 	ensure.Failf(message, arg1)
 }
 
-func TestEnsureT(t *testing.T) {
+func TestET(t *testing.T) {
 	t.Run("when provided a non *testing.T instance", func(t *testing.T) {
 		mockT := setupMockTWithCleanupCheck(t)
 
@@ -116,7 +116,7 @@ func TestEnsureT(t *testing.T) {
 		ensure := ensure.New(t)
 		outerName := t.Name()
 
-		ensure.Run("inner", func(ensure ensurepkg.Ensure) {
+		ensure.Run("inner", func(ensure ensurer.E) {
 			if ensure.T().Name() != outerName+"/inner" {
 				t.Fatalf("Expected to be able to use T() inside ensure.Run")
 			}
@@ -124,7 +124,7 @@ func TestEnsureT(t *testing.T) {
 	})
 }
 
-func TestEnsureGoMockController(t *testing.T) {
+func TestEGoMockController(t *testing.T) {
 	mockT := setupMockTWithCleanupCheck(t)
 	mockT.EXPECT().Cleanup(gomock.Any()).AnyTimes() // Setup by GoMock Controller
 	mockT.EXPECT().Helper().AnyTimes()              // Setup by GoMock Controller
@@ -142,7 +142,7 @@ func TestEnsureGoMockController(t *testing.T) {
 	}
 }
 
-func TestEnsureCleanupCheck(t *testing.T) {
+func TestECleanupCheck(t *testing.T) {
 	t.Run("when test was run", func(t *testing.T) {
 		mockT := setupMockT(t)
 

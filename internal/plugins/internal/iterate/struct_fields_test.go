@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/ensurer"
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/iterate"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
 )
@@ -505,7 +505,7 @@ func TestStructFields(t *testing.T) {
 		},
 	}
 
-	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
+	ensure.RunTableByIndex(table, func(ensure ensurer.E, i int) {
 		entry := table[i]
 
 		var fields []*Field
@@ -519,7 +519,7 @@ func TestStructFields(t *testing.T) {
 		ensure(fields).Equals(entry.ExpectedFields)
 	})
 
-	ensure.Run("panics when provided a non-struct", func(ensure ensurepkg.Ensure) {
+	ensure.Run("panics when provided a non-struct", func(ensure ensurer.E) {
 		defer func() {
 			ensure(recover()).Equals("StructFields must be provided a struct, got: string")
 		}()
@@ -1002,7 +1002,7 @@ func TestInitializeStruct(t *testing.T) {
 		},
 	}
 
-	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
+	ensure.RunTableByIndex(table, func(ensure ensurer.E, i int) {
 		entry := table[i]
 		s := reflect.ValueOf(entry.NestedStruct).Elem().FieldByName("Struct")
 		ensure(s == (reflect.Value{})).IsFalse()
@@ -1021,7 +1021,7 @@ func TestInitializeStruct(t *testing.T) {
 		ensure(fields).Equals(entry.ExpectedFields)
 	})
 
-	ensure.Run("panics when not provided a pointer", func(ensure ensurepkg.Ensure) {
+	ensure.Run("panics when not provided a pointer", func(ensure ensurer.E) {
 		defer func() {
 			ensure(recover()).Equals("InitializeStruct must be provided a pointer to a struct, got: struct {}")
 		}()
@@ -1032,7 +1032,7 @@ func TestInitializeStruct(t *testing.T) {
 		res.InitializeStruct(reflect.ValueOf(struct{}{}), nil)
 	})
 
-	ensure.Run("panics when not provided a struct pointer", func(ensure ensurepkg.Ensure) {
+	ensure.Run("panics when not provided a struct pointer", func(ensure ensurer.E) {
 		defer func() {
 			ensure(recover()).Equals("InitializeStruct must be provided a pointer to a struct, got: *string")
 		}()
@@ -1045,7 +1045,7 @@ func TestInitializeStruct(t *testing.T) {
 		res.InitializeStruct(reflect.ValueOf(ptr), nil)
 	})
 
-	ensure.Run("panics when type doesn't match", func(ensure ensurepkg.Ensure) {
+	ensure.Run("panics when type doesn't match", func(ensure ensurer.E) {
 		defer func() {
 			ensure(recover()).Equals("InitializeStruct must be provided the type (iterate_test.s1) that was provided to StructFields, got: *iterate_test.s2")
 		}()
@@ -1059,7 +1059,7 @@ func TestInitializeStruct(t *testing.T) {
 		res.InitializeStruct(reflect.ValueOf(&s2{}), nil)
 	})
 
-	ensure.Run("panics when type is not addressable", func(ensure ensurepkg.Ensure) {
+	ensure.Run("panics when type is not addressable", func(ensure ensurer.E) {
 		defer func() {
 			ensure(recover()).Equals("InitializeStruct must be provided an addressable value, such as a field inside a pointer to a struct or an element in a slice, got: *iterate_test.s")
 		}()

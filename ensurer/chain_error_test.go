@@ -1,4 +1,4 @@
-package ensurepkg_test
+package ensurer_test
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/ensurer"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/erk"
 )
@@ -25,7 +25,7 @@ func TestChainIsError(t *testing.T) {
 		ensure(val).IsError(err)
 	})
 
-	sharedIsErrorTests(t, func(mockT *mock_testctx.MockT, chain *ensurepkg.Chain, expected error) {
+	sharedIsErrorTests(t, func(mockT *mock_testctx.MockT, chain *ensurer.Chain, expected error) {
 		chain.IsError(expected)
 	})
 }
@@ -94,7 +94,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 	})
 
 	t.Run("when one expected error", func(t *testing.T) {
-		sharedIsErrorTests(t, func(mockT *mock_testctx.MockT, chain *ensurepkg.Chain, expected error) {
+		sharedIsErrorTests(t, func(mockT *mock_testctx.MockT, chain *ensurer.Chain, expected error) {
 			mockT.EXPECT().Helper()
 
 			chain.MatchesAllErrors(expected)
@@ -343,7 +343,7 @@ func TestChainMatchesAllErrors(t *testing.T) {
 	})
 }
 
-func sharedIsErrorTests(t *testing.T, run func(mockT *mock_testctx.MockT, chain *ensurepkg.Chain, expected error)) {
+func sharedIsErrorTests(t *testing.T, run func(mockT *mock_testctx.MockT, chain *ensurer.Chain, expected error)) {
 	const errorFormat = "\nActual error is not the expected error:\n\tActual:   %s\n\tExpected: %s"
 
 	t.Run("when equal error by reference", func(t *testing.T) {

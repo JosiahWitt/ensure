@@ -1,7 +1,7 @@
 //nolint:testpackage // Only used for the init function below.
-package ensurepkg
+package ensurer
 
-import "github.com/JosiahWitt/ensure/ensurepkg/internal/testhelper"
+import "github.com/JosiahWitt/ensure/ensurer/internal/testhelper"
 
 //nolint:gochecknoinits // Only to make testing easier.
 func init() {

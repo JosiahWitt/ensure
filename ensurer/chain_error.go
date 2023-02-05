@@ -1,4 +1,4 @@
-package ensurepkg
+package ensurer
 
 import (
 	"errors"

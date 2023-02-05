@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/ensurer"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/plugins"
 	"github.com/JosiahWitt/ensure/internal/tablerunner"
@@ -549,17 +549,17 @@ func TestBuiltTableRun(t *testing.T) {
 		},
 	}
 
-	ensure.Run("when table is a slice without pointers", func(ensure ensurepkg.Ensure) {
+	ensure.Run("when table is a slice without pointers", func(ensure ensurer.E) {
 		for _, entry := range table {
-			ensure.Run(entry.Name, func(ensure ensurepkg.Ensure) {
+			ensure.Run(entry.Name, func(ensure ensurer.E) {
 				entry.runTable(ensure, &state, entry.Table)
 			})
 		}
 	})
 
-	ensure.Run("when table is a slice with pointers", func(ensure ensurepkg.Ensure) {
+	ensure.Run("when table is a slice with pointers", func(ensure ensurer.E) {
 		for _, entry := range table {
-			ensure.Run(entry.Name, func(ensure ensurepkg.Ensure) {
+			ensure.Run(entry.Name, func(ensure ensurer.E) {
 				pointerTable := []*ExampleEntry{}
 
 				for _, entry := range entry.Table {
@@ -571,9 +571,9 @@ func TestBuiltTableRun(t *testing.T) {
 		}
 	})
 
-	ensure.Run("when table is an array without pointers", func(ensure ensurepkg.Ensure) {
+	ensure.Run("when table is an array without pointers", func(ensure ensurer.E) {
 		for _, entry := range table {
-			ensure.Run(entry.Name, func(ensure ensurepkg.Ensure) {
+			ensure.Run(entry.Name, func(ensure ensurer.E) {
 				arrayTable := [3]ExampleEntry{}
 				copy(arrayTable[:], entry.Table)
 				entry.runTable(ensure, &state, arrayTable)
@@ -581,9 +581,9 @@ func TestBuiltTableRun(t *testing.T) {
 		}
 	})
 
-	ensure.Run("when table is an array with pointers", func(ensure ensurepkg.Ensure) {
+	ensure.Run("when table is an array with pointers", func(ensure ensurer.E) {
 		for _, entry := range table {
-			ensure.Run(entry.Name, func(ensure ensurepkg.Ensure) {
+			ensure.Run(entry.Name, func(ensure ensurer.E) {
 				pointerTable := [3]*ExampleEntry{}
 
 				for i, entry := range entry.Table {
@@ -596,7 +596,7 @@ func TestBuiltTableRun(t *testing.T) {
 	})
 }
 
-func (entry *RunEntry) runTable(ensure ensurepkg.Ensure, state *[]string, table interface{}) {
+func (entry *RunEntry) runTable(ensure ensurer.E, state *[]string, table interface{}) {
 	*state = []string{}
 
 	builtTable, err := tablerunner.BuildTable(table, entry.Plugins)
