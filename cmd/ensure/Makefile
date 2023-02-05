@@ -6,7 +6,8 @@ test:
 
 test-coverage:
 	mkdir -p tmp
-	go test ./... -coverprofile=tmp/ensure-cmd.coverage && go tool cover -html=tmp/ensure-cmd.coverage -o=tmp/coverage.html
+	go test ./... -coverprofile=tmp/ensure.coverage && go tool cover -html=tmp/ensure.coverage -o=tmp/coverage.html
 
 lint:
 	golangci-lint run
+	staticcheck ./...
