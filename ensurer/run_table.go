@@ -1,4 +1,4 @@
-package ensurepkg
+package ensurer
 
 import (
 	"github.com/JosiahWitt/ensure/internal/plugins/all"
@@ -38,7 +38,7 @@ import (
 //
 // Support for mocks is also included.
 // Please see the README for an example.
-func (e Ensure) RunTableByIndex(table interface{}, fn func(ensure Ensure, i int)) {
+func (e E) RunTableByIndex(table interface{}, fn func(ensure E, i int)) {
 	c := e(nil)
 	c.t.Helper()
 	c.markRun()

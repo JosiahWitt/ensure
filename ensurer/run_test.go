@@ -1,17 +1,17 @@
-package ensurepkg_test
+package ensurer_test
 
 import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurepkg"
-	"github.com/JosiahWitt/ensure/ensurepkg/internal/testhelper"
+	"github.com/JosiahWitt/ensure/ensurer"
+	"github.com/JosiahWitt/ensure/ensurer/internal/testhelper"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/testctx"
 	"github.com/golang/mock/gomock"
 )
 
-func TestEnsureRun(t *testing.T) {
+func TestERun(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	outerMockT := setupMockTWithCleanupCheck(t)
@@ -34,9 +34,9 @@ func TestEnsureRun(t *testing.T) {
 			fn(innerMockCtx)
 		})
 
-	var innerEnsure ensurepkg.Ensure
+	var innerEnsure ensurer.E
 	outerEnsure := ensure.New(outerMockT)
-	outerEnsure.Run(name, func(ensure ensurepkg.Ensure) {
+	outerEnsure.Run(name, func(ensure ensurer.E) {
 		innerEnsure = ensure
 	})
 
