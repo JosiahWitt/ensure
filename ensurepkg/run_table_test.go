@@ -7,6 +7,8 @@ import (
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/ensurepkg"
 	"github.com/JosiahWitt/ensure/ensurepkg/internal/testhelper"
+	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
+	"github.com/JosiahWitt/ensure/internal/testctx"
 	"github.com/golang/mock/gomock"
 )
 
@@ -18,14 +20,13 @@ type runTableTestEntryGroup struct {
 type runTableTestEntry struct {
 	Name                 string
 	ExpectedNames        []string
-	ExpectedFatalMessage string
-	ExpectedWarnings     []string
+	ExpectedTableSize    int // Defaults to the length of ExpectedNames
+	FatalMessagesContain []string
 	Table                interface{}
 	CheckEntry           func(t *testing.T, rawEntry interface{})
 }
 
 func TestEnsureRunTableByIndex(t *testing.T) {
-	testhelper.AllowAnyTestContexts(t) // TODO: Remove once we refactor these tests
 	runTableTests := runTableTests{}
 
 	groups := []runTableTestEntryGroup{
@@ -47,81 +48,95 @@ func TestEnsureRunTableByIndex(t *testing.T) {
 		entry := entry // Pin range variable
 
 		t.Run(entry.Name, func(t *testing.T) {
-			mockT := setupMockT(t)
-			expectedTableSize := len(entry.ExpectedNames)
+			ctrl := gomock.NewController(t)
+			outerMockT := setupMockTWithCleanupCheck(t)
+			outerMockT.EXPECT().Helper().MinTimes(1)
 
-			if len(entry.ExpectedWarnings) > 0 {
-				gomock.InOrder(
-					mockT.EXPECT().Helper(),
-					mockT.EXPECT().Cleanup(gomock.Any()),
-					mockT.EXPECT().Helper(),
-					mockT.EXPECT().Logf(
-						"\n\n⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n\n"+
-							"WARNINGS:\n - %s\n\n"+
-							"These may or may not be the cause of a problem. If you recently changed an interface, make sure to rerun `ensure mocks generate`.\n\n"+
-							"⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n\n",
+			outerCtx := mock_testctx.NewMockContext(ctrl)
+			outerCtx.EXPECT().T().Return(outerMockT).AnyTimes()
+			testhelper.SetTestContext(t, outerMockT, outerCtx)
 
-						strings.Join(entry.ExpectedWarnings, "\n - "),
-					),
+			actualFatalMessages := []string{}
+			expectedRunCalls := []*gomock.Call{}
+			innerMockTs := []*mock_testctx.MockT{} //lint:ignore ST1003 mockTs not mockTS
+
+			for _, name := range entry.ExpectedNames {
+				innerMockT := setupMockT(t)
+				innerMockT.EXPECT().Helper().MinTimes(1)
+				innerMockT.EXPECT().Cleanup(gomock.Any()).AnyTimes()
+				innerMockTs = append(innerMockTs, innerMockT)
+
+				innerContext := mock_testctx.NewMockContext(ctrl)
+				innerContext.EXPECT().T().Return(innerMockT).AnyTimes()
+				innerContext.EXPECT().GoMockController().Return(gomock.NewController(innerMockT)).AnyTimes()
+				testhelper.SetTestContext(t, innerMockT, innerContext)
+
+				innerMockT.EXPECT().Fatalf(gomock.Any()).Do(func(msg string, args ...interface{}) {
+					actualFatalMessages = append(actualFatalMessages, msg)
+				}).AnyTimes()
+
+				expectedRunCalls = append(expectedRunCalls,
+					outerCtx.EXPECT().Run(name, gomock.Any()).
+						Do(func(name string, fn func(ctx testctx.Context)) {
+							fn(innerContext)
+						}),
 				)
 			}
 
-			mockT.EXPECT().Helper().Times(3 * expectedTableSize) // 3 = RunTableByIndex + run + before Cleanup call
-			mockT.EXPECT().Cleanup(gomock.Any()).Times(expectedTableSize)
+			// Run calls should be in order
+			gomock.InOrder(expectedRunCalls...)
 
-			// Build expected Run calls only if there's no expected error
-			expectedTestingInputs := []*testing.T{}
-			if entry.ExpectedFatalMessage == "" {
-				expectedRunCalls := []*gomock.Call{}
+			outerMockT.EXPECT().Fatalf(gomock.Any()).Do(func(msg string, args ...interface{}) {
+				actualFatalMessages = append(actualFatalMessages, msg)
+			}).AnyTimes()
 
-				for _, name := range entry.ExpectedNames {
-					providedTestingInput := &testing.T{}
-					expectedTestingInputs = append(expectedTestingInputs, providedTestingInput)
-
-					expectedRunCalls = append(expectedRunCalls,
-						mockT.EXPECT().Run(name, gomock.Any()).
-							Do(func(name string, fn func(t *testing.T)) {
-								fn(providedTestingInput)
-							}),
-					)
-				}
-
-				// Run calls should be in order
-				gomock.InOrder(expectedRunCalls...)
-			} else {
-				gomock.InOrder(
-					mockT.EXPECT().Helper(),
-					mockT.EXPECT().Cleanup(gomock.Any()),
-					mockT.EXPECT().Helper(),
-					mockT.EXPECT().Fatalf(entry.ExpectedFatalMessage),
-				)
-			}
-
-			type Params struct {
+			type entryCall struct {
 				ensure ensurepkg.Ensure
 				i      int
 			}
 
-			// Run table and save parameters
-			actualParams := []Params{}
-			ensure := ensure.New(mockT)
+			// Run table and save call details
+			actualEntryCalls := []entryCall{}
+			ensure := ensure.New(outerMockT)
 			ensure.RunTableByIndex(entry.Table, func(ensure ensurepkg.Ensure, i int) {
-				actualParams = append(actualParams, Params{ensure: ensure, i: i})
+				actualEntryCalls = append(actualEntryCalls, entryCall{ensure: ensure, i: i})
 			})
 
-			// Verify call count
-			if len(actualParams) != expectedTableSize {
-				t.Fatalf("len(actualParams) != expectedTableSize")
-			}
-
-			// Verify parameters are correct
-			for i, actualParam := range actualParams {
-				if actualParam.ensure.T() != expectedTestingInputs[i] {
-					t.Fatalf("actualParams[%d].ensure.T() != expectedTestingInputs[%d]", i, i)
+			// Verify entry calls
+			{
+				expectedTableSize := entry.ExpectedTableSize
+				if expectedTableSize == 0 {
+					expectedTableSize = len(entry.ExpectedNames)
 				}
 
-				if actualParam.i != i {
-					t.Fatalf("actualParams[%d].i != %d", i, i)
+				// Verify call count
+				if len(actualEntryCalls) != expectedTableSize {
+					t.Fatalf("len(actualParams) != expectedTableSize: %d != %d", len(actualEntryCalls), expectedTableSize)
+				}
+
+				// Verify parameters are correct
+				for i, actualParam := range actualEntryCalls {
+					if actualParam.i != i {
+						t.Fatalf("actualParams[%d].i != %d", i, i)
+					}
+
+					// Show the correct mock is paired with the correct call
+					innerMockT := innerMockTs[i]
+					innerMockT.EXPECT().Fatalf("failing %d", i)
+					actualParam.ensure.Failf("failing %d", i)
+				}
+			}
+
+			// Verify fatal messages
+			{
+				if len(actualFatalMessages) != len(entry.FatalMessagesContain) {
+					t.Fatalf("Expected %d fatal message(s), got %d fatal message(s): %v", len(entry.FatalMessagesContain), len(actualFatalMessages), actualFatalMessages)
+				}
+
+				for i, expectedMessageContains := range entry.FatalMessagesContain {
+					if !strings.Contains(actualFatalMessages[i], expectedMessageContains) {
+						t.Fatalf("Error message expected to contain %q, got: %s", expectedMessageContains, actualFatalMessages[i])
+					}
 				}
 			}
 
@@ -139,7 +154,7 @@ func (runTableTests) general() runTableTestEntryGroup {
 		Prefix: "general",
 		Entries: []runTableTestEntry{
 			{
-				Name:          "with valid table: slice",
+				Name:          "with valid table: slice with non-pointers",
 				ExpectedNames: []string{"name 1", "name 2", "name 3"},
 				Table: []struct {
 					Name  string
@@ -159,11 +174,49 @@ func (runTableTests) general() runTableTestEntryGroup {
 					},
 				},
 			},
+			{
+				Name:          "with valid table: slice with pointers",
+				ExpectedNames: []string{"name 1", "name 2", "name 3"},
+				Table: []*struct {
+					Name  string
+					Value string
+				}{
+					{
+						Name:  "name 1",
+						Value: "item 1",
+					},
+					{
+						Name:  "name 2",
+						Value: "item 2",
+					},
+					{
+						Name:  "name 3",
+						Value: "item 3",
+					},
+				},
+			},
 
 			{
-				Name:          "with valid table: array",
+				Name:          "with valid table: array with non-pointers",
 				ExpectedNames: []string{"name 1", "name 2"},
 				Table: [2]struct {
+					Name  string
+					Value string
+				}{
+					{
+						Name:  "name 1",
+						Value: "item 1",
+					},
+					{
+						Name:  "name 2",
+						Value: "item 2",
+					},
+				},
+			},
+			{
+				Name:          "with valid table: array with pointers",
+				ExpectedNames: []string{"name 1", "name 2"},
+				Table: [2]*struct {
 					Name  string
 					Value string
 				}{
@@ -180,13 +233,13 @@ func (runTableTests) general() runTableTestEntryGroup {
 
 			{
 				Name:                 "with invalid table type: not array or slice",
-				ExpectedFatalMessage: "Expected a slice or array for the table, got string",
+				FatalMessagesContain: []string{"Expected a slice or array for the table, got string"},
 				Table:                "my table",
 			},
 
 			{
-				Name:                 "with invalid table type: not array or slice of stucts",
-				ExpectedFatalMessage: "Expected entry in table to be a struct, got string",
+				Name:                 "with invalid table type: not array or slice of structs",
+				FatalMessagesContain: []string{"Expected entry in table to be a struct or a pointer to a struct, got string"},
 				Table: []string{
 					"item 1",
 					"item 2",
@@ -195,7 +248,7 @@ func (runTableTests) general() runTableTestEntryGroup {
 
 			{
 				Name:                 "with missing name",
-				ExpectedFatalMessage: "Name field does not exist on struct in table",
+				FatalMessagesContain: []string{"Required Name field does not exist on struct in table"},
 				Table: []struct {
 					Value string
 				}{
@@ -210,7 +263,7 @@ func (runTableTests) general() runTableTestEntryGroup {
 
 			{
 				Name:                 "with name with invalid type",
-				ExpectedFatalMessage: "Name field in struct in table is not a string",
+				FatalMessagesContain: []string{"Required Name field in struct in table is not a string"},
 				Table: []struct {
 					Name  int
 					Value string
@@ -228,7 +281,9 @@ func (runTableTests) general() runTableTestEntryGroup {
 
 			{
 				Name:                 "with missing name for one item",
-				ExpectedFatalMessage: "Errors encountered while building table:\n - table[1]: Name not set for item",
+				ExpectedNames:        []string{"name 1", ""},
+				ExpectedTableSize:    1,
+				FatalMessagesContain: []string{"table[1].Name is empty"},
 				Table: []struct {
 					Name  string
 					Value string
@@ -246,7 +301,9 @@ func (runTableTests) general() runTableTestEntryGroup {
 
 			{
 				Name:                 "with duplicate name",
-				ExpectedFatalMessage: "Errors encountered while building table:\n - table[2]: duplicate Name found; first occurrence was table[0].Name: name 1",
+				ExpectedNames:        []string{"name 1", "name 2", "name 1"},
+				ExpectedTableSize:    2,
+				FatalMessagesContain: []string{"table[2].Name duplicates table[0].Name: name 1"},
 				Table: []struct {
 					Name  string
 					Value string
@@ -268,7 +325,9 @@ func (runTableTests) general() runTableTestEntryGroup {
 
 			{
 				Name:                 "with double duplicate name",
-				ExpectedFatalMessage: "Errors encountered while building table:\n - table[2]: duplicate Name found; first occurrence was table[0].Name: name 1\n - table[3]: duplicate Name found; first occurrence was table[0].Name: name 1",
+				ExpectedNames:        []string{"name 1", "name 2", "name 1", "name 1"},
+				ExpectedTableSize:    2,
+				FatalMessagesContain: []string{"table[2].Name duplicates table[0].Name: name 1", "table[3].Name duplicates table[0].Name: name 1"},
 				Table: []struct {
 					Name  string
 					Value string
@@ -488,8 +547,8 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 			},
 
 			{
-				Name:                 "when embedded field is not struct",
-				ExpectedFatalMessage: "Mocks.Embedable should be an embedded struct with no pointers, got *ensurepkg_test.Embedable",
+				Name:          "when embedded field is not struct",
+				ExpectedNames: []string{"name 1", "name 2"},
 				Table: []struct {
 					Name  string
 					Mocks *TwoValidMocksWithEmbeddedPtr
@@ -501,11 +560,22 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 						Name: "name 2",
 					},
 				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name  string
+						Mocks *TwoValidMocksWithEmbeddedPtr
+					})
+
+					for _, entry := range table {
+						checkTwoValidMocks(t, entry.Mocks.Valid1, entry.Mocks.Valid2)
+					}
+				},
 			},
 
 			{
 				Name:                 "when embedded field has error",
-				ExpectedFatalMessage: "Mocks.Valid1 should be a pointer to a struct, got ensurepkg_test.ExampleMockValid2",
+				FatalMessagesContain: []string{"Mocks.BrokenEmbedable.Valid1 is expected to be a pointer to a struct"},
 				Table: []struct {
 					Name  string
 					Mocks *BrokenEmbedded
@@ -521,7 +591,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when not pointer to mock struct",
-				ExpectedFatalMessage: "Mocks field should be a pointer to a struct, got ensurepkg_test.TwoValidMocks",
+				FatalMessagesContain: []string{"expected Mocks field to be a pointer to a struct"},
 				Table: []struct {
 					Name  string
 					Mocks TwoValidMocks
@@ -537,7 +607,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when pointer to non struct",
-				ExpectedFatalMessage: "Mocks field should be a pointer to a struct, got *string",
+				FatalMessagesContain: []string{"expected Mocks field to be a pointer to a struct"},
 				Table: []struct {
 					Name  string
 					Mocks *string
@@ -552,9 +622,8 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 			},
 
 			{
-				Name: "when missing NEW method",
-				ExpectedFatalMessage: "\nMocks.Invalid is missing the NEW method. Expected:\n\tfunc (*struct { Nothing bool }) NEW(*gomock.Controller) *struct { Nothing bool }" +
-					"\nPlease ensure you generated the mocks using the `ensure mocks generate` command.",
+				Name:                 "when missing NEW method",
+				FatalMessagesContain: []string{"Mocks.Invalid (*struct { Nothing bool }) is missing a NEW method"},
 				Table: []struct {
 					Name  string
 					Mocks *OneMockMissingNEWMethod
@@ -570,7 +639,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when NEW method has an extra param",
-				ExpectedFatalMessage: "\nMocks.Invalid.NEW has this method signature:\n\tfunc(*gomock.Controller, string) *ensurepkg_test.ExampleMockNEWMethodExtraParam\nExpected:\n\tfunc(*gomock.Controller) *ensurepkg_test.ExampleMockNEWMethodExtraParam",
+				FatalMessagesContain: []string{"Mocks.Invalid (*ensurepkg_test.ExampleMockNEWMethodExtraParam) must have a NEW method matching one of the following signatures"},
 				Table: []struct {
 					Name  string
 					Mocks *OneMockNEWMethodExtraParam
@@ -586,7 +655,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when NEW method has incorrect param",
-				ExpectedFatalMessage: "\nMocks.Invalid.NEW has this method signature:\n\tfunc(string) *ensurepkg_test.ExampleMockNEWMethodIncorrectParam\nExpected:\n\tfunc(*gomock.Controller) *ensurepkg_test.ExampleMockNEWMethodIncorrectParam",
+				FatalMessagesContain: []string{"Mocks.Invalid (*ensurepkg_test.ExampleMockNEWMethodIncorrectParam) must have a NEW method matching one of the following signatures"},
 				Table: []struct {
 					Name  string
 					Mocks *OneMockNEWMethodIncorrectParam
@@ -602,7 +671,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when NEW method has zero returns",
-				ExpectedFatalMessage: "\nMocks.Invalid.NEW has this method signature:\n\tfunc(*gomock.Controller)\nExpected:\n\tfunc(*gomock.Controller) *ensurepkg_test.ExampleMockNEWMethodZeroReturns",
+				FatalMessagesContain: []string{"Mocks.Invalid (*ensurepkg_test.ExampleMockNEWMethodZeroReturns) must have a NEW method matching one of the following signatures"},
 				Table: []struct {
 					Name  string
 					Mocks *OneMockNEWMethodZeroReturns
@@ -618,7 +687,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when NEW method has incorrect return",
-				ExpectedFatalMessage: "\nMocks.Invalid.NEW has this method signature:\n\tfunc(*gomock.Controller) string\nExpected:\n\tfunc(*gomock.Controller) *ensurepkg_test.ExampleMockNEWMethodIncorrectReturn",
+				FatalMessagesContain: []string{"Mocks.Invalid (*ensurepkg_test.ExampleMockNEWMethodIncorrectReturn) must have a NEW method matching one of the following signatures"},
 				Table: []struct {
 					Name  string
 					Mocks *OneMockNEWMethodIncorrectReturn
@@ -634,7 +703,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when mock is not a pointer",
-				ExpectedFatalMessage: "Mocks.Invalid should be a pointer to a struct, got ensurepkg_test.ExampleMockValid1",
+				FatalMessagesContain: []string{"Mocks.Invalid is expected to be a pointer to a struct"},
 				Table: []struct {
 					Name  string
 					Mocks *OneMockNotPointer
@@ -649,8 +718,8 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 			},
 
 			{
-				Name:                 "with duplicate mock",
-				ExpectedFatalMessage: "Found multiple mocks with type '*ensurepkg_test.ExampleMockValid1'; only one mock of each type is allowed",
+				Name:          "with duplicate mock",
+				ExpectedNames: []string{"name 1", "name 2"},
 				Table: []struct {
 					Name  string
 					Mocks *DuplicateMocks
@@ -661,6 +730,18 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 					{
 						Name: "name 2",
 					},
+				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name  string
+						Mocks *DuplicateMocks
+					})
+
+					for _, entry := range table {
+						isTrue(t, entry.Mocks.Valid1.WasInitialized)
+						isTrue(t, entry.Mocks.Valid1Duplicate.WasInitialized)
+					}
 				},
 			},
 		},
@@ -740,7 +821,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "without Mocks field",
-				ExpectedFatalMessage: "SetupMocks field requires the Mocks field",
+				FatalMessagesContain: []string{"Mocks field must be set on the table to use SetupMocks"},
 				Table: []struct {
 					Name       string
 					SetupMocks func(*TwoValidMocks)
@@ -758,7 +839,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "function missing param",
-				ExpectedFatalMessage: "\nSetupMocks has this function signature:\n\tfunc()\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
+				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensurepkg_test.TwoValidMocks)"},
 				Table: []struct {
 					Name       string
 					Mocks      *TwoValidMocks
@@ -777,7 +858,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "function with invalid param",
-				ExpectedFatalMessage: "\nSetupMocks has this function signature:\n\tfunc(*string)\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
+				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensurepkg_test.TwoValidMocks)"},
 				Table: []struct {
 					Name       string
 					Mocks      *TwoValidMocks
@@ -796,7 +877,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "function with a return",
-				ExpectedFatalMessage: "\nSetupMocks has this function signature:\n\tfunc(*ensurepkg_test.TwoValidMocks) error\nExpected:\n\tfunc(*ensurepkg_test.TwoValidMocks)",
+				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensurepkg_test.TwoValidMocks)"},
 				Table: []struct {
 					Name       string
 					Mocks      *TwoValidMocks
@@ -822,10 +903,9 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 			Valid1 *ExampleMockValid1
 		}
 
-		ValidMocksWithIgnoreUnusedTag struct {
+		TwoValidMocksWithIgnoreUnusedTag struct {
 			Valid1 *ExampleMockValid1
 			Valid2 *ExampleMockValid2 `ensure:"ignoreunused"`
-			Valid3 *ExampleMockNEWMethodZeroParams
 		}
 
 		IntAdder interface {
@@ -901,10 +981,6 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 			{
 				Name:          "when valid with no mocks",
 				ExpectedNames: []string{"name 1", "name 2"},
-				ExpectedWarnings: []string{
-					"No mocks matched 'ensurepkg_test.IntAdder', the interface for Subject.Adder",
-					"No mocks matched 'ensurepkg_test.IntMultiplier', the interface for Subject.Multiplier",
-				},
 				Table: []struct {
 					Name    string
 					Subject *MultiInterfaceSubject
@@ -964,7 +1040,7 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when not pointer to struct",
-				ExpectedFatalMessage: "Subject field should be a pointer to a struct, got ensurepkg_test.AdderSubject",
+				FatalMessagesContain: []string{"expected Subject field to be a pointer to a struct"},
 				Table: []struct {
 					Name    string
 					Mocks   *OneValidMock
@@ -981,7 +1057,7 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when pointer to non struct",
-				ExpectedFatalMessage: "Subject field should be a pointer to a struct, got *string",
+				FatalMessagesContain: []string{"expected Subject field to be a pointer to a struct"},
 				Table: []struct {
 					Name    string
 					Mocks   *OneValidMock
@@ -1029,9 +1105,8 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 			},
 
 			{
-				Name:             "when field contains a non-mocked interface",
-				ExpectedNames:    []string{"name 1", "name 2"},
-				ExpectedWarnings: []string{"No mocks matched 'ensurepkg_test.IntMultiplier', the interface for Subject.UnmockedInterface"},
+				Name:          "when field contains a non-mocked interface",
+				ExpectedNames: []string{"name 1", "name 2"},
 				Table: []struct {
 					Name    string
 					Mocks   *OneValidMock
@@ -1063,7 +1138,7 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when entry matches multiple mocks",
-				ExpectedFatalMessage: "Subject.Subber matches multiple mocks; only one mock should exist for each interface: *ensurepkg_test.ExampleMockValid1, *ensurepkg_test.ExampleMockValid2",
+				FatalMessagesContain: []string{"Subject.Subber is satisfied by more than one mock: Mocks.Valid1, Mocks.Valid2."},
 				Table: []struct {
 					Name    string
 					Mocks   *TwoValidMocks
@@ -1079,11 +1154,8 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 			},
 
 			{
-				Name:          "when mock is unused",
-				ExpectedNames: []string{"name 1", "name 2"},
-				ExpectedWarnings: []string{
-					"Mocks.Valid2 (type *ensurepkg_test.ExampleMockValid2) did not match any interfaces in the Subject",
-				},
+				Name:                 "when mock is unused",
+				FatalMessagesContain: []string{"Mocks.Valid2 was required but not matched by any interfaces in Subject."},
 				Table: []struct {
 					Name    string
 					Mocks   *TwoValidMocks
@@ -1096,31 +1168,14 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 						Name: "name 2",
 					},
 				},
-
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
-					table := rawTable.([]struct {
-						Name    string
-						Mocks   *TwoValidMocks
-						Subject *AdderSubject
-					})
-
-					for _, entry := range table {
-						entry.Mocks.check(t)
-						isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
-					}
-				},
 			},
 
 			{
 				Name:          "when mock is unused but has ignoreunused tag",
 				ExpectedNames: []string{"name 1", "name 2"},
-				ExpectedWarnings: []string{
-					// Only mock without ignoreunused tag is logged
-					"Mocks.Valid3 (type *ensurepkg_test.ExampleMockNEWMethodZeroParams) did not match any interfaces in the Subject",
-				},
 				Table: []struct {
 					Name    string
-					Mocks   *ValidMocksWithIgnoreUnusedTag
+					Mocks   *TwoValidMocksWithIgnoreUnusedTag
 					Subject *AdderSubject
 				}{
 					{
@@ -1134,14 +1189,13 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 				CheckEntry: func(t *testing.T, rawTable interface{}) {
 					table := rawTable.([]struct {
 						Name    string
-						Mocks   *ValidMocksWithIgnoreUnusedTag
+						Mocks   *TwoValidMocksWithIgnoreUnusedTag
 						Subject *AdderSubject
 					})
 
 					for _, entry := range table {
 						checkTwoValidMocks(t, entry.Mocks.Valid1, entry.Mocks.Valid2)
 						isTrue(t, entry.Subject.Adder.Add(1, 2) == 3)
-						isTrue(t, entry.Mocks.Valid3.WasInitialized)
 					}
 				},
 			},

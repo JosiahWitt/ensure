@@ -64,7 +64,7 @@ func validateMocksFieldType(mocksStruct *reflect.StructField) error {
 	return nil
 }
 
-//nolint:funlen // It seems clearer to keep this in a single method.
+//nolint:funlen,cyclop // It seems clearer to keep this in a single method.
 func (t *TablePlugin) parseMocks(mocksStruct *reflect.StructField) (map[string]*mockField, *iterate.StructFieldsResult, error) {
 	mockFields := map[string]*mockField{}
 
@@ -76,6 +76,16 @@ func (t *TablePlugin) parseMocks(mocksStruct *reflect.StructField) (map[string]*
 
 		if tag.ignore {
 			return nil
+		}
+
+		if mocksField.Type.Kind() != reflect.Ptr || mocksField.Type.Elem().Kind() != reflect.Struct {
+			return []error{stringerr.Newf(
+				"%s is expected to be a pointer to a struct, got: %v. To ignore %[1]s, add the %[4]s tag.",
+				mocksFieldPath,
+				mocksField.Type,
+				id.NEW,
+				id.ExampleIgnore,
+			)}
 		}
 
 		newMethod, hasNew := mocksField.Type.MethodByName(id.NEW)
