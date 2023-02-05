@@ -242,6 +242,87 @@ func TestParseEntryType(t *testing.T) {
 			}),
 		},
 		{
+			Name: "returns error when Mocks has an exported field that is not a pointer",
+
+			MocksInput: &mocks.All{},
+			Entry: struct {
+				Name  string
+				Mocks *struct {
+					M1 *MockNoInsNEW
+					M2 struct{} // Isn't a pointer
+					M3 *MockGoMocksNEW
+				}
+			}{},
+
+			ExpectedError: stringerr.Newf("Unable to build Mocks field:\n" +
+				" - Mocks.M2 is expected to be a pointer to a struct, got: struct {}. To ignore Mocks.M2, add the `ensure:\"-\"` tag.",
+			),
+
+			ExpectedMocks: testhelper.BuildMocks([]*testhelper.MockData{
+				{
+					Path: "Mocks.M1",
+					Mock: &MockNoInsNEW{},
+				},
+				{
+					Path: "Mocks.M3",
+					Mock: &MockGoMocksNEW{},
+				},
+			}),
+		},
+		{
+			Name: "returns error when Mocks has an exported field that is not a pointer to a struct",
+
+			MocksInput: &mocks.All{},
+			Entry: struct {
+				Name  string
+				Mocks *struct {
+					M1 *MockNoInsNEW
+					M2 *string // Isn't a pointer to a struct
+					M3 *MockGoMocksNEW
+				}
+			}{},
+
+			ExpectedError: stringerr.Newf("Unable to build Mocks field:\n" +
+				" - Mocks.M2 is expected to be a pointer to a struct, got: *string. To ignore Mocks.M2, add the `ensure:\"-\"` tag.",
+			),
+
+			ExpectedMocks: testhelper.BuildMocks([]*testhelper.MockData{
+				{
+					Path: "Mocks.M1",
+					Mock: &MockNoInsNEW{},
+				},
+				{
+					Path: "Mocks.M3",
+					Mock: &MockGoMocksNEW{},
+				},
+			}),
+		},
+		{
+			Name: "returns no error when Mocks has exported fields that aren't pointers to structs, but are ignored",
+
+			MocksInput: &mocks.All{},
+			Entry: struct {
+				Name  string
+				Mocks *struct {
+					M1  *MockNoInsNEW
+					M2a struct{} `ensure:"-"` // Isn't a pointer
+					M2b *string  `ensure:"-"` // Isn't a pointer to a struct
+					M3  *MockGoMocksNEW
+				}
+			}{},
+
+			ExpectedMocks: testhelper.BuildMocks([]*testhelper.MockData{
+				{
+					Path: "Mocks.M1",
+					Mock: &MockNoInsNEW{},
+				},
+				{
+					Path: "Mocks.M3",
+					Mock: &MockGoMocksNEW{},
+				},
+			}),
+		},
+		{
 			Name: "returns error when Mocks has an exported field without a NEW method",
 
 			MocksInput: &mocks.All{},
