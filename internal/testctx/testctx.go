@@ -19,24 +19,41 @@ type T interface {
 
 var _ T = &testing.T{}
 
+// WrapEnsure is a function that returns the [ensuring.E] for the provided [T].
+// It returns an interface instead of the concrete type to avoid an import cycle.
+type WrapEnsure func(T) interface{}
+
 // Context contains scoped test helpers.
 type Context interface {
+	// T returns the currently in-scope [T].
 	T() T
+
+	// Run wraps the [testing.T] Run method, making it mockable.
 	Run(name string, fn func(Context))
+
+	// GoMockController returns the [gomock.Controller] relating to the in-scope [T].
+	// It memoizes the value for subsequent calls.
 	GoMockController() *gomock.Controller
+
+	// Ensure returns the [ensuring.E] relating to the in-scope [T].
+	// It returns an interface instead of the concrete type to avoid an import cycle.
+	// It memoizes the value for subsequent calls.
+	Ensure() interface{}
 }
 
 type baseContext struct {
 	t T
 
 	goMockController *gomock.Controller
+	wrapEnsure       WrapEnsure
+	ensure           interface{}
 }
 
 var _ Context = &baseContext{}
 
 // New creates a new [Context].
-func New(t T) Context {
-	return &baseContext{t: t}
+func New(t T, wrapEnsure WrapEnsure) Context {
+	return &baseContext{t: t, wrapEnsure: wrapEnsure}
 }
 
 // T returns the currently in-scope [T].
@@ -50,7 +67,7 @@ func (ctx *baseContext) Run(name string, fn func(Context)) {
 
 	ctx.t.Run(name, func(t *testing.T) {
 		t.Helper()
-		wrappedCtx := New(t)
+		wrappedCtx := New(t, ctx.wrapEnsure)
 		fn(wrappedCtx)
 	})
 }
@@ -66,4 +83,17 @@ func (ctx *baseContext) GoMockController() *gomock.Controller {
 	}
 
 	return ctx.goMockController
+}
+
+// Ensure returns the [ensuring.E] relating to the in-scope [T].
+// It returns an interface instead of the concrete type to avoid an import cycle.
+// It memoizes the value for subsequent calls.
+func (ctx *baseContext) Ensure() interface{} {
+	ctx.t.Helper()
+
+	if ctx.ensure == nil {
+		ctx.ensure = ctx.wrapEnsure(ctx.t)
+	}
+
+	return ctx.ensure
 }

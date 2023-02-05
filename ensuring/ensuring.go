@@ -14,7 +14,7 @@ import (
 )
 
 //nolint:gochecknoglobals // This is stored as a variable so we can override it for tests in init_test.go.
-var newTestContext = testctx.New
+var newTestContextFunc = testctx.New
 
 // T implements a subset of methods on [testing.T].
 // More methods may be added to T with a minor ensure release.
@@ -117,4 +117,8 @@ func wrap(t T) E {
 
 		return c
 	}
+}
+
+func newTestContext(t T) testctx.Context {
+	return newTestContextFunc(t, func(t testctx.T) interface{} { return wrap(t) })
 }

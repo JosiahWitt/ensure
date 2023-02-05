@@ -15,11 +15,11 @@ var (
 
 // NewTestContext is called instead of [testctx.New] and is setup in ../../init_test.go.
 // This shouldn't be used by anything else.
-func NewTestContext(t testctx.T) testctx.Context {
+func NewTestContext(t testctx.T, wrapEnsure testctx.WrapEnsure) testctx.Context {
 	ctx, ok := testContexts[t]
 	if !ok {
 		if allowAnyTestContexts {
-			return testctx.New(t)
+			return testctx.New(t, wrapEnsure)
 		}
 
 		panic("Missing mock test context")

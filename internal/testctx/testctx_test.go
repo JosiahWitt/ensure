@@ -1,6 +1,7 @@
 package testctx_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -11,22 +12,22 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	mockT := struct {
-		testctx.T
-		unique string
-	}{unique: "hello"}
+	ctrl := gomock.NewController(t)
+	mockT := mock_testctx.NewMockT(ctrl)
+	mockT.EXPECT().Helper().AnyTimes()
 
-	ctx := testctx.New(mockT)
-	eq(t, ctx.T(), mockT)
+	wrappedT := MockT{T: mockT, unique: "hello"}
+	wrapEnsure := func(t testctx.T) interface{} { return t.(MockT).unique + " world" }
+
+	ctx := testctx.New(wrappedT, wrapEnsure)
+	eq(t, ctx.T().(MockT).unique, "hello")
+	eq(t, ctx.Ensure(), "hello world")
 }
 
 func TestT(t *testing.T) {
-	mockT := struct {
-		testctx.T
-		unique string
-	}{unique: "hello"}
+	mockT := MockT{unique: "hello"}
 
-	ctx := testctx.New(mockT)
+	ctx := testctx.New(mockT, nil)
 	eq(t, ctx.T(), mockT)
 }
 
@@ -39,16 +40,22 @@ func TestRun(t *testing.T) {
 		fn(&testing.T{})
 	})
 
-	ctx := testctx.New(outerT)
+	wrapEnsure := func(t testctx.T) interface{} { return fmt.Sprintf("%T", t) }
+	ctx := testctx.New(outerT, wrapEnsure)
 
 	var actualInnerT *testing.T
+	var actualInnerEnsure string
 	ctx.Run("everything works", func(ctx testctx.Context) {
 		actualInnerT = ctx.T().(*testing.T)
+		actualInnerEnsure = ctx.Ensure().(string)
 	})
 
 	neq(t, actualInnerT, nil)          // It shouldn't be nil, indicating the callback wasn't called
 	neq(t, actualInnerT, &testing.T{}) // It shouldn't be empty, indicating Helper() wasn't called
 	neq(t, actualInnerT, outerT)       // It shouldn't be the outerT
+
+	// Show wrapEnsure was promoted correctly
+	eq(t, actualInnerEnsure, "*testing.T")
 }
 
 func TestGoMockController(t *testing.T) {
@@ -61,7 +68,7 @@ func TestGoMockController(t *testing.T) {
 			fn()
 		}).Times(2) // We call it once and gomock.NewController calls it once
 
-		ctx := testctx.New(mockT)
+		ctx := testctx.New(mockT, nil)
 		mockCtrl := ctx.GoMockController()
 		eq(t, mockCtrl.T, mockT)
 
@@ -87,7 +94,7 @@ func TestGoMockController(t *testing.T) {
 		mockT.EXPECT().Helper().AnyTimes()
 		mockT.EXPECT().Cleanup(gomock.Any()).AnyTimes()
 
-		ctx := testctx.New(mockT)
+		ctx := testctx.New(mockT, nil)
 		mockCtrl := ctx.GoMockController()
 
 		// SomeMethod is never "called", and should be noticed during cleanup
@@ -97,6 +104,28 @@ func TestGoMockController(t *testing.T) {
 		mockT.EXPECT().Errorf(gomock.Any(), gomock.Any()).MinTimes(1)
 		cleanupFn()
 	})
+}
+
+func TestEnsure(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockT := mock_testctx.NewMockT(ctrl)
+	mockT.EXPECT().Helper().AnyTimes()
+
+	wrappedT := MockT{T: mockT, unique: "hello"}
+
+	callCount := 0
+	wrapEnsure := func(t testctx.T) interface{} {
+		callCount++
+		return t.(MockT).unique + " world"
+	}
+
+	ctx := testctx.New(wrappedT, wrapEnsure)
+	eq(t, ctx.Ensure(), "hello world")
+
+	// Show it's memoized
+	ctx.Ensure()
+	ctx.Ensure()
+	eq(t, callCount, 1)
 }
 
 func eq(t *testing.T, a, b interface{}) {
@@ -111,6 +140,11 @@ func neq(t *testing.T, a, b interface{}) {
 	if reflect.DeepEqual(a, b) {
 		t.Fatalf(pretty.Sprintf("% #v should not equal % #v", a, b))
 	}
+}
+
+type MockT struct {
+	testctx.T
+	unique string
 }
 
 type exampleTypeWithMethod struct{}
