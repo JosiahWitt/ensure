@@ -18,6 +18,6 @@ flags:
   package:
     paths:
       - "*.go"
-      - "ensurer/**"
+      - "ensuring/**"
       - "ensurepkg/**"
       - "internal/**"

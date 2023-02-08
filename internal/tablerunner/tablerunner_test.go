@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurer"
+	"github.com/JosiahWitt/ensure/ensuring"
 	"github.com/JosiahWitt/ensure/internal/plugins"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
 	"github.com/JosiahWitt/ensure/internal/tablerunner"
@@ -221,7 +221,7 @@ func TestBuildTable(t *testing.T) {
 	}
 
 	for _, entry := range table {
-		ensure.Run(entry.Name, func(ensure ensurer.E) {
+		ensure.Run(entry.Name, func(ensure ensuring.E) {
 			builtTable, err := tablerunner.BuildTable(entry.Table, entry.Plugins)
 			ensure(err).IsError(entry.ExpectedError)
 			ensure(builtTable != nil).Equals(entry.ReturnsBuiltTable)

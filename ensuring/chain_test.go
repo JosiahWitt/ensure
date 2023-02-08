@@ -1,4 +1,4 @@
-package ensurer_test
+package ensuring_test
 
 import (
 	"sync"

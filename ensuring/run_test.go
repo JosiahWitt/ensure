@@ -1,11 +1,11 @@
-package ensurer_test
+package ensuring_test
 
 import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurer"
-	"github.com/JosiahWitt/ensure/ensurer/internal/testhelper"
+	"github.com/JosiahWitt/ensure/ensuring"
+	"github.com/JosiahWitt/ensure/ensuring/internal/testhelper"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/testctx"
 	"github.com/golang/mock/gomock"
@@ -34,9 +34,9 @@ func TestERun(t *testing.T) {
 			fn(innerMockCtx)
 		})
 
-	var innerEnsure ensurer.E
+	var innerEnsure ensuring.E
 	outerEnsure := ensure.New(outerMockT)
-	outerEnsure.Run(name, func(ensure ensurer.E) {
+	outerEnsure.Run(name, func(ensure ensuring.E) {
 		innerEnsure = ensure
 	})
 

@@ -1,4 +1,4 @@
-package ensurer
+package ensuring
 
 import (
 	"fmt"

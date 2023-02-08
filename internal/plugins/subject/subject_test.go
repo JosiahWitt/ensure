@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurer"
+	"github.com/JosiahWitt/ensure/ensuring"
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/mocks"
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/testhelper"
 	"github.com/JosiahWitt/ensure/internal/plugins/subject"
@@ -520,7 +520,7 @@ func TestParseEntryType(t *testing.T) {
 		},
 	}
 
-	ensure.RunTableByIndex(table, func(ensure ensurer.E, i int) {
+	ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
 		entry := table[i]
 
 		plugin := subject.New(entry.MocksInput)
@@ -1112,7 +1112,7 @@ func TestParseEntryValue(t *testing.T) {
 		},
 	}
 
-	ensure.RunTableByIndex(table, func(ensure ensurer.E, i int) {
+	ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
 		entry := table[i]
 
 		plugin := subject.New(entry.MocksInput)
