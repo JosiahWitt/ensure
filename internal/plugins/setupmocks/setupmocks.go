@@ -2,10 +2,12 @@
 package setupmocks
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/JosiahWitt/ensure/internal/plugins"
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/id"
+	"github.com/JosiahWitt/ensure/internal/reflectensure"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
 	"github.com/JosiahWitt/ensure/internal/testctx"
 )
@@ -33,42 +35,67 @@ func (t *TablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableEntry
 			return nil, stringerr.Newf("%s field must be set on the table to use %s", id.Mocks, id.SetupMocks)
 		}
 
-		if err := validateSetupMocksFieldType(&setupMocksFunc, &mocksStruct); err != nil {
+		funcType, err := parseSetupMocksField(&setupMocksFunc, &mocksStruct)
+		if err != nil {
 			return nil, err
 		}
 
 		h.hasSetupMocks = true
+		h.funcType = funcType
 	}
 
 	return h, nil
 }
 
-func validateSetupMocksFieldType(setupMocksFunc, mocksStruct *reflect.StructField) error {
+func parseSetupMocksField(setupMocksFunc, mocksStruct *reflect.StructField) (funcType, error) {
 	t := setupMocksFunc.Type
 
 	generateError := func() error {
-		return stringerr.Newf("expected %s field to be a func(%v), got: %v", id.SetupMocks, mocksStruct.Type, t)
+		return stringerr.NewBlock(
+			fmt.Sprintf("expected %s field to be one of the following", id.SetupMocks),
+			[]error{
+				stringerr.Newf("func(m %v)", mocksStruct.Type),
+				stringerr.Newf("func(m %v, %s %s)", mocksStruct.Type, id.Ensure, id.EnsuringE),
+			},
+			fmt.Sprintf("Got: %v", t),
+		)
 	}
 
 	if t.Kind() != reflect.Func {
-		return generateError()
+		return 0, generateError()
 	}
 
-	invalidIns := t.NumIn() != 1 || t.In(0) != mocksStruct.Type
-	invalidOuts := t.NumOut() != 0
+	validDefaultIns := t.NumIn() == 1 && t.In(0) == mocksStruct.Type
+	validEnsureIns := t.NumIn() == 2 && t.In(0) == mocksStruct.Type && reflectensure.IsEnsuringE(t.In(1))
+	validIns := validDefaultIns || validEnsureIns
 
-	if invalidIns || invalidOuts {
-		return generateError()
+	validOuts := t.NumOut() == 0
+
+	if !validIns || !validOuts {
+		return 0, generateError()
 	}
 
-	return nil
+	switch {
+	case validEnsureIns:
+		return funcTypeEnsure, nil
+	default:
+		return funcTypeDefault, nil
+	}
 }
+
+type funcType int
+
+const (
+	funcTypeDefault funcType = iota
+	funcTypeEnsure
+)
 
 // TableEntryHooks exposes the before and after hooks for each entry in the table.
 type TableEntryHooks struct {
 	plugins.NoopAfterEntry
 
 	hasSetupMocks bool
+	funcType      funcType
 }
 
 var _ plugins.TableEntryHooks = &TableEntryHooks{}
@@ -88,7 +115,16 @@ func (h *TableEntryHooks) BeforeEntry(ctx testctx.Context, entryValue reflect.Va
 	}
 
 	mocksField := v.FieldByName(id.Mocks)
-	setupMocksFunc.Call([]reflect.Value{mocksField})
+
+	var ins []reflect.Value
+	switch h.funcType {
+	case funcTypeDefault:
+		ins = []reflect.Value{mocksField}
+	case funcTypeEnsure:
+		ins = []reflect.Value{mocksField, reflect.ValueOf(ctx.Ensure())}
+	}
+
+	setupMocksFunc.Call(ins)
 
 	return nil
 }

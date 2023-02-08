@@ -46,3 +46,7 @@ issues:
         - ifshort
         - thelper
         - maintidx
+
+    - text: singleCaseSwitch
+      linters:
+        - gocritic
