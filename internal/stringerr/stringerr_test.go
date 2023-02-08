@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurer"
+	"github.com/JosiahWitt/ensure/ensuring"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
 )
 
@@ -20,17 +20,17 @@ func TestNewf(t *testing.T) {
 func TestNewfIs(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("when equal", func(ensure ensurer.E) {
+	ensure.Run("when equal", func(ensure ensuring.E) {
 		err := stringerr.Newf("some %s string", "formatted")
 		ensure(errors.Is(err, errors.New("some formatted string"))).IsTrue()
 	})
 
-	ensure.Run("when not equal", func(ensure ensurer.E) {
+	ensure.Run("when not equal", func(ensure ensuring.E) {
 		err := stringerr.Newf("some %s string", "formatted")
 		ensure(errors.Is(err, errors.New("some formatted thing"))).IsFalse()
 	})
 
-	ensure.Run("when comparing against nil", func(ensure ensurer.E) {
+	ensure.Run("when comparing against nil", func(ensure ensuring.E) {
 		err := stringerr.Newf("some %s string", "formatted")
 		ensure(errors.Is(err, nil)).IsFalse()
 	})
@@ -39,7 +39,7 @@ func TestNewfIs(t *testing.T) {
 func TestNewGroup(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("with no nested errors", func(ensure ensurer.E) {
+	ensure.Run("with no nested errors", func(ensure ensuring.E) {
 		err := stringerr.NewGroup("my prefix", []error{errors.New("first"), errors.New("second")})
 
 		ensure(err.Error()).Equals(w(`
@@ -49,7 +49,7 @@ my prefix:
 `))
 	})
 
-	ensure.Run("with nested group", func(ensure ensurer.E) {
+	ensure.Run("with nested group", func(ensure ensuring.E) {
 		grpErr := stringerr.NewGroup("nested prefix", []error{errors.New("nested first"), errors.New("nested second")})
 		err := stringerr.NewGroup("my prefix", []error{errors.New("first"), grpErr, errors.New("third")})
 
@@ -63,7 +63,7 @@ my prefix:
 `))
 	})
 
-	ensure.Run("with double nested group", func(ensure ensurer.E) {
+	ensure.Run("with double nested group", func(ensure ensuring.E) {
 		doubleGrpErr := stringerr.NewGroup("double nested prefix", []error{errors.New("double nested")})
 		grpErr := stringerr.NewGroup("nested prefix", []error{errors.New("nested first"), doubleGrpErr, errors.New("nested third")})
 		err := stringerr.NewGroup("my prefix", []error{errors.New("first"), grpErr, errors.New("third")})
@@ -80,7 +80,7 @@ my prefix:
 `))
 	})
 
-	ensure.Run("with nested block", func(ensure ensurer.E) {
+	ensure.Run("with nested block", func(ensure ensuring.E) {
 		blockErr := stringerr.NewBlock("nested prefix", []error{errors.New("nested first"), errors.New("nested second")}, "nested footer")
 		err := stringerr.NewGroup("my prefix", []error{errors.New("first"), blockErr, errors.New("third")})
 
@@ -95,7 +95,7 @@ my prefix:
 `))
 	})
 
-	ensure.Run("with double nested block", func(ensure ensurer.E) {
+	ensure.Run("with double nested block", func(ensure ensuring.E) {
 		doubleBlockErr := stringerr.NewBlock("double nested prefix", []error{errors.New("double nested")}, "double nested footer")
 		blockErr := stringerr.NewBlock("nested prefix", []error{errors.New("nested first"), doubleBlockErr, errors.New("nested third")}, "nested footer")
 		err := stringerr.NewGroup("my prefix", []error{errors.New("first"), blockErr, errors.New("third")})
@@ -118,25 +118,25 @@ my prefix:
 func TestNewGroupIs(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("when equal", func(ensure ensurer.E) {
+	ensure.Run("when equal", func(ensure ensuring.E) {
 		err := stringerr.NewGroup("my prefix", []error{errors.New("first"), errors.New("second")})
 		err2 := stringerr.NewGroup("my prefix", []error{errors.New("first"), errors.New("second")})
 		ensure(errors.Is(err, err2)).IsTrue()
 	})
 
-	ensure.Run("when prefix not equal", func(ensure ensurer.E) {
+	ensure.Run("when prefix not equal", func(ensure ensuring.E) {
 		err := stringerr.NewGroup("my prefix", []error{errors.New("first"), errors.New("second")})
 		err2 := stringerr.NewGroup("my prefix!", []error{errors.New("first"), errors.New("second")})
 		ensure(errors.Is(err, err2)).IsFalse()
 	})
 
-	ensure.Run("when grouped error not equal", func(ensure ensurer.E) {
+	ensure.Run("when grouped error not equal", func(ensure ensuring.E) {
 		err := stringerr.NewGroup("my prefix", []error{errors.New("first"), errors.New("second")})
 		err2 := stringerr.NewGroup("my prefix", []error{errors.New("first one"), errors.New("second")})
 		ensure(errors.Is(err, err2)).IsFalse()
 	})
 
-	ensure.Run("when comparing against nil", func(ensure ensurer.E) {
+	ensure.Run("when comparing against nil", func(ensure ensuring.E) {
 		err := stringerr.NewGroup("my prefix", []error{errors.New("first"), errors.New("second")})
 		ensure(errors.Is(err, nil)).IsFalse()
 	})
@@ -145,7 +145,7 @@ func TestNewGroupIs(t *testing.T) {
 func TestNewBlock(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("with no nested errors", func(ensure ensurer.E) {
+	ensure.Run("with no nested errors", func(ensure ensuring.E) {
 		err := stringerr.NewBlock("my prefix", []error{errors.New("first"), errors.New("second")}, "my footer")
 
 		ensure(err.Error()).Equals(w(`
@@ -156,7 +156,7 @@ my footer
 `))
 	})
 
-	ensure.Run("with nested group", func(ensure ensurer.E) {
+	ensure.Run("with nested group", func(ensure ensuring.E) {
 		grpErr := stringerr.NewGroup("nested prefix", []error{errors.New("nested first"), errors.New("nested second")})
 		err := stringerr.NewBlock("my prefix", []error{errors.New("first"), grpErr, errors.New("third")}, "my footer")
 
@@ -171,7 +171,7 @@ my footer
 `))
 	})
 
-	ensure.Run("with double nested group", func(ensure ensurer.E) {
+	ensure.Run("with double nested group", func(ensure ensuring.E) {
 		doubleGrpErr := stringerr.NewGroup("double nested prefix", []error{errors.New("double nested")})
 		grpErr := stringerr.NewGroup("nested prefix", []error{errors.New("nested first"), doubleGrpErr, errors.New("nested third")})
 		err := stringerr.NewBlock("my prefix", []error{errors.New("first"), grpErr, errors.New("third")}, "my footer")
@@ -189,7 +189,7 @@ my footer
 `))
 	})
 
-	ensure.Run("with nested block", func(ensure ensurer.E) {
+	ensure.Run("with nested block", func(ensure ensuring.E) {
 		blockErr := stringerr.NewBlock("nested prefix", []error{errors.New("nested first"), errors.New("nested second")}, "nested footer")
 		err := stringerr.NewBlock("my prefix", []error{errors.New("first"), blockErr, errors.New("third")}, "my footer")
 
@@ -205,7 +205,7 @@ my footer
 `))
 	})
 
-	ensure.Run("with double nested block", func(ensure ensurer.E) {
+	ensure.Run("with double nested block", func(ensure ensuring.E) {
 		doubleBlockErr := stringerr.NewBlock("double nested prefix", []error{errors.New("double nested")}, "double nested footer")
 		blockErr := stringerr.NewBlock("nested prefix", []error{errors.New("nested first"), doubleBlockErr, errors.New("nested third")}, "nested footer")
 		err := stringerr.NewBlock("my prefix", []error{errors.New("first"), blockErr, errors.New("third")}, "my footer")
@@ -229,31 +229,31 @@ my footer
 func TestNewBlockIs(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("when equal", func(ensure ensurer.E) {
+	ensure.Run("when equal", func(ensure ensuring.E) {
 		err := stringerr.NewBlock("my prefix", []error{errors.New("first"), errors.New("second")}, "my footer")
 		err2 := stringerr.NewBlock("my prefix", []error{errors.New("first"), errors.New("second")}, "my footer")
 		ensure(errors.Is(err, err2)).IsTrue()
 	})
 
-	ensure.Run("when prefix not equal", func(ensure ensurer.E) {
+	ensure.Run("when prefix not equal", func(ensure ensuring.E) {
 		err := stringerr.NewBlock("my prefix", []error{errors.New("first"), errors.New("second")}, "my footer")
 		err2 := stringerr.NewBlock("my prefix!", []error{errors.New("first"), errors.New("second")}, "my footer")
 		ensure(errors.Is(err, err2)).IsFalse()
 	})
 
-	ensure.Run("when grouped error not equal", func(ensure ensurer.E) {
+	ensure.Run("when grouped error not equal", func(ensure ensuring.E) {
 		err := stringerr.NewBlock("my prefix", []error{errors.New("first"), errors.New("second")}, "my footer")
 		err2 := stringerr.NewBlock("my prefix", []error{errors.New("first one"), errors.New("second")}, "my footer")
 		ensure(errors.Is(err, err2)).IsFalse()
 	})
 
-	ensure.Run("when footer not equal", func(ensure ensurer.E) {
+	ensure.Run("when footer not equal", func(ensure ensuring.E) {
 		err := stringerr.NewBlock("my prefix", []error{errors.New("first"), errors.New("second")}, "my footer")
 		err2 := stringerr.NewBlock("my prefix", []error{errors.New("first"), errors.New("second")}, "my footer!")
 		ensure(errors.Is(err, err2)).IsFalse()
 	})
 
-	ensure.Run("when comparing against nil", func(ensure ensurer.E) {
+	ensure.Run("when comparing against nil", func(ensure ensuring.E) {
 		err := stringerr.NewBlock("my prefix", []error{errors.New("first"), errors.New("second")}, "my footer")
 		ensure(errors.Is(err, nil)).IsFalse()
 	})

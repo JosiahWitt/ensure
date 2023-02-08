@@ -1,11 +1,11 @@
-package ensurer_test
+package ensuring_test
 
 import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurer"
-	"github.com/JosiahWitt/ensure/ensurer/internal/testhelper"
+	"github.com/JosiahWitt/ensure/ensuring"
+	"github.com/JosiahWitt/ensure/ensuring/internal/testhelper"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/testctx"
 	"github.com/golang/mock/gomock"
@@ -30,10 +30,10 @@ func TestNew(t *testing.T) {
 
 		gomock.InOrder(
 			mockT.EXPECT().Helper(),
-			mockT.EXPECT().Fatalf("Do not call `ensurer.InternalCreateDoNotCallDirectly(t)` directly. Instead use `ensure := ensure.New(t)`."),
+			mockT.EXPECT().Fatalf("Do not call `ensuring.InternalCreateDoNotCallDirectly(t)` directly. Instead use `ensure := ensure.New(t)`."),
 		)
 
-		ensurer.InternalCreateDoNotCallDirectly(mockT)
+		ensuring.InternalCreateDoNotCallDirectly(mockT)
 	})
 }
 
@@ -116,7 +116,7 @@ func TestET(t *testing.T) {
 		ensure := ensure.New(t)
 		outerName := t.Name()
 
-		ensure.Run("inner", func(ensure ensurer.E) {
+		ensure.Run("inner", func(ensure ensuring.E) {
 			if ensure.T().Name() != outerName+"/inner" {
 				t.Fatalf("Expected to be able to use T() inside ensure.Run")
 			}

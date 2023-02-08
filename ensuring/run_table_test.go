@@ -1,12 +1,12 @@
-package ensurer_test
+package ensuring_test
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurer"
-	"github.com/JosiahWitt/ensure/ensurer/internal/testhelper"
+	"github.com/JosiahWitt/ensure/ensuring"
+	"github.com/JosiahWitt/ensure/ensuring/internal/testhelper"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/testctx"
 	"github.com/golang/mock/gomock"
@@ -91,14 +91,14 @@ func TestERunTableByIndex(t *testing.T) {
 			}).AnyTimes()
 
 			type entryCall struct {
-				ensure ensurer.E
+				ensure ensuring.E
 				i      int
 			}
 
 			// Run table and save call details
 			actualEntryCalls := []entryCall{}
 			ensure := ensure.New(outerMockT)
-			ensure.RunTableByIndex(entry.Table, func(ensure ensurer.E, i int) {
+			ensure.RunTableByIndex(entry.Table, func(ensure ensuring.E, i int) {
 				actualEntryCalls = append(actualEntryCalls, entryCall{ensure: ensure, i: i})
 			})
 
@@ -639,7 +639,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when NEW method has an extra param",
-				FatalMessagesContain: []string{"Mocks.Invalid (*ensurer_test.ExampleMockNEWMethodExtraParam) must have a NEW method matching one of the following signatures"},
+				FatalMessagesContain: []string{"Mocks.Invalid (*ensuring_test.ExampleMockNEWMethodExtraParam) must have a NEW method matching one of the following signatures"},
 				Table: []struct {
 					Name  string
 					Mocks *OneMockNEWMethodExtraParam
@@ -655,7 +655,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when NEW method has incorrect param",
-				FatalMessagesContain: []string{"Mocks.Invalid (*ensurer_test.ExampleMockNEWMethodIncorrectParam) must have a NEW method matching one of the following signatures"},
+				FatalMessagesContain: []string{"Mocks.Invalid (*ensuring_test.ExampleMockNEWMethodIncorrectParam) must have a NEW method matching one of the following signatures"},
 				Table: []struct {
 					Name  string
 					Mocks *OneMockNEWMethodIncorrectParam
@@ -671,7 +671,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when NEW method has zero returns",
-				FatalMessagesContain: []string{"Mocks.Invalid (*ensurer_test.ExampleMockNEWMethodZeroReturns) must have a NEW method matching one of the following signatures"},
+				FatalMessagesContain: []string{"Mocks.Invalid (*ensuring_test.ExampleMockNEWMethodZeroReturns) must have a NEW method matching one of the following signatures"},
 				Table: []struct {
 					Name  string
 					Mocks *OneMockNEWMethodZeroReturns
@@ -687,7 +687,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "when NEW method has incorrect return",
-				FatalMessagesContain: []string{"Mocks.Invalid (*ensurer_test.ExampleMockNEWMethodIncorrectReturn) must have a NEW method matching one of the following signatures"},
+				FatalMessagesContain: []string{"Mocks.Invalid (*ensuring_test.ExampleMockNEWMethodIncorrectReturn) must have a NEW method matching one of the following signatures"},
 				Table: []struct {
 					Name  string
 					Mocks *OneMockNEWMethodIncorrectReturn
@@ -839,7 +839,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "function missing param",
-				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensurer_test.TwoValidMocks)"},
+				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensuring_test.TwoValidMocks)"},
 				Table: []struct {
 					Name       string
 					Mocks      *TwoValidMocks
@@ -858,7 +858,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "function with invalid param",
-				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensurer_test.TwoValidMocks)"},
+				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensuring_test.TwoValidMocks)"},
 				Table: []struct {
 					Name       string
 					Mocks      *TwoValidMocks
@@ -877,7 +877,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "function with a return",
-				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensurer_test.TwoValidMocks)"},
+				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensuring_test.TwoValidMocks)"},
 				Table: []struct {
 					Name       string
 					Mocks      *TwoValidMocks

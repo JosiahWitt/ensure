@@ -1,8 +1,8 @@
-// Package ensurer contains the implementation for the ensure test framework.
+// Package ensuring contains the implementation for the ensure test framework.
 //
 // It is in a separate package from ensure to allow shadowing the ensure package
 // without losing access to the types. Use [ensure.New] to create a new instance of Ensure.
-package ensurer
+package ensuring
 
 import (
 	"runtime"
@@ -45,7 +45,7 @@ func InternalCreateDoNotCallDirectly(t T) E {
 
 	if !strings.HasSuffix(callerFilePath, validWrapperFilePathSuffix) {
 		t.Helper()
-		t.Fatalf("Do not call `ensurer.InternalCreateDoNotCallDirectly(t)` directly. Instead use `ensure := ensure.New(t)`.")
+		t.Fatalf("Do not call `ensuring.InternalCreateDoNotCallDirectly(t)` directly. Instead use `ensure := ensure.New(t)`.")
 	}
 
 	return wrap(t)

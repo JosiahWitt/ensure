@@ -79,7 +79,7 @@ func TestBasicExample(t *testing.T) {
   ...
 
   // Methods can be called on ensure, for example, Run:
-  ensure.Run("my subtest", func(ensure ensurer.E) {
+  ensure.Run("my subtest", func(ensure ensuring.E) {
     ...
 
     // To ensure a value is correct, use ensure as a function:

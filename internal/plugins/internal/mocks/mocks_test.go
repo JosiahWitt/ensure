@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/JosiahWitt/ensure/ensurer"
+	"github.com/JosiahWitt/ensure/ensuring"
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/mocks"
 )
 
 func TestAllAddMock(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("adds mock", func(ensure ensurer.E) {
+	ensure.Run("adds mock", func(ensure ensuring.E) {
 		m := mocks.All{}
 		m1 := m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
 		m2 := m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
@@ -31,7 +31,7 @@ func TestAllAddMock(t *testing.T) {
 		ensure(len(m.Slice())).Equals(2)
 	})
 
-	ensure.Run("when path is duplicated", func(ensure ensurer.E) {
+	ensure.Run("when path is duplicated", func(ensure ensuring.E) {
 		defer func() {
 			ensure(recover()).Equals(`mock with path "a" was already added: (PREVIOUS TYPE: string, NEW TYPE: bool)`)
 		}()
@@ -46,12 +46,12 @@ func TestAllAddMock(t *testing.T) {
 func TestAllSlice(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("when no items", func(ensure ensurer.E) {
+	ensure.Run("when no items", func(ensure ensuring.E) {
 		m := mocks.All{}
 		ensure(m.Slice()).IsEmpty()
 	})
 
-	ensure.Run("when many items", func(ensure ensurer.E) {
+	ensure.Run("when many items", func(ensure ensuring.E) {
 		m := mocks.All{}
 		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
 		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
@@ -69,12 +69,12 @@ func TestAllSlice(t *testing.T) {
 func TestAllPathSet(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("when no items", func(ensure ensurer.E) {
+	ensure.Run("when no items", func(ensure ensuring.E) {
 		m := mocks.All{}
 		ensure(m.PathSet()).IsEmpty()
 	})
 
-	ensure.Run("when many items", func(ensure ensurer.E) {
+	ensure.Run("when many items", func(ensure ensuring.E) {
 		m := mocks.All{}
 		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
 		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
@@ -86,7 +86,7 @@ func TestAllPathSet(t *testing.T) {
 func TestMockImplements(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("when interface is provided", func(ensure ensurer.E) {
+	ensure.Run("when interface is provided", func(ensure ensuring.E) {
 		m := mocks.All{}
 		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
 		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
@@ -103,7 +103,7 @@ func TestMockImplements(t *testing.T) {
 		ensure(m.Slice()[1].Implements(bingo)).IsTrue()
 	})
 
-	ensure.Run("when interface is not provided", func(ensure ensurer.E) {
+	ensure.Run("when interface is not provided", func(ensure ensuring.E) {
 		defer func() {
 			ensure(recover()).Equals("expected an interface to be provided to Implements, got: string")
 		}()
@@ -117,7 +117,7 @@ func TestMockImplements(t *testing.T) {
 func TestMockSetValueByEntryIndex(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("sets values correctly", func(ensure ensurer.E) {
+	ensure.Run("sets values correctly", func(ensure ensuring.E) {
 		m := mocks.All{}
 		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
 		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
@@ -130,7 +130,7 @@ func TestMockSetValueByEntryIndex(t *testing.T) {
 		ensure(m.Slice()[0].ValueByEntryIndex(5).Interface()).Equals(&ExampleGreeterMock{"hey"})
 	})
 
-	ensure.Run("when mock value does not match mock type", func(ensure ensurer.E) {
+	ensure.Run("when mock value does not match mock type", func(ensure ensuring.E) {
 		defer func() {
 			ensure(recover()).Equals(`type of value for mock with path "a" was not the expected type: (EXPECTED: *mocks_test.ExampleGreeterMock, GOT: string)`)
 		}()
@@ -142,7 +142,7 @@ func TestMockSetValueByEntryIndex(t *testing.T) {
 		m.Slice()[0].SetValueByEntryIndex(5, reflect.ValueOf("hey"))
 	})
 
-	ensure.Run("when mock values are duplicated for an index", func(ensure ensurer.E) {
+	ensure.Run("when mock values are duplicated for an index", func(ensure ensuring.E) {
 		defer func() {
 			ensure(recover()).Equals(`value at index 5 was already added for mock with path "a" and type: *mocks_test.ExampleGreeterMock`)
 		}()
@@ -159,7 +159,7 @@ func TestMockSetValueByEntryIndex(t *testing.T) {
 func TestMockValueByEntryIndex(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("gets values correctly", func(ensure ensurer.E) {
+	ensure.Run("gets values correctly", func(ensure ensuring.E) {
 		m := mocks.All{}
 		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
 		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
@@ -172,7 +172,7 @@ func TestMockValueByEntryIndex(t *testing.T) {
 		ensure(m.Slice()[0].ValueByEntryIndex(5).Interface()).Equals(&ExampleGreeterMock{"hey"})
 	})
 
-	ensure.Run("when mock value is not set for index", func(ensure ensurer.E) {
+	ensure.Run("when mock value is not set for index", func(ensure ensuring.E) {
 		defer func() {
 			ensure(recover()).Equals(`value at index 5 was not set for mock with path "a" and type: *mocks_test.ExampleGreeterMock`)
 		}()
@@ -198,35 +198,35 @@ func TestOnlyOneRequired(t *testing.T) {
 		return m.Slice()
 	}
 
-	ensure.Run("when none are required", func(ensure ensurer.E) {
+	ensure.Run("when none are required", func(ensure ensuring.E) {
 		ensure(mocks.OnlyOneRequired(buildMocks(false, false, false)...)).IsFalse()
 	})
 
-	ensure.Run("when first is required", func(ensure ensurer.E) {
+	ensure.Run("when first is required", func(ensure ensuring.E) {
 		ensure(mocks.OnlyOneRequired(buildMocks(true, false, false)...)).IsTrue()
 	})
 
-	ensure.Run("when middle is required", func(ensure ensurer.E) {
+	ensure.Run("when middle is required", func(ensure ensuring.E) {
 		ensure(mocks.OnlyOneRequired(buildMocks(false, true, false)...)).IsTrue()
 	})
 
-	ensure.Run("when last is required", func(ensure ensurer.E) {
+	ensure.Run("when last is required", func(ensure ensuring.E) {
 		ensure(mocks.OnlyOneRequired(buildMocks(false, false, true)...)).IsTrue()
 	})
 
-	ensure.Run("when first and last are required", func(ensure ensurer.E) {
+	ensure.Run("when first and last are required", func(ensure ensuring.E) {
 		ensure(mocks.OnlyOneRequired(buildMocks(true, false, true)...)).IsFalse()
 	})
 
-	ensure.Run("when first and middle are required", func(ensure ensurer.E) {
+	ensure.Run("when first and middle are required", func(ensure ensuring.E) {
 		ensure(mocks.OnlyOneRequired(buildMocks(true, true, false)...)).IsFalse()
 	})
 
-	ensure.Run("when middle and last are required", func(ensure ensurer.E) {
+	ensure.Run("when middle and last are required", func(ensure ensuring.E) {
 		ensure(mocks.OnlyOneRequired(buildMocks(false, true, true)...)).IsFalse()
 	})
 
-	ensure.Run("when all are required", func(ensure ensurer.E) {
+	ensure.Run("when all are required", func(ensure ensuring.E) {
 		ensure(mocks.OnlyOneRequired(buildMocks(true, true, true)...)).IsFalse()
 	})
 }
