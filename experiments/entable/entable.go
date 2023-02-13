@@ -2,6 +2,7 @@
 // It requires Go 1.18+ due to the use of generics.
 //
 // Use [T] to construct a table. Use [G] to nest a table in a group.
+// Use [Builder] to construct complex collections of [T] and [G].
 package entable
 
 import "github.com/JosiahWitt/ensure/ensuring"
@@ -70,7 +71,8 @@ func (t T[E]) RunWithIndex(ensure ensuring.E, fn func(ensure ensuring.E, i int, 
 }
 
 // G allows constructing a table within a group. It executes all entries
-// in a separate test scope with the provided name.
+// in a separate test scope with the provided name. Typically used with
+// [Builder].
 //
 // For example:
 //
@@ -141,4 +143,94 @@ func (g *G[E]) RunWithIndex(ensure ensuring.E, fn func(ensure ensuring.E, i int,
 			fn(ensure, i, entry)
 		})
 	})
+}
+
+// Builder allows building a complex collection of tests including individual
+// entries, tables ([T]), and groups ([G]) of tables. Tests are executed
+// in the order entries, tables, and groups are appended.
+//
+// For example:
+//
+//	type Entry struct {
+//		Name  string
+//		Value string
+//	}
+//
+//	builder := entable.NewBuilder[Entry]()
+//
+//	builder.Append(
+//		&Entry{
+//			Name:  "first entry",
+//			Value: "qwerty",
+//		},
+//		&Entry{
+//			Name:  "second entry",
+//			Value: "qazwsx",
+//		},
+//	)
+//
+//	builder.AppendTable(entable.T[Entry]{
+//		{
+//			Name:  "first in table",
+//			Value: "hello",
+//		},
+//		{
+//			Name:  "second in table",
+//			Value: "world",
+//		},
+//	})
+//
+//	builder.AppendGroup(&entable.G[Entry]{
+//		Name: "grp1",
+//		Table: entable.T[Entry]{
+//			{
+//				Name:  "first in group",
+//				Value: "asdf",
+//			},
+//			{
+//				Name:  "second in group",
+//				Value: "zxcv",
+//			},
+//		},
+//	})
+//
+//	builder.Run(ensure, func(ensure ensuring.E, entry *Entry) {
+//		ensure(stringcheck.IsValid(entry.Value)).IsTrue()
+//	})
+type Builder[E any] struct {
+	entries []runnable[E]
+}
+
+// NewBuilder constructs an empty [Builder].
+func NewBuilder[E any]() *Builder[E] {
+	return &Builder[E]{}
+}
+
+// Append appends entries to the [Builder].
+func (b *Builder[E]) Append(entries ...*E) {
+	b.entries = append(b.entries, T[E](entries))
+}
+
+// AppendTable appends a table ([T]) to the [Builder].
+func (b *Builder[E]) AppendTable(table T[E]) {
+	b.entries = append(b.entries, table)
+}
+
+// AppendGroup appends a group ([G]) to the [Builder].
+func (b *Builder[E]) AppendGroup(group *G[E]) {
+	b.entries = append(b.entries, group)
+}
+
+// Run runs the table, executing fn for each entry in the table. See docs for [Builder]
+// for an example. See docs for [entable.T.Run] and [entable.G.Run] for more info.
+func (b *Builder[E]) Run(ensure ensuring.E, fn func(ensure ensuring.E, entry *E)) {
+	ensure.T().Helper()
+
+	for _, entry := range b.entries {
+		entry.Run(ensure, fn)
+	}
+}
+
+type runnable[E any] interface {
+	Run(ensure ensuring.E, fn func(ensure ensuring.E, entry *E))
 }
