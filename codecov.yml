@@ -21,3 +21,6 @@ flags:
       - "ensuring/**"
       - "ensurepkg/**"
       - "internal/**"
+  entable:
+    paths:
+      - "experiments/entable/**"

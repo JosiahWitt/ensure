@@ -12,7 +12,6 @@ linters:
     - interfacer
     - scopelint
     - varnamelen
-    - gofumpt
     - exhaustruct
     - ireturn
     # Deprecated:
@@ -47,14 +46,3 @@ issues:
         - ifshort
         - thelper
         - maintidx
-
-    # Exclude some linters from fixtures and scenarios
-    - path: .*(/fixtures/)|(/scenarios/).*
-      linters:
-        - gochecknoglobals
-
-    - path: .*(/fixtures/)|(/scenarios/).*
-      text: "underscores? in package name"
-      linters:
-        - revive
-        - stylecheck

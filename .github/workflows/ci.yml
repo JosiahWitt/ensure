@@ -7,6 +7,19 @@ jobs:
     strategy:
       matrix:
         go-version: ["1.16", "1.17", "1.18", "1.19", "1.20"]
+        path: [".", "cmd/ensure", "experiments/entable"]
+        include:
+          - path: "."
+            flags: package
+          - path: cmd/ensure
+            flags: cli
+          - path: experiments/entable
+            flags: entable
+        exclude:
+          - path: experiments/entable # Entable requires generics
+            go-version: "1.16"
+          - path: experiments/entable # Entable requires generics
+            go-version: "1.17"
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
@@ -17,25 +30,15 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Test Ensure Package
-        run: go test -race -coverprofile=pkg-coverage.txt -covermode=atomic ./...
+      - name: Test `${{ matrix.path }}`
+        run: (cd ${{ matrix.path }}; go test -race -coverprofile=./coverage.txt -covermode=atomic ./...)
 
-      - name: Upload package coverage to codecov
+      - name: Upload `${{ matrix.path }}` coverage to codecov
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: pkg-coverage.txt
-          flags: package
-
-      - name: Test Ensure CLI
-        run: (cd cmd/ensure; go test -race -coverprofile=../../cli-coverage.txt -covermode=atomic ./...)
-
-      - name: Upload CLI coverage to codecov
-        uses: codecov/codecov-action@v2
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: cli-coverage.txt
-          flags: cli
+          files: ${{ matrix.path }}/coverage.txt
+          flags: ${{ matrix.flags }}
 
   lint:
     name: Lint
@@ -43,6 +46,12 @@ jobs:
     strategy:
       matrix:
         go-version: ["1.16", "1.17", "1.18", "1.19", "1.20"]
+        path: [".", "cmd/ensure", "experiments/entable"]
+        exclude:
+          - path: "experiments/entable" # Entable requires generics
+            go-version: "1.16"
+          - path: "experiments/entable" # Entable requires generics
+            go-version: "1.17"
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
@@ -53,18 +62,12 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Lint Ensure Package
+      - name: Lint `${{ matrix.path }}`
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.51.0
           skip-go-installation: true
-
-      - name: Lint Ensure CLI
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: v1.51.0
-          skip-go-installation: true
-          working-directory: cmd/ensure
+          working-directory: ${{ matrix.path }}
 
   staticcheck:
     name: Staticcheck
@@ -73,6 +76,7 @@ jobs:
       matrix:
         # Staticcheck requires Go 1.19+
         go-version: ["1.19", "1.20"]
+        path: [".", "cmd/ensure", "experiments/entable"]
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
@@ -83,18 +87,12 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Staticcheck Ensure Package
+      - name: Staticcheck `${{ matrix.path }}`
         uses: dominikh/staticcheck-action@v1
         with:
           version: "2023.1"
           install-go: false
-
-      - name: Staticcheck Ensure CLI
-        uses: dominikh/staticcheck-action@v1
-        with:
-          version: "2023.1"
-          install-go: false
-          working-directory: cmd/ensure
+          working-directory: ${{ matrix.path }}
 
   regression-test:
     name: Regression Test
