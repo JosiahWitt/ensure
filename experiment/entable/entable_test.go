@@ -5,7 +5,7 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/ensuring"
-	"github.com/JosiahWitt/ensure/experiments/entable"
+	"github.com/JosiahWitt/ensure/experiment/entable"
 )
 
 func TestTRun(t *testing.T) {

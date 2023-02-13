@@ -23,4 +23,4 @@ flags:
       - "internal/**"
   entable:
     paths:
-      - "experiments/entable/**"
+      - "experiment/entable/**"

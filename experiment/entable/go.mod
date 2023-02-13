@@ -1,4 +1,4 @@
-module github.com/JosiahWitt/ensure/experiments/entable
+module github.com/JosiahWitt/ensure/experiment/entable
 
 go 1.18
 
