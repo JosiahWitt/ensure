@@ -188,7 +188,7 @@ func setupMockT(t *testing.T) *mock_testctx.MockT {
 	ctrl := gomock.NewController(t)
 	mockT := mock_testctx.NewMockT(ctrl)
 
-	testhelper.SetTestContext(t, mockT, testctx.New(mockT))
+	testhelper.SetTestContext(t, mockT, testctx.New(mockT, wrapEnsure))
 	return mockT
 }
 
@@ -204,4 +204,8 @@ func setupMockTWithCleanupCheck(t *testing.T) *mock_testctx.MockT {
 	)
 
 	return mockT
+}
+
+func wrapEnsure(t testctx.T) interface{} {
+	return ensure.New(t)
 }

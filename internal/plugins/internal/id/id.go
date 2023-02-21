@@ -2,6 +2,8 @@
 package id
 
 const (
+	EnsuringE = "ensuring.E"
+
 	Mocks      = "Mocks"
 	SetupMocks = "SetupMocks"
 	Subject    = "Subject"

@@ -6,8 +6,10 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/ensuring"
+	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/plugins/setupmocks"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
+	"github.com/golang/mock/gomock"
 )
 
 func TestParseEntryType(t *testing.T) {
@@ -43,6 +45,15 @@ func TestParseEntryType(t *testing.T) {
 			}{},
 		},
 		{
+			Name: "returns no errors when SetupMocks is provided with an optional ensuring.E parameter",
+
+			Entry: struct {
+				Name       string
+				Mocks      *Mocks
+				SetupMocks func(*Mocks, ensuring.E)
+			}{},
+		},
+		{
 			Name: "returns error when SetupMocks is provided, but Mocks is not provided",
 
 			Entry: struct {
@@ -61,7 +72,12 @@ func TestParseEntryType(t *testing.T) {
 				SetupMocks *func(*Mocks)
 			}{},
 
-			ExpectedError: stringerr.Newf("expected SetupMocks field to be a func(*setupmocks_test.Mocks), got: *func(*setupmocks_test.Mocks)"),
+			ExpectedError: stringerr.Newf(
+				"expected SetupMocks field to be one of the following:\n" +
+					" - func(m *setupmocks_test.Mocks)\n" +
+					" - func(m *setupmocks_test.Mocks, ensure ensuring.E)\n" +
+					"Got: *func(*setupmocks_test.Mocks)",
+			),
 		},
 		{
 			Name: "returns error when SetupMocks has no inputs",
@@ -72,10 +88,15 @@ func TestParseEntryType(t *testing.T) {
 				SetupMocks func()
 			}{},
 
-			ExpectedError: stringerr.Newf("expected SetupMocks field to be a func(*setupmocks_test.Mocks), got: func()"),
+			ExpectedError: stringerr.Newf(
+				"expected SetupMocks field to be one of the following:\n" +
+					" - func(m *setupmocks_test.Mocks)\n" +
+					" - func(m *setupmocks_test.Mocks, ensure ensuring.E)\n" +
+					"Got: func()",
+			),
 		},
 		{
-			Name: "returns error when SetupMocks has two inputs",
+			Name: "returns error when SetupMocks has two equal inputs",
 
 			Entry: struct {
 				Name       string
@@ -83,7 +104,12 @@ func TestParseEntryType(t *testing.T) {
 				SetupMocks func(*Mocks, *Mocks)
 			}{},
 
-			ExpectedError: stringerr.Newf("expected SetupMocks field to be a func(*setupmocks_test.Mocks), got: func(*setupmocks_test.Mocks, *setupmocks_test.Mocks)"),
+			ExpectedError: stringerr.Newf(
+				"expected SetupMocks field to be one of the following:\n" +
+					" - func(m *setupmocks_test.Mocks)\n" +
+					" - func(m *setupmocks_test.Mocks, ensure ensuring.E)\n" +
+					"Got: func(*setupmocks_test.Mocks, *setupmocks_test.Mocks)",
+			),
 		},
 		{
 			Name: "returns error when SetupMocks has an invalid input",
@@ -94,7 +120,60 @@ func TestParseEntryType(t *testing.T) {
 				SetupMocks func(Mocks)
 			}{},
 
-			ExpectedError: stringerr.Newf("expected SetupMocks field to be a func(*setupmocks_test.Mocks), got: func(setupmocks_test.Mocks)"),
+			ExpectedError: stringerr.Newf(
+				"expected SetupMocks field to be one of the following:\n" +
+					" - func(m *setupmocks_test.Mocks)\n" +
+					" - func(m *setupmocks_test.Mocks, ensure ensuring.E)\n" +
+					"Got: func(setupmocks_test.Mocks)",
+			),
+		},
+		{
+			Name: "returns error when SetupMocks has two inputs, and the first is invalid",
+
+			Entry: struct {
+				Name       string
+				Mocks      *Mocks
+				SetupMocks func(Mocks, ensuring.E)
+			}{},
+
+			ExpectedError: stringerr.Newf(
+				"expected SetupMocks field to be one of the following:\n" +
+					" - func(m *setupmocks_test.Mocks)\n" +
+					" - func(m *setupmocks_test.Mocks, ensure ensuring.E)\n" +
+					"Got: func(setupmocks_test.Mocks, ensuring.E)",
+			),
+		},
+		{
+			Name: "returns error when SetupMocks has two inputs, and the second is invalid",
+
+			Entry: struct {
+				Name       string
+				Mocks      *Mocks
+				SetupMocks func(*Mocks, *ensuring.E)
+			}{},
+
+			ExpectedError: stringerr.Newf(
+				"expected SetupMocks field to be one of the following:\n" +
+					" - func(m *setupmocks_test.Mocks)\n" +
+					" - func(m *setupmocks_test.Mocks, ensure ensuring.E)\n" +
+					"Got: func(*setupmocks_test.Mocks, *ensuring.E)",
+			),
+		},
+		{
+			Name: "returns error when SetupMocks has three inputs",
+
+			Entry: struct {
+				Name       string
+				Mocks      *Mocks
+				SetupMocks func(*Mocks, ensuring.E, ensuring.E)
+			}{},
+
+			ExpectedError: stringerr.Newf(
+				"expected SetupMocks field to be one of the following:\n" +
+					" - func(m *setupmocks_test.Mocks)\n" +
+					" - func(m *setupmocks_test.Mocks, ensure ensuring.E)\n" +
+					"Got: func(*setupmocks_test.Mocks, ensuring.E, ensuring.E)",
+			),
 		},
 		{
 			Name: "returns error when SetupMocks returns values",
@@ -105,7 +184,12 @@ func TestParseEntryType(t *testing.T) {
 				SetupMocks func(*Mocks) *Mocks
 			}{},
 
-			ExpectedError: stringerr.Newf("expected SetupMocks field to be a func(*setupmocks_test.Mocks), got: func(*setupmocks_test.Mocks) *setupmocks_test.Mocks"),
+			ExpectedError: stringerr.Newf(
+				"expected SetupMocks field to be one of the following:\n" +
+					" - func(m *setupmocks_test.Mocks)\n" +
+					" - func(m *setupmocks_test.Mocks, ensure ensuring.E)\n" +
+					"Got: func(*setupmocks_test.Mocks) *setupmocks_test.Mocks",
+			),
 		},
 	}
 
@@ -125,7 +209,8 @@ func TestParseEntryValue(t *testing.T) {
 	table := []struct {
 		Name string
 
-		Table interface{}
+		Table      interface{}
+		SetupMockT func(m *mock_testctx.MockT, i int)
 
 		ExpectedTable interface{}
 	}{
@@ -168,7 +253,7 @@ func TestParseEntryValue(t *testing.T) {
 			},
 		},
 		{
-			Name: "executes SetupMocks when SetupMocks and Mocks are provided",
+			Name: "executes SetupMocks when SetupMocks(*Mocks) and Mocks are provided",
 
 			Table: []struct {
 				Name       string
@@ -256,6 +341,58 @@ func TestParseEntryValue(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "executes SetupMocks when SetupMocks(*Mocks, ensuring.E) and Mocks are provided",
+
+			SetupMockT: func(m *mock_testctx.MockT, i int) {
+				switch i {
+				case 0:
+					m.EXPECT().Fatalf("first fail")
+				case 1:
+					m.EXPECT().Fatalf("second fail")
+				}
+			},
+
+			Table: []struct {
+				Name       string
+				Mocks      *Mocks
+				SetupMocks func(*Mocks, ensuring.E)
+			}{
+				{
+					Name: "first",
+					SetupMocks: func(m *Mocks, ensure ensuring.E) {
+						m.A = "first mocks"
+						ensure.Failf("first fail") // Show ensure is connected correctly
+					},
+				},
+				{
+					Name: "second",
+					SetupMocks: func(m *Mocks, ensure ensuring.E) {
+						m.A = "second mocks"
+						ensure.Failf("second fail") // Show ensure is connected correctly
+					},
+				},
+			},
+
+			ExpectedTable: []struct {
+				Name       string
+				Mocks      *Mocks
+				SetupMocks func(*Mocks, ensuring.E)
+			}{
+				{
+					Name: "first",
+					Mocks: &Mocks{
+						A: "first mocks",
+					},
+				},
+				{
+					Name: "second",
+					Mocks: &Mocks{
+						A: "second mocks",
+					},
+				},
+			},
+		},
 	}
 
 	ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
@@ -273,8 +410,19 @@ func TestParseEntryValue(t *testing.T) {
 				mocksField.Set(reflect.New(reflect.TypeOf(Mocks{})))
 			}
 
-			ensure(tableEntryHooks.BeforeEntry(nil, entryVal, i)).IsNotError()
-			ensure(tableEntryHooks.AfterEntry(nil, entryVal, i)).IsNotError()
+			mockT := mock_testctx.NewMockT(ensure.GoMockController())
+			mockT.EXPECT().Helper().AnyTimes()
+			mockT.EXPECT().Cleanup(gomock.Any()).AnyTimes()
+
+			if entry.SetupMockT != nil {
+				entry.SetupMockT(mockT, i)
+			}
+
+			mockCtx := mock_testctx.NewMockContext(ensure.GoMockController())
+			mockCtx.EXPECT().Ensure().Return(ensure.New(mockT)).AnyTimes()
+
+			ensure(tableEntryHooks.BeforeEntry(mockCtx, entryVal, i)).IsNotError()
+			ensure(tableEntryHooks.AfterEntry(mockCtx, entryVal, i)).IsNotError()
 		}
 
 		ensure(entry.Table).Equals(entry.ExpectedTable)

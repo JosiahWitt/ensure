@@ -69,6 +69,7 @@ func TestERunTableByIndex(t *testing.T) {
 				innerContext := mock_testctx.NewMockContext(ctrl)
 				innerContext.EXPECT().T().Return(innerMockT).AnyTimes()
 				innerContext.EXPECT().GoMockController().Return(gomock.NewController(innerMockT)).AnyTimes()
+				innerContext.EXPECT().Ensure().Return(ensure.New(innerMockT)).AnyTimes()
 				testhelper.SetTestContext(t, innerMockT, innerContext)
 
 				innerMockT.EXPECT().Fatalf(gomock.Any()).Do(func(msg string, args ...interface{}) {
@@ -753,7 +754,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 		Prefix: "SetupMocks field",
 		Entries: []runTableTestEntry{
 			{
-				Name:          "with valid function",
+				Name:          "with valid function with one param",
 				ExpectedNames: []string{"name 1", "name 2"},
 				Table: []struct {
 					Name       string
@@ -779,6 +780,44 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 						Name       string
 						Mocks      *TwoValidMocks
 						SetupMocks func(*TwoValidMocks)
+					})
+
+					for _, entry := range table {
+						entry.Mocks.check(t)
+						isTrue(t, entry.Mocks.Valid1.CustomField == "updated "+entry.Name)
+					}
+				},
+			},
+			{
+				Name:                 "with valid function with two params",
+				ExpectedNames:        []string{"name 1", "name 2"},
+				FatalMessagesContain: []string{"first SetupMocks", "second SetupMocks"}, // Not actual failures; only to show ensure is passed in correctly
+				Table: []struct {
+					Name       string
+					Mocks      *TwoValidMocks
+					SetupMocks func(*TwoValidMocks, ensuring.E)
+				}{
+					{
+						Name: "name 1",
+						SetupMocks: func(tvm *TwoValidMocks, ensure ensuring.E) {
+							tvm.Valid1.CustomField = "updated name 1"
+							ensure.Failf("first SetupMocks")
+						},
+					},
+					{
+						Name: "name 2",
+						SetupMocks: func(tvm *TwoValidMocks, ensure ensuring.E) {
+							tvm.Valid1.CustomField = "updated name 2"
+							ensure.Failf("second SetupMocks")
+						},
+					},
+				},
+
+				CheckEntry: func(t *testing.T, rawTable interface{}) {
+					table := rawTable.([]struct {
+						Name       string
+						Mocks      *TwoValidMocks
+						SetupMocks func(*TwoValidMocks, ensuring.E)
 					})
 
 					for _, entry := range table {
@@ -839,7 +878,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "function missing param",
-				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensuring_test.TwoValidMocks)"},
+				FatalMessagesContain: []string{"expected SetupMocks field to be one of the following:"},
 				Table: []struct {
 					Name       string
 					Mocks      *TwoValidMocks
@@ -858,7 +897,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "function with invalid param",
-				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensuring_test.TwoValidMocks)"},
+				FatalMessagesContain: []string{"expected SetupMocks field to be one of the following:"},
 				Table: []struct {
 					Name       string
 					Mocks      *TwoValidMocks
@@ -877,7 +916,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 
 			{
 				Name:                 "function with a return",
-				FatalMessagesContain: []string{"expected SetupMocks field to be a func(*ensuring_test.TwoValidMocks)"},
+				FatalMessagesContain: []string{"expected SetupMocks field to be one of the following:"},
 				Table: []struct {
 					Name       string
 					Mocks      *TwoValidMocks

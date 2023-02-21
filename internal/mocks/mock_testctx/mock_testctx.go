@@ -239,6 +239,31 @@ func (m *MockContext) EXPECT() *MockContextMockRecorder {
 	return m.recorder
 }
 
+// Ensure mocks Ensure on Context.
+func (m *MockContext) Ensure() interface{} {
+	m.ctrl.T.Helper()
+	inputs := []interface{}{}
+	ret := m.ctrl.Call(m, "Ensure", inputs...)
+	ret0, _ := ret[0].(interface{})
+	return ret0
+}
+
+// Ensure sets up expectations for calls to Ensure.
+// Calling this method multiple times allows expecting multiple calls to Ensure with a variety of parameters.
+//
+// Inputs:
+//
+//	none
+//
+// Outputs:
+//
+//	interface{}
+func (mr *MockContextMockRecorder) Ensure() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	inputs := []interface{}{}
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ensure", reflect.TypeOf((*MockContext)(nil).Ensure), inputs...)
+}
+
 // GoMockController mocks GoMockController on Context.
 func (m *MockContext) GoMockController() *gomock.Controller {
 	m.ctrl.T.Helper()

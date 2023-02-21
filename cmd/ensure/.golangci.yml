@@ -48,6 +48,10 @@ issues:
         - thelper
         - maintidx
 
+    - text: singleCaseSwitch
+      linters:
+        - gocritic
+
     # Exclude some linters from fixtures and scenarios
     - path: .*(/fixtures/)|(/scenarios/).*
       linters:
