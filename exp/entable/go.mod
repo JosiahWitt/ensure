@@ -1,8 +1,8 @@
-module github.com/JosiahWitt/ensure/experiment/entable
+module github.com/JosiahWitt/ensure/exp/entable
 
 go 1.18
 
-require github.com/JosiahWitt/ensure v0.4.0-beta.3
+require github.com/JosiahWitt/ensure v0.4.0
 
 require (
 	github.com/JosiahWitt/erk v0.5.8 // indirect

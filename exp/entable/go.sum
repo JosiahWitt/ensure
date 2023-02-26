@@ -1,6 +1,6 @@
 github.com/JosiahWitt/ensure v0.3.1/go.mod h1:f9w6clasETP6j/VXbisqC2QWcmfBCzFHoEksUsSYOg8=
-github.com/JosiahWitt/ensure v0.4.0-beta.3 h1:96U6EBR5sY0L4UoP4ZOfHs8+cPj+W7v9noi3V3nn9y8=
-github.com/JosiahWitt/ensure v0.4.0-beta.3/go.mod h1:v9NPUdqtbbjKh5fhPPjTb701lTdYe5IyK0D+e52m1OA=
+github.com/JosiahWitt/ensure v0.4.0 h1:A3gvCenDVC/tf1gzLnvC+D74JsmdswCcakEB4j0rT44=
+github.com/JosiahWitt/ensure v0.4.0/go.mod h1:v9NPUdqtbbjKh5fhPPjTb701lTdYe5IyK0D+e52m1OA=
 github.com/JosiahWitt/erk v0.5.6/go.mod h1:OiLS68mTg6Aa3Olx2CHoe3Dg38Uy8MsJzHawpT8aEfQ=
 github.com/JosiahWitt/erk v0.5.8 h1:k1EjYn+0oKgMxd/tzVlF1uIfJtVUeqUmZdomRIOm5EI=
 github.com/JosiahWitt/erk v0.5.8/go.mod h1:QJr+FBLfK1qK4OLui6wQpG82Y3YCeSJfTU5gtpqMe1o=
