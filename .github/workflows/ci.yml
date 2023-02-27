@@ -7,18 +7,18 @@ jobs:
     strategy:
       matrix:
         go-version: ["1.16", "1.17", "1.18", "1.19", "1.20"]
-        path: [".", "cmd/ensure", "experiment/entable"]
+        path: [".", "cmd/ensure", "exp/entable"]
         include:
           - path: "."
             flags: package
           - path: cmd/ensure
             flags: cli
-          - path: experiment/entable
+          - path: exp/entable
             flags: entable
         exclude:
-          - path: experiment/entable # Entable requires generics
+          - path: exp/entable # Entable requires generics
             go-version: "1.16"
-          - path: experiment/entable # Entable requires generics
+          - path: exp/entable # Entable requires generics
             go-version: "1.17"
 
     steps:
@@ -46,11 +46,11 @@ jobs:
     strategy:
       matrix:
         go-version: ["1.16", "1.17", "1.18", "1.19", "1.20"]
-        path: [".", "cmd/ensure", "experiment/entable"]
+        path: [".", "cmd/ensure", "exp/entable"]
         exclude:
-          - path: "experiment/entable" # Entable requires generics
+          - path: "exp/entable" # Entable requires generics
             go-version: "1.16"
-          - path: "experiment/entable" # Entable requires generics
+          - path: "exp/entable" # Entable requires generics
             go-version: "1.17"
 
     steps:
@@ -76,7 +76,7 @@ jobs:
       matrix:
         # Staticcheck requires Go 1.19+
         go-version: ["1.19", "1.20"]
-        path: [".", "cmd/ensure", "experiment/entable"]
+        path: [".", "cmd/ensure", "exp/entable"]
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
