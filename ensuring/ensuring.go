@@ -85,6 +85,16 @@ func (e E) T() *testing.T {
 	return t
 }
 
+// InterfaceT exposes the scoped [T]. Usually, [E.T] will be
+// more useful, as it exposes the full [testing.T]. InterfaceT
+// is intended for use when a non-[testing.T] type was provided
+// to `ensure.New`, as in the case of mocking.
+func (e E) InterfaceT() T {
+	c := e(nil)
+	c.markRun()
+	return c.t
+}
+
 // GoMockController exposes a GoMock Controller scoped to the current test context.
 // Learn more about GoMock here: https://github.com/golang/mock
 func (e E) GoMockController() *gomock.Controller {

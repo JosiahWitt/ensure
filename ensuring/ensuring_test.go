@@ -124,6 +124,52 @@ func TestET(t *testing.T) {
 	})
 }
 
+func TestEInterfaceT(t *testing.T) {
+	type MockT struct {
+		ensuring.T
+		Unique string
+	}
+
+	t.Run("passes through T when not using ensure.Run", func(t *testing.T) {
+		mockT := setupMockTWithCleanupCheck(t)
+		wrappedMockT := MockT{T: mockT, Unique: "hello"}
+		testhelper.SetTestContext(t, wrappedMockT, testctx.New(wrappedMockT, wrapEnsure))
+		ensure := ensure.New(wrappedMockT)
+
+		if ensure.InterfaceT().(MockT).Unique != "hello" {
+			t.Fatal("didn't return the expected T")
+		}
+	})
+
+	t.Run("returns nested T when using ensure.Run", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+
+		innerMockT := setupMockTWithCleanupCheck(t)
+		innerMockT.EXPECT().Helper().AnyTimes()
+		wrappedInnerMockT := MockT{T: innerMockT, Unique: "hello"}
+
+		innerMockTestCtx := mock_testctx.NewMockContext(ctrl)
+		innerMockTestCtx.EXPECT().T().Return(wrappedInnerMockT).AnyTimes()
+		testhelper.SetTestContext(t, wrappedInnerMockT, innerMockTestCtx)
+
+		outerMockT := setupMockTWithCleanupCheck(t)
+		outerMockT.EXPECT().Helper().AnyTimes()
+
+		outerMockTestCtx := mock_testctx.NewMockContext(ctrl)
+		testhelper.SetTestContext(t, outerMockT, outerMockTestCtx)
+		outerMockTestCtx.EXPECT().Run("inner", gomock.Any()).Do(func(_ string, fn func(testctx.Context)) {
+			fn(innerMockTestCtx)
+		})
+
+		ensure := ensure.New(outerMockT)
+		ensure.Run("inner", func(ensure ensuring.E) {
+			if ensure.InterfaceT().(MockT).Unique != "hello" {
+				t.Fatal("didn't return the expected T")
+			}
+		})
+	})
+}
+
 func TestEGoMockController(t *testing.T) {
 	mockT := setupMockTWithCleanupCheck(t)
 	mockT.EXPECT().Cleanup(gomock.Any()).AnyTimes() // Setup by GoMock Controller
