@@ -1,5 +1,5 @@
 generate-mocks:
-	@# Not implemented
+	(cd ../../cmd/ensure; go build -o ../../tmp/ensure) && ../../tmp/ensure mocks generate
 
 test:
 	go test ./...
