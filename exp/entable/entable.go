@@ -132,7 +132,7 @@ func (t *Table[E]) Iterate(fn func(entry *E)) {
 // It uses [ensuring.E.RunTableByIndex], so the same functionality is supported,
 // including built-in support for mocks.
 func (t *Table[E]) Run(ensure ensuring.E, fn func(ensure ensuring.E, entry *E)) {
-	ensure.T().Helper()
+	ensure.InterfaceT().Helper()
 
 	if t.name != "" {
 		ensure.Run(t.name, func(ensure ensuring.E) {
@@ -144,20 +144,22 @@ func (t *Table[E]) Run(ensure ensuring.E, fn func(ensure ensuring.E, entry *E)) 
 }
 
 func (t *Table[E]) run(ensure ensuring.E, fn func(ensure ensuring.E, entry *E)) {
-	ensure.T().Helper()
+	ensure.InterfaceT().Helper()
 
 	subtableNames := make(map[string]int, len(t.subtables))
 	for i, subtable := range t.subtables {
 		if subtable.name == "" {
 			ensure.Failf(
 				"Subtables are required to be named using WithName. Subtables[%d] was not named. "+
-					"If you want to append the entries from the table directly, use AppendTableEntries.",
+					"If you want to append the entries from the table directly instead of naming it, use AppendTableEntries.",
 				i,
 			)
+			return
 		}
 
 		if lastIdx, ok := subtableNames[subtable.name]; ok {
 			ensure.Failf("Subtables names are required to be unique. Subtables[%d] shares a name with Subtables[%d]: %s", i, lastIdx, subtable.name)
+			return
 		}
 
 		subtableNames[subtable.name] = i

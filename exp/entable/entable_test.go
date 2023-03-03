@@ -6,6 +6,8 @@ import (
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/ensuring"
 	"github.com/JosiahWitt/ensure/exp/entable"
+	"github.com/JosiahWitt/ensure/exp/entable/internal/mocks/github.com/JosiahWitt/ensure/mock_ensuring"
+	"github.com/golang/mock/gomock"
 )
 
 func TestNew(t *testing.T) {
@@ -451,5 +453,53 @@ func TestRun(t *testing.T) {
 				Value: "🌎",
 			},
 		})
+	})
+
+	ensure.Run("when subtables share names", func(ensure ensuring.E) {
+		mockT := mock_ensuring.NewMockT(ensure.GoMockController())
+		mockT.EXPECT().Helper().MinTimes(2)
+		mockT.EXPECT().Cleanup(gomock.Any()).AnyTimes()
+		mockEnsure := ensure.New(mockT)
+
+		type Entry struct{}
+
+		table := entable.New[Entry]()
+		table.AppendTable(
+			entable.New[Entry]().WithName("sub1"),
+			entable.New[Entry]().WithName("sub2"),
+			entable.New[Entry]().WithName("sub1"),
+		)
+
+		mockT.EXPECT().Fatalf("Subtables names are required to be unique. Subtables[%d] shares a name with Subtables[%d]: %s", 2, 0, "sub1")
+
+		numCalls := 0
+		table.Run(mockEnsure, func(ensure ensuring.E, entry *Entry) { numCalls++ })
+		ensure(numCalls).Equals(0)
+	})
+
+	ensure.Run("when subtable is missing a name", func(ensure ensuring.E) {
+		mockT := mock_ensuring.NewMockT(ensure.GoMockController())
+		mockT.EXPECT().Helper().MinTimes(2)
+		mockT.EXPECT().Cleanup(gomock.Any()).AnyTimes()
+		mockEnsure := ensure.New(mockT)
+
+		type Entry struct{}
+
+		table := entable.New[Entry]()
+		table.AppendTable(
+			entable.New[Entry]().WithName("sub1"),
+			entable.New[Entry](),
+			entable.New[Entry]().WithName("sub3"),
+		)
+
+		mockT.EXPECT().Fatalf(
+			"Subtables are required to be named using WithName. Subtables[%d] was not named. "+
+				"If you want to append the entries from the table directly instead of naming it, use AppendTableEntries.",
+			1,
+		)
+
+		numCalls := 0
+		table.Run(mockEnsure, func(ensure ensuring.E, entry *Entry) { numCalls++ })
+		ensure(numCalls).Equals(0)
 	})
 }
