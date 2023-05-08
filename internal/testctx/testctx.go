@@ -15,6 +15,7 @@ type T interface {
 	Run(name string, f func(t *testing.T)) bool
 	Helper()
 	Cleanup(func())
+	Parallel()
 }
 
 var _ T = &testing.T{}
