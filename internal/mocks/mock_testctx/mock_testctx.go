@@ -185,6 +185,31 @@ func (mr *MockTMockRecorder) Logf(_format interface{}, _args ...interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logf", reflect.TypeOf((*MockT)(nil).Logf), inputs...)
 }
 
+// Parallel mocks Parallel on T.
+func (m *MockT) Parallel() {
+	m.ctrl.T.Helper()
+	inputs := []interface{}{}
+	ret := m.ctrl.Call(m, "Parallel", inputs...)
+	var _ = ret // Unused, since there are no returns
+	return
+}
+
+// Parallel sets up expectations for calls to Parallel.
+// Calling this method multiple times allows expecting multiple calls to Parallel with a variety of parameters.
+//
+// Inputs:
+//
+//	none
+//
+// Outputs:
+//
+//	none
+func (mr *MockTMockRecorder) Parallel() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	inputs := []interface{}{}
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Parallel", reflect.TypeOf((*MockT)(nil).Parallel), inputs...)
+}
+
 // Run mocks Run on T.
 func (m *MockT) Run(_name string, _f func(t *testing.T)) bool {
 	m.ctrl.T.Helper()

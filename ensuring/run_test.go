@@ -12,6 +12,20 @@ import (
 )
 
 func TestERun(t *testing.T) {
+	testERun(t, false, func(ensure ensuring.E) func(string, func(ensuring.E)) {
+		return ensure.Run
+	})
+}
+
+func TestERunParallel(t *testing.T) {
+	testERun(t, true, func(ensure ensuring.E) func(string, func(ensuring.E)) {
+		return ensure.RunParallel
+	})
+}
+
+type runBuilderFunc func(ensure ensuring.E) func(string, func(ensuring.E))
+
+func testERun(t *testing.T, isParallel bool, runBuilder runBuilderFunc) {
 	ctrl := gomock.NewController(t)
 
 	outerMockT := setupMockTWithCleanupCheck(t)
@@ -22,6 +36,10 @@ func TestERun(t *testing.T) {
 
 	innerMockT := setupMockTWithCleanupCheck(t)
 	innerMockT.EXPECT().Helper().Times(2)
+
+	if isParallel {
+		innerMockT.EXPECT().Parallel()
+	}
 
 	innerMockCtx := mock_testctx.NewMockContext(ctrl)
 	innerMockCtx.EXPECT().T().Return(innerMockT)
@@ -36,7 +54,8 @@ func TestERun(t *testing.T) {
 
 	var innerEnsure ensuring.E
 	outerEnsure := ensure.New(outerMockT)
-	outerEnsure.Run(name, func(ensure ensuring.E) {
+	run := runBuilder(outerEnsure)
+	run(name, func(ensure ensuring.E) {
 		innerEnsure = ensure
 	})
 
