@@ -6,6 +6,6 @@ Please see the [root of this repo](https://github.com/JosiahWitt/ensure) for mor
 
 ## Installation
 ```bash
-# Requires Go 1.16+
-$ go install github.com/JosiahWitt/ensure/cmd/ensure
+# Requires Go 1.21+
+$ go install github.com/JosiahWitt/ensure/cmd/ensure@latest
 ```
