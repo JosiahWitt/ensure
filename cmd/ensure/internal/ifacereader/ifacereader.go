@@ -258,6 +258,29 @@ func (r *internalPackageReader) buildTuple(variableName string, rawType types.Ty
 	}
 }
 
+func (r *internalPackageReader) parseTypeParams(namedType *types.Named) []*TypeParam {
+	typeParamList := namedType.TypeParams()
+	typeParamCount := typeParamList.Len()
+
+	if typeParamCount == 0 {
+		return nil
+	}
+
+	typeParams := make([]*TypeParam, 0, typeParamCount)
+	for i := range typeParamCount {
+		typeParam := typeParamList.At(i)
+
+		typeParams = append(typeParams, &TypeParam{
+			Name: typeParam.Obj().Name(),
+			Type: types.TypeString(typeParam.Constraint(), func(p *types.Package) string {
+				return r.pkgNameGen.GeneratePackageName(r.pkg, p)
+			}),
+		})
+	}
+
+	return typeParams
+}
+
 func buildPackageReadError(pkg *packages.Package) error {
 	err := erg.NewAs(erk.WithParams(ErrReadingPackage, erk.Params{"path": pkg.PkgPath}))
 
