@@ -2,25 +2,18 @@ linters:
   enable-all: true
   fast: false
   disable:
-    - maligned
     - prealloc
     - wsl
     - nlreturn
     - wrapcheck
     - godox
-    - golint
-    - interfacer
-    - scopelint
     - varnamelen
     - exhaustruct
     - ireturn
+    - depguard
     # Deprecated:
-    - nosnakecase
-    - deadcode
-    - ifshort
-    - structcheck
-    - varcheck
-    - exhaustivestruct
+    - execinquery
+    - gomnd
     # We run staticcheck separately:
     - staticcheck
     - stylecheck
@@ -46,3 +39,9 @@ issues:
         - ifshort
         - thelper
         - maintidx
+
+    # Sometimes even unused parameter names can be helpful for documentation.
+    # We can reconsider enabling this on a case by case basis in the future.
+    - text: "unused-parameter: parameter '.*' seems to be unused"
+      linters:
+        - revive

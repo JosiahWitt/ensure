@@ -6,7 +6,7 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/uniqpkg"
-	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/ensuring"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -215,7 +215,7 @@ func TestGeneratePackageName(t *testing.T) {
 		},
 	}
 
-	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
+	ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
 		entry := table[i]
 
 		entry.Runner(entry.Subject)
@@ -276,7 +276,7 @@ func TestAddImport(t *testing.T) {
 		return pkgs.ForPackage("my/pkg")
 	}
 
-	ensure.Run("supports adding multiple imports", func(ensure ensurepkg.Ensure) {
+	ensure.Run("supports adding multiple imports", func(ensure ensuring.E) {
 		pkg := createPkg()
 
 		pkg.AddImport("pkgs/pkg1", "pkg1")
@@ -288,7 +288,7 @@ func TestAddImport(t *testing.T) {
 		})
 	})
 
-	ensure.Run("supports adding the same import several times", func(ensure ensurepkg.Ensure) {
+	ensure.Run("supports adding the same import several times", func(ensure ensuring.E) {
 		pkg := createPkg()
 
 		pkg.AddImport("pkgs/pkg1", "pkg1")
@@ -302,7 +302,7 @@ func TestAddImport(t *testing.T) {
 		})
 	})
 
-	ensure.Run("supports adding several imports with the same name", func(ensure ensurepkg.Ensure) {
+	ensure.Run("supports adding several imports with the same name", func(ensure ensuring.E) {
 		pkg := createPkg()
 
 		pkg.AddImport("pkgs/1/pkg1", "pkg1")
@@ -322,7 +322,7 @@ func TestAddImport(t *testing.T) {
 func TestImports(t *testing.T) {
 	ensure := ensure.New(t)
 
-	ensure.Run("imports are in sorted order", func(ensure ensurepkg.Ensure) {
+	ensure.Run("imports are in sorted order", func(ensure ensuring.E) {
 		pkgs := uniqpkg.New()
 		pkg := pkgs.ForPackage("my/pkg")
 

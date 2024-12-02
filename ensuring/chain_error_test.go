@@ -559,7 +559,6 @@ func (t testError) Error() string {
 	return t.Message
 }
 
-//nolint:errname // We don't want to pluralize this
 type testSliceError []error
 
 func (t testSliceError) Error() string {

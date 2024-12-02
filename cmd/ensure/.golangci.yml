@@ -2,26 +2,20 @@ linters:
   enable-all: true
   fast: false
   disable:
-    - maligned
     - prealloc
     - wsl
     - nlreturn
     - wrapcheck
     - godox
-    - golint
-    - interfacer
-    - scopelint
     - varnamelen
     - gofumpt
     - exhaustruct
     - ireturn
+    - depguard
     # Deprecated:
-    - nosnakecase
-    - deadcode
-    - ifshort
-    - structcheck
-    - varcheck
-    - exhaustivestruct
+    - execinquery
+    - exportloopref
+    - gomnd
     # We run staticcheck separately:
     - staticcheck
     - stylecheck
@@ -47,6 +41,10 @@ issues:
         - ifshort
         - thelper
         - maintidx
+        - inamedparam
+        - err113
+        - nilnil
+        - mnd
 
     - text: singleCaseSwitch
       linters:
@@ -62,3 +60,17 @@ issues:
       linters:
         - revive
         - stylecheck
+
+    - path: .*(/fixtures/)|(/scenarios/).*
+      linters:
+        - inamedparam
+
+    - path: /mock.*/
+      linters:
+        - mnd
+
+    # Sometimes even unused parameter names can be helpful for documentation.
+    # We can reconsider enabling this on a case by case basis in the future.
+    - text: "unused-parameter: parameter '.*' seems to be unused"
+      linters:
+        - revive

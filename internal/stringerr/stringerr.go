@@ -54,8 +54,8 @@ func (g *groupError) Error() string {
 func (g *groupError) errorWithIndentation(indentation string) string {
 	errs := make([]string, 0, len(g.rawErrs))
 	for _, err := range g.rawErrs {
-		//nolint:errorlint // We don't want to recurse past the first one, so we don't want to use errors.As
-		if withIndentation, ok := err.(interface{ errorWithIndentation(string) string }); ok {
+		// We don't want to recurse past the first one, so we don't want to use errors.As
+		if withIndentation, ok := err.(interface{ errorWithIndentation(string) string }); ok { //nolint:inamedparam
 			errs = append(errs, withIndentation.errorWithIndentation(indentation+levelIndentation))
 		} else {
 			errs = append(errs, err.Error())

@@ -18,7 +18,7 @@ $ go get github.com/JosiahWitt/ensure
 
 ### CLI
 ```bash
-# Requires Go 1.16+
+# Requires Go 1.21+
 $ go install github.com/JosiahWitt/ensure/cmd/ensure@latest
 ```
 

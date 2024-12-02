@@ -11,7 +11,7 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mocks/mock_fswrite"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockwrite"
-	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/ensuring"
 )
 
 func TestTidyMocks(t *testing.T) {
@@ -320,7 +320,7 @@ func TestTidyMocks(t *testing.T) {
 		},
 	}
 
-	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
+	ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
 		entry := table[i]
 		entry.Subject.Logger = log.New(io.Discard, "", 0)
 

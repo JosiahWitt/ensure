@@ -16,6 +16,7 @@ func (r *internalPackageReader) parseTypeParams(namedType *types.Named) []*TypeP
 	}
 
 	typeParams := make([]*TypeParam, 0, typeParamCount)
+	//nolint:intrange // Requires Go 1.20+
 	for i := 0; i < typeParamCount; i++ {
 		typeParam := typeParamList.At(i)
 

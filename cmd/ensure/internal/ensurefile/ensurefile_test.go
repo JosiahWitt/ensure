@@ -8,7 +8,7 @@ import (
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mocks/io/mock_fs"
-	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/ensuring"
 	"github.com/golang/mock/gomock"
 )
 
@@ -163,7 +163,7 @@ func TestLoadConfig(t *testing.T) {
 
 	table = appendValidationEntriesToLoadConfigEntries(table)
 
-	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
+	ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
 		entry := table[i]
 
 		config, err := entry.Subject.LoadConfig(entry.PWD)

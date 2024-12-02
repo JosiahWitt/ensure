@@ -40,9 +40,9 @@ func (m *MockT) EXPECT() *MockTMockRecorder {
 }
 
 // Cleanup mocks Cleanup on T.
-func (m *MockT) Cleanup(_arg0 func()) {
+func (m *MockT) Cleanup(_f func()) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_arg0}
+	inputs := []interface{}{_f}
 	ret := m.ctrl.Call(m, "Cleanup", inputs...)
 	var _ = ret // Unused, since there are no returns
 	return
@@ -53,14 +53,14 @@ func (m *MockT) Cleanup(_arg0 func()) {
 //
 // Inputs:
 //
-//	func()
+//	f func()
 //
 // Outputs:
 //
 //	none
-func (mr *MockTMockRecorder) Cleanup(_arg0 interface{}) *gomock.Call {
+func (mr *MockTMockRecorder) Cleanup(_f interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_arg0}
+	inputs := []interface{}{_f}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockT)(nil).Cleanup), inputs...)
 }
 

@@ -20,7 +20,7 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/scenarios/inlineexternaltypes"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/scenarios/iterableexternaltypes"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/scenarios/variadic"
-	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/ensuring"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -435,7 +435,7 @@ func TestReadPackages(t *testing.T) {
 	table = append(table, buildTypeTests()...)
 	table = append(table, buildGenericTests()...)
 
-	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
+	ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
 		entry := table[i]
 
 		withinDirectory(entry.WorkingDir, func() {
