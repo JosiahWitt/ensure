@@ -22,7 +22,7 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/single_method_unnamed_inputs"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/single_method_variadic_input"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/uniqpkg"
-	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/ensuring"
 )
 
 func TestGenerateMocks(t *testing.T) {
@@ -262,7 +262,7 @@ func TestGenerateMocks(t *testing.T) {
 		},
 	}
 
-	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
+	ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
 		entry := table[i]
 
 		g, err := mockgen.New()

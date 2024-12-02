@@ -13,7 +13,7 @@ import (
 func TestNew(t *testing.T) {
 	ensure := ensure.New(t)
 
-	type Entry struct{} //nolint:unused
+	type Entry struct{}
 
 	ensure(entable.New[Entry]()).Equals(&entable.Table[Entry]{})
 }
@@ -40,7 +40,7 @@ func TestFrom(t *testing.T) {
 func TestWithName(t *testing.T) {
 	ensure := ensure.New(t)
 
-	type Entry struct{} //nolint:unused
+	type Entry struct{}
 
 	table := entable.New[Entry]()
 	namedTable := table.WithName("hello")

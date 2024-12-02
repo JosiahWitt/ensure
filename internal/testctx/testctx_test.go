@@ -131,14 +131,14 @@ func TestEnsure(t *testing.T) {
 func eq(t *testing.T, a, b interface{}) {
 	t.Helper()
 	if !reflect.DeepEqual(a, b) {
-		t.Fatalf(pretty.Sprintf("% #v should equal % #v", a, b))
+		t.Fatal(pretty.Sprintf("% #v should equal % #v", a, b))
 	}
 }
 
 func neq(t *testing.T, a, b interface{}) {
 	t.Helper()
 	if reflect.DeepEqual(a, b) {
-		t.Fatalf(pretty.Sprintf("% #v should not equal % #v", a, b))
+		t.Fatal(pretty.Sprintf("% #v should not equal % #v", a, b))
 	}
 }
 

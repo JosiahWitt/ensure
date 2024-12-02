@@ -16,7 +16,7 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mocks/mock_mockgen"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mocks/mock_mockwrite"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/uniqpkg"
-	"github.com/JosiahWitt/ensure/ensurepkg"
+	"github.com/JosiahWitt/ensure/ensuring"
 )
 
 func TestMocksGenerate(t *testing.T) {
@@ -184,7 +184,7 @@ func TestMocksGenerate(t *testing.T) {
 		},
 	}
 
-	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
+	ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
 		entry := table[i]
 		entry.Subject.Getwd = entry.Getwd
 		entry.Subject.Logger = log.New(io.Discard, "", 0)
@@ -282,7 +282,7 @@ func TestMocksTidy(t *testing.T) {
 		},
 	}
 
-	ensure.RunTableByIndex(table, func(ensure ensurepkg.Ensure, i int) {
+	ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
 		entry := table[i]
 		entry.Subject.Getwd = entry.Getwd
 		entry.Subject.Logger = log.New(io.Discard, "", 0)

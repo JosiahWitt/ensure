@@ -14,7 +14,7 @@ type T interface {
 	Fatalf(format string, args ...interface{})
 	Run(name string, f func(t *testing.T)) bool
 	Helper()
-	Cleanup(func())
+	Cleanup(f func())
 	Parallel()
 }
 

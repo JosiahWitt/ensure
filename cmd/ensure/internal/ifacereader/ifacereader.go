@@ -203,7 +203,7 @@ func (r *internalPackageReader) buildPackage(pkgDetail *PackageDetails, pkg *pac
 func (r *internalPackageReader) buildIface(ifaceName string, iface *types.Interface) (*Interface, error) {
 	methods := make([]*Method, 0, iface.NumMethods())
 
-	for i := 0; i < iface.NumMethods(); i++ {
+	for i := range iface.NumMethods() {
 		builtMethod, err := r.buildMethod(iface.Method(i))
 		if err != nil {
 			return nil, err
@@ -225,13 +225,13 @@ func (r *internalPackageReader) buildMethod(method *types.Func) (*Method, error)
 	}
 
 	inputs := make([]*Tuple, 0, signature.Params().Len())
-	for i := 0; i < signature.Params().Len(); i++ {
+	for i := range signature.Params().Len() {
 		param := signature.Params().At(i)
 		inputs = append(inputs, r.buildTuple(param.Name(), param.Type()))
 	}
 
 	outputs := make([]*Tuple, 0, signature.Results().Len())
-	for i := 0; i < signature.Results().Len(); i++ {
+	for i := range signature.Results().Len() {
 		result := signature.Results().At(i)
 		outputs = append(outputs, r.buildTuple(result.Name(), result.Type()))
 	}
@@ -256,6 +256,29 @@ func (r *internalPackageReader) buildTuple(variableName string, rawType types.Ty
 			return r.pkgNameGen.GeneratePackageName(r.pkg, p)
 		}),
 	}
+}
+
+func (r *internalPackageReader) parseTypeParams(namedType *types.Named) []*TypeParam {
+	typeParamList := namedType.TypeParams()
+	typeParamCount := typeParamList.Len()
+
+	if typeParamCount == 0 {
+		return nil
+	}
+
+	typeParams := make([]*TypeParam, 0, typeParamCount)
+	for i := range typeParamCount {
+		typeParam := typeParamList.At(i)
+
+		typeParams = append(typeParams, &TypeParam{
+			Name: typeParam.Obj().Name(),
+			Type: types.TypeString(typeParam.Constraint(), func(p *types.Package) string {
+				return r.pkgNameGen.GeneratePackageName(r.pkg, p)
+			}),
+		})
+	}
+
+	return typeParams
 }
 
 func buildPackageReadError(pkg *packages.Package) error {
