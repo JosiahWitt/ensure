@@ -43,19 +43,21 @@ func TestRun(t *testing.T) {
 	wrapEnsure := func(t testctx.T) interface{} { return fmt.Sprintf("%T", t) }
 	ctx := testctx.New(outerT, wrapEnsure)
 
-	var actualInnerT *testing.T
-	var actualInnerEnsure string
+	var called bool
 	ctx.Run("everything works", func(ctx testctx.Context) {
-		actualInnerT = ctx.T().(*testing.T)
-		actualInnerEnsure = ctx.Ensure().(string)
+		actualInnerT := ctx.T()
+		neq(t, actualInnerT, nil)          // It shouldn't be nil, indicating the callback wasn't called
+		neq(t, actualInnerT, &testing.T{}) // It shouldn't be empty, indicating Helper() wasn't called
+		neq(t, actualInnerT, outerT)       // It shouldn't be the outerT
+
+		// Show wrapEnsure was promoted correctly
+		eq(t, ctx.Ensure(), "*testing.T")
+
+		called = true
 	})
 
-	neq(t, actualInnerT, nil)          // It shouldn't be nil, indicating the callback wasn't called
-	neq(t, actualInnerT, &testing.T{}) // It shouldn't be empty, indicating Helper() wasn't called
-	neq(t, actualInnerT, outerT)       // It shouldn't be the outerT
-
-	// Show wrapEnsure was promoted correctly
-	eq(t, actualInnerEnsure, "*testing.T")
+	// Verify the callback was actually executed
+	eq(t, called, true)
 }
 
 func TestGoMockController(t *testing.T) {

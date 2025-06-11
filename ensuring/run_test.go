@@ -12,21 +12,32 @@ import (
 )
 
 func TestERun(t *testing.T) {
-	testERun(t, false, func(ensure ensuring.E) func(string, func(ensuring.E)) {
-		return ensure.Run
-	})
+	runConfig{
+		prepare: func(ensure ensuring.E) func(string, func(ensuring.E)) {
+			return ensure.Run
+		},
+	}.test(t)
 }
 
 func TestERunParallel(t *testing.T) {
-	testERun(t, true, func(ensure ensuring.E) func(string, func(ensuring.E)) {
-		return ensure.RunParallel
-	})
+	runConfig{
+		isParallel: true,
+		prepare: func(ensure ensuring.E) func(string, func(ensuring.E)) {
+			return ensure.RunParallel
+		},
+	}.test(t)
 }
 
-type runBuilderFunc func(ensure ensuring.E) func(string, func(ensuring.E))
+type runConfig struct {
+	isParallel bool
+	isSync     bool
+	prepare    func(ensure ensuring.E) func(string, func(ensuring.E))
+}
 
-func testERun(t *testing.T, isParallel bool, runBuilder runBuilderFunc) {
+func (cfg runConfig) test(t *testing.T) {
 	ctrl := gomock.NewController(t)
+
+	const name = "my test name"
 
 	outerMockT := setupMockTWithCleanupCheck(t)
 	outerMockT.EXPECT().Helper()
@@ -37,7 +48,7 @@ func testERun(t *testing.T, isParallel bool, runBuilder runBuilderFunc) {
 	innerMockT := setupMockTWithCleanupCheck(t)
 	innerMockT.EXPECT().Helper().Times(2)
 
-	if isParallel {
+	if cfg.isParallel {
 		innerMockT.EXPECT().Parallel()
 	}
 
@@ -45,20 +56,43 @@ func testERun(t *testing.T, isParallel bool, runBuilder runBuilderFunc) {
 	innerMockCtx.EXPECT().T().Return(innerMockT)
 	testhelper.SetTestContext(t, innerMockT, innerMockCtx)
 
-	const name = "my test name"
+	if cfg.isSync {
+		preSyncInnerMockT := setupMockT(t)
+		preSyncInnerMockT.EXPECT().Helper()
 
-	outerMockCtx.EXPECT().Run(name, gomock.Any()).
-		Do(func(name string, fn func(ctx testctx.Context)) {
-			fn(innerMockCtx)
-		})
+		preSyncInnerMockCtx := mock_testctx.NewMockSyncableContext(ctrl)
+		preSyncInnerMockCtx.EXPECT().T().Return(preSyncInnerMockT)
+		testhelper.SetTestContext(t, preSyncInnerMockT, preSyncInnerMockCtx)
+
+		outerMockCtx.EXPECT().Run(name, gomock.Any()).
+			Do(execFuncParamWithName(preSyncInnerMockCtx))
+
+		preSyncInnerMockCtx.EXPECT().Sync(gomock.Any()).
+			Do(execFuncParam(innerMockCtx))
+	} else {
+		outerMockCtx.EXPECT().Run(name, gomock.Any()).
+			Do(execFuncParamWithName(innerMockCtx))
+	}
 
 	var innerEnsure ensuring.E
 	outerEnsure := ensure.New(outerMockT)
-	run := runBuilder(outerEnsure)
+	run := cfg.prepare(outerEnsure)
 	run(name, func(ensure ensuring.E) {
 		innerEnsure = ensure
 	})
 
 	innerMockT.EXPECT().Fatalf("inner")
 	innerEnsure.Failf("inner")
+}
+
+func execFuncParam(param testctx.Context) func(fn func(ctx testctx.Context)) {
+	return func(fn func(ctx testctx.Context)) {
+		fn(param)
+	}
+}
+
+func execFuncParamWithName(param testctx.Context) func(name string, fn func(ctx testctx.Context)) {
+	return func(name string, fn func(ctx testctx.Context)) {
+		fn(param)
+	}
 }

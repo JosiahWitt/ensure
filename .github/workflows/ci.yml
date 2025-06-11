@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ["1.20", "1.21", "1.22", "1.23"]
+        go-version: ["1.20", "1.21", "1.22", "1.23", "1.24", "1.25.0-rc.1"]
         path: [".", "cmd/ensure", "exp/entable"]
         include:
           - path: "."
@@ -16,13 +16,15 @@ jobs:
             flags: cli
           - path: exp/entable
             flags: entable
+          - go-version: "1.25.0-rc.1"
+            godebug: asynctimerchan=0
         exclude:
           - path: cmd/ensure # CLI requires Go 1.21+
             go-version: "1.20"
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -30,7 +32,9 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Test `${{ matrix.path }}`
-        run: (cd ${{ matrix.path }}; go test -race -coverprofile=./coverage.txt -covermode=atomic ./...)
+        run: |
+          export GODEBUG=${{ matrix.godebug }}
+          (cd ${{ matrix.path }}; go test -race -coverprofile=./coverage.txt -covermode=atomic ./...)
 
       - name: Upload `${{ matrix.path }}` coverage to codecov
         uses: codecov/codecov-action@v2
@@ -45,15 +49,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ["1.20", "1.21", "1.22", "1.23"]
+        go-version: ["1.20", "1.21", "1.22", "1.23", "1.24", "1.25.0-rc.1"]
         path: [".", "cmd/ensure", "exp/entable"]
         exclude:
           - path: cmd/ensure # CLI requires Go 1.21+
             go-version: "1.20"
+          - go-version: "1.25.0-rc.1" # TODO: Enable linting on 1.25 when it is no longer a RC
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -74,17 +79,18 @@ jobs:
       fail-fast: false
       matrix:
         # Staticcheck requires Go 1.21+
-        go-version: ["1.21", "1.22", "1.23"]
+        go-version: ["1.21", "1.22", "1.23", "1.24", "1.25.0-rc.1"]
         path: [".", "cmd/ensure", "exp/entable"]
         exclude:
           - path: cmd/ensure # Staticcheck isn't working for CLI on Go 1.21
             go-version: "1.21"
           - path: cmd/ensure # Staticcheck isn't working for CLI on Go 1.22
             go-version: "1.22"
+          - go-version: "1.25.0-rc.1" # TODO: Enable Staticcheck on 1.25 when it is no longer a RC
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -94,7 +100,7 @@ jobs:
       - name: Staticcheck `${{ matrix.path }}`
         uses: dominikh/staticcheck-action@v1
         with:
-          version: "2024.1.1"
+          version: "2025.1.1"
           install-go: false
           working-directory: ${{ matrix.path }}
 
@@ -105,11 +111,11 @@ jobs:
       fail-fast: false
       matrix:
         # CLI requires Go 1.21+
-        go-version: ["1.21", "1.22", "1.23"]
+        go-version: ["1.21", "1.22", "1.23", "1.24", "1.25.0-rc.1"]
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
 

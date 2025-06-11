@@ -42,6 +42,14 @@ type Context interface {
 	Ensure() interface{}
 }
 
+// SyncableContext extends [Context] with the ability to use [synctest.Test] in Go 1.25+.
+type SyncableContext interface {
+	Context
+
+	// Sync wraps the Go 1.25+ [synctest.Test] function, making it mockable.
+	Sync(fn func(Context))
+}
+
 type baseContext struct {
 	t T
 
