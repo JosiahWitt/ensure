@@ -26,6 +26,10 @@ func TestRunSync(t *testing.T) {
 		// Shows time.Sleep within RunSync doesn't wait actual clock time
 		assertShorterThan(t, time.Since(start), 10*time.Second)
 	})
+
+	sharedEnsureRunTests(t, func(ensure ensuring.E) func(string, func(ensuring.E)) {
+		return ensure.RunSync
+	})
 }
 
 func TestRunTableByIndexSync(t *testing.T) {
@@ -50,6 +54,10 @@ func TestRunTableByIndexSync(t *testing.T) {
 
 		// Shows time.Sleep within RunSync doesn't wait actual clock time
 		assertShorterThan(t, time.Since(start), 10*time.Second)
+	})
+
+	sharedEnsureRunTableByIndexTests(t, func(ensure ensuring.E) func(table interface{}, fn func(ensure ensuring.E, i int)) {
+		return ensure.RunTableByIndexSync
 	})
 }
 
