@@ -1,4 +1,4 @@
 mocks:
   packages:
     - path: github.com/JosiahWitt/ensure/internal/testctx
-      interfaces: [T, Context]
+      interfaces: [T, Context, SyncableContext]

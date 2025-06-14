@@ -8,9 +8,16 @@ import (
 	"github.com/JosiahWitt/ensure/ensuring"
 	"github.com/JosiahWitt/ensure/ensuring/internal/testhelper"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
-	"github.com/JosiahWitt/ensure/internal/testctx"
 	"github.com/golang/mock/gomock"
 )
+
+func TestERunTableByIndex(t *testing.T) {
+	runTableConfig{
+		prepare: func(ensure ensuring.E) func(table interface{}, fn func(ensure ensuring.E, i int)) {
+			return ensure.RunTableByIndex
+		},
+	}.test(t)
+}
 
 type runTableTestEntryGroup struct {
 	Prefix  string
@@ -26,7 +33,12 @@ type runTableTestEntry struct {
 	CheckEntry           func(t *testing.T, rawEntry interface{})
 }
 
-func TestERunTableByIndex(t *testing.T) {
+type runTableConfig struct {
+	isSync  bool
+	prepare func(ensure ensuring.E) func(table interface{}, fn func(ensure ensuring.E, i int))
+}
+
+func (cfg runTableConfig) test(t *testing.T) {
 	runTableTests := runTableTests{}
 
 	groups := []runTableTestEntryGroup{
@@ -52,36 +64,62 @@ func TestERunTableByIndex(t *testing.T) {
 			outerMockT := setupMockTWithCleanupCheck(t)
 			outerMockT.EXPECT().Helper().MinTimes(1)
 
-			outerCtx := mock_testctx.NewMockContext(ctrl)
-			outerCtx.EXPECT().T().Return(outerMockT).AnyTimes()
-			testhelper.SetTestContext(t, outerMockT, outerCtx)
+			outerMockCtx := mock_testctx.NewMockContext(ctrl)
+			outerMockCtx.EXPECT().T().Return(outerMockT).AnyTimes()
+			testhelper.SetTestContext(t, outerMockT, outerMockCtx)
 
-			actualFatalMessages := []string{}
 			expectedRunCalls := []*gomock.Call{}
 			innerMockTs := []*mock_testctx.MockT{} //lint:ignore ST1003 mockTs not mockTS
 
+			actualFatalMessages := []string{}
+			fatalMessagesRecorder := func(msg string, args ...interface{}) {
+				actualFatalMessages = append(actualFatalMessages, msg)
+			}
+
 			for _, name := range entry.ExpectedNames {
 				innerMockT := setupMockT(t)
-				innerMockT.EXPECT().Helper().MinTimes(1)
+				innerMockT.EXPECT().Helper().MinTimes(cfg.expectedMinHelperCalls(entry))
 				innerMockT.EXPECT().Cleanup(gomock.Any()).AnyTimes()
+				innerMockT.EXPECT().Fatalf(gomock.Any()).Do(fatalMessagesRecorder).AnyTimes()
 				innerMockTs = append(innerMockTs, innerMockT)
 
-				innerContext := mock_testctx.NewMockContext(ctrl)
-				innerContext.EXPECT().T().Return(innerMockT).AnyTimes()
-				innerContext.EXPECT().GoMockController().Return(gomock.NewController(innerMockT)).AnyTimes()
-				innerContext.EXPECT().Ensure().Return(ensure.New(innerMockT)).AnyTimes()
-				testhelper.SetTestContext(t, innerMockT, innerContext)
+				innerMockCtx := mock_testctx.NewMockContext(ctrl)
+				innerMockCtx.EXPECT().T().Return(innerMockT).AnyTimes()
+				innerMockCtx.EXPECT().GoMockController().Return(gomock.NewController(innerMockT)).AnyTimes()
+				innerMockCtx.EXPECT().Ensure().Return(ensure.New(innerMockT)).AnyTimes()
+				testhelper.SetTestContext(t, innerMockT, innerMockCtx)
 
-				innerMockT.EXPECT().Fatalf(gomock.Any()).Do(func(msg string, args ...interface{}) {
-					actualFatalMessages = append(actualFatalMessages, msg)
-				}).AnyTimes()
+				if cfg.isSync {
+					preSyncInnerMockT := setupMockT(t)
+					preSyncInnerMockT.EXPECT().Helper().MinTimes(cfg.expectedMinHelperCalls(entry))
+					preSyncInnerMockT.EXPECT().Cleanup(gomock.Any()).AnyTimes()
+					preSyncInnerMockT.EXPECT().Fatalf(gomock.Any()).Do(fatalMessagesRecorder).AnyTimes()
 
-				expectedRunCalls = append(expectedRunCalls,
-					outerCtx.EXPECT().Run(name, gomock.Any()).
-						Do(func(name string, fn func(ctx testctx.Context)) {
-							fn(innerContext)
-						}),
-				)
+					preSyncInnerMockCtx := mock_testctx.NewMockSyncableContext(ctrl)
+					preSyncInnerMockCtx.EXPECT().T().Return(preSyncInnerMockT).AnyTimes()
+					preSyncInnerMockCtx.EXPECT().GoMockController().Return(gomock.NewController(preSyncInnerMockT)).AnyTimes()
+					preSyncInnerMockCtx.EXPECT().Ensure().Return(ensure.New(preSyncInnerMockT)).AnyTimes()
+					testhelper.SetTestContext(t, preSyncInnerMockT, preSyncInnerMockCtx)
+
+					expectedRunCalls = append(expectedRunCalls,
+						outerMockCtx.EXPECT().Run(name, gomock.Any()).
+							Do(execFuncParamWithName(preSyncInnerMockCtx)),
+					)
+
+					preSyncInnerMockCtxSyncCall := preSyncInnerMockCtx.EXPECT().Sync(gomock.Any()).
+						Do(execFuncParam(innerMockCtx))
+
+					if len(entry.FatalMessagesContain) > 0 {
+						preSyncInnerMockCtxSyncCall.AnyTimes()
+					}
+
+					expectedRunCalls = append(expectedRunCalls, preSyncInnerMockCtxSyncCall)
+				} else {
+					expectedRunCalls = append(expectedRunCalls,
+						outerMockCtx.EXPECT().Run(name, gomock.Any()).
+							Do(execFuncParamWithName(innerMockCtx)),
+					)
+				}
 			}
 
 			// Run calls should be in order
@@ -99,7 +137,8 @@ func TestERunTableByIndex(t *testing.T) {
 			// Run table and save call details
 			actualEntryCalls := []entryCall{}
 			ensure := ensure.New(outerMockT)
-			ensure.RunTableByIndex(entry.Table, func(ensure ensuring.E, i int) {
+			runTableByIndex := cfg.prepare(ensure)
+			runTableByIndex(entry.Table, func(ensure ensuring.E, i int) {
 				actualEntryCalls = append(actualEntryCalls, entryCall{ensure: ensure, i: i})
 			})
 
@@ -146,6 +185,14 @@ func TestERunTableByIndex(t *testing.T) {
 			}
 		})
 	}
+}
+
+func (cfg runTableConfig) expectedMinHelperCalls(entry runTableTestEntry) int {
+	if len(entry.FatalMessagesContain) > 0 {
+		return 0
+	}
+
+	return 2
 }
 
 type runTableTests struct{}
