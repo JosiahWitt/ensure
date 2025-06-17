@@ -51,6 +51,7 @@ func (g *groupError) Error() string {
 	return g.errorWithIndentation("")
 }
 
+//nolint:funcorder // It's clearer immediately after where it is referenced.
 func (g *groupError) errorWithIndentation(indentation string) string {
 	errs := make([]string, 0, len(g.rawErrs))
 	for _, err := range g.rawErrs {

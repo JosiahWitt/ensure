@@ -272,6 +272,35 @@ func TestReadPackages(t *testing.T) {
 			},
 		},
 		{
+			Name: "package with interface that is an alias",
+
+			PackageDetails: []*ifacereader.PackageDetails{
+				{
+					Path:       pathPrefix + "/alias",
+					Interfaces: []string{"ThisIsAnAlias"},
+				},
+			},
+
+			ExpectedPackages: []*ifacereader.Package{
+				{
+					Name: "alias",
+					Path: pathPrefix + "/alias",
+					Interfaces: []*ifacereader.Interface{
+						{
+							Name: "ThisIsAnAlias",
+							Methods: []*ifacereader.Method{
+								{
+									Name:    "Hello",
+									Inputs:  []*ifacereader.Tuple{},
+									Outputs: []*ifacereader.Tuple{},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			Name: "package with external dependencies",
 
 			PackageDetails: []*ifacereader.PackageDetails{

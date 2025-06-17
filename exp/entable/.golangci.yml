@@ -1,6 +1,7 @@
+version: "2"
+
 linters:
-  enable-all: true
-  fast: false
+  default: all
   disable:
     - prealloc
     - wsl
@@ -11,37 +12,57 @@ linters:
     - exhaustruct
     - ireturn
     - depguard
-    # Deprecated:
-    - execinquery
-    - gomnd
+    - perfsprint
     # We run staticcheck separately:
     - staticcheck
-    - stylecheck
 
-linters-settings:
-  lll:
-    line-length: 160
+  settings:
+    lll:
+      line-length: 160
 
-issues:
-  exclude-rules:
-    # Exclude some linters from tests
-    - path: _test\.go
-      linters:
-        - funlen
-        - lll
-        - goconst
-        - goerr113
-        - dupl
-        - paralleltest
-        - gocognit
-        - cyclop
-        - forcetypeassert
-        - ifshort
-        - thelper
-        - maintidx
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
 
-    # Sometimes even unused parameter names can be helpful for documentation.
-    # We can reconsider enabling this on a case by case basis in the future.
-    - text: "unused-parameter: parameter '.*' seems to be unused"
-      linters:
-        - revive
+    rules:
+      - path: _test\.go
+        linters:
+          - funlen
+          - lll
+          - goconst
+          - goerr113
+          - dupl
+          - paralleltest
+          - gocognit
+          - cyclop
+          - forcetypeassert
+          - ifshort
+          - thelper
+          - maintidx
+          - inamedparam
+          - err113
+          - nilnil
+          - mnd
+
+      - text: singleCaseSwitch
+        linters:
+          - gocritic
+
+      # Sometimes even unused parameter names can be helpful for documentation.
+      # We can reconsider enabling this on a case by case basis in the future.
+      - text: "unused-parameter: parameter '.*' seems to be unused"
+        linters:
+          - revive
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - goimports
+
+  exclusions:
+    generated: lax

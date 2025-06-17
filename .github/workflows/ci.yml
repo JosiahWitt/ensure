@@ -66,10 +66,9 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Lint `${{ matrix.path }}`
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: v1.62.2
-          skip-go-installation: true
+          version: v2.1.6
           working-directory: ${{ matrix.path }}
 
   staticcheck:

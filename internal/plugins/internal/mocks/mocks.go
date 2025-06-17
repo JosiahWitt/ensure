@@ -40,10 +40,6 @@ func (a *All) AddMock(path string, optional bool, t reflect.Type) *Mock {
 	return m
 }
 
-func (a *All) len() int {
-	return len(a.mocks)
-}
-
 // Slice returns the underlying slice of mocks, and should not be modified.
 func (a *All) Slice() []*Mock {
 	return a.mocks
@@ -58,6 +54,10 @@ func (a *All) PathSet() PathSet {
 	}
 
 	return m
+}
+
+func (a *All) len() int {
+	return len(a.mocks)
 }
 
 // Mock holds metadata about a mock, and should not be modified directly.

@@ -246,7 +246,7 @@ func lengthOf(value interface{}) (int, error) {
 	reflectKind := reflectValue.Kind()
 	if reflectKind != reflect.Array && reflectKind != reflect.Slice && reflectKind != reflect.String && reflectKind != reflect.Map {
 		//lint:ignore ST1005 Only used internally
-		return 0, fmt.Errorf("Got type %T, expected array, slice, string, or map", value) //nolint:goerr113 // Only used internally
+		return 0, fmt.Errorf("Got type %T, expected array, slice, string, or map", value) //nolint:err113 // Only used internally
 	}
 
 	return reflectValue.Len(), nil
@@ -257,7 +257,7 @@ func contains(items, value interface{}) (bool, error) {
 		substr, substrOk := value.(string)
 		if !substrOk {
 			//lint:ignore ST1005 Only used internally
-			return false, fmt.Errorf("Got string, but expected is a %T, and a string can only contain other strings", value) //nolint:goerr113,lll // Only used internally
+			return false, fmt.Errorf("Got string, but expected is a %T, and a string can only contain other strings", value) //nolint:err113 // Only used internally
 		}
 
 		return strings.Contains(str, substr), nil
@@ -267,7 +267,7 @@ func contains(items, value interface{}) (bool, error) {
 	itemsReflectKind := itemsReflectValue.Kind()
 	if itemsReflectKind != reflect.Array && itemsReflectKind != reflect.Slice {
 		//lint:ignore ST1005 Only used internally
-		return false, fmt.Errorf("Got type %T, expected string, array, or slice", value) //nolint:goerr113 // Only used internally
+		return false, fmt.Errorf("Got type %T, expected string, array, or slice", value) //nolint:err113 // Only used internally
 	}
 
 	for i := 0; i < itemsReflectValue.Len(); i++ {
