@@ -24,10 +24,12 @@ var (
 	ErrInvalidInterface = erk.New(ErkInvalidInput{}, "Interface '{{.interface}}' not found in package: {{.package}}")
 	ErrNotInterface     = erk.New(ErkInvalidInput{}, "Type '{{.interface}}' is not an interface in package '{{.package}}', it's a '{{.type}}'")
 
-	ErrPathMismatch           = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Could not find package details for path: {{.path}}")
-	ErrLeftoverPackageDetails = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Unexpected leftover package details")
-	ErrInterfaceTypeNotNamed  = erk.New(ErkInternal{}, unexpectedErrorPrefix+": interface type for '{{.interface}}' was not *types.Named, it was: {{type .type}}")
-	ErrFuncUnderlyingType     = erk.New(ErkInternal{},
+	ErrPathMismatch                 = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Could not find package details for path: {{.path}}")
+	ErrLeftoverPackageDetails       = erk.New(ErkInternal{}, unexpectedErrorPrefix+": Unexpected leftover package details")
+	ErrInterfaceTypeNotNamedOrAlias = erk.New(ErkInternal{},
+		unexpectedErrorPrefix+": interface type for '{{.interface}}' was not *types.Named or *types.Alias, it was: {{type .type}}",
+	)
+	ErrFuncUnderlyingType = erk.New(ErkInternal{},
 		unexpectedErrorPrefix+": *types.Func underlying type was not *types.Signature, it was: {{type .underlyingType}}",
 	)
 )
@@ -179,17 +181,19 @@ func (r *internalPackageReader) buildPackage(pkgDetail *PackageDetails, pkg *pac
 			return nil, err
 		}
 
-		namedIface, ok := rawIface.Type().(*types.Named)
-		if !ok {
-			// Not sure if this is possible
-			return nil, erk.WithParams(ErrInterfaceTypeNotNamed, erk.Params{
+		switch ifaceType := rawIface.Type().(type) {
+		case *types.Named:
+			builtIface.TypeParams = r.parseTypeParams(ifaceType)
+		case *types.Alias:
+			builtIface.TypeParams = r.parseTypeParams(ifaceType)
+		default:
+			return nil, erk.WithParams(ErrInterfaceTypeNotNamedOrAlias, erk.Params{
 				"interface": ifaceName,
 				"package":   pkgDetail.Path,
 				"type":      rawIface.Type(),
 			})
 		}
 
-		builtIface.TypeParams = r.parseTypeParams(namedIface)
 		ifaces = append(ifaces, builtIface)
 	}
 
@@ -258,7 +262,7 @@ func (r *internalPackageReader) buildTuple(variableName string, rawType types.Ty
 	}
 }
 
-func (r *internalPackageReader) parseTypeParams(namedType *types.Named) []*TypeParam {
+func (r *internalPackageReader) parseTypeParams(namedType interface{ TypeParams() *types.TypeParamList }) []*TypeParam {
 	typeParamList := namedType.TypeParams()
 	typeParamCount := typeParamList.Len()
 

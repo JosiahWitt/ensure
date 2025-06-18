@@ -6,7 +6,7 @@ package mock_fswrite
 
 import (
 	"github.com/golang/mock/gomock"
-	"io/fs"
+	"os"
 	"reflect"
 )
 
@@ -66,7 +66,7 @@ func (mr *MockWritableMockRecorder) ListRecursive(_dir interface{}) *gomock.Call
 }
 
 // MkdirAll mocks MkdirAll on Writable.
-func (m *MockWritable) MkdirAll(_path string, _perm fs.FileMode) error {
+func (m *MockWritable) MkdirAll(_path string, _perm os.FileMode) error {
 	m.ctrl.T.Helper()
 	inputs := []interface{}{_path, _perm}
 	ret := m.ctrl.Call(m, "MkdirAll", inputs...)
@@ -80,7 +80,7 @@ func (m *MockWritable) MkdirAll(_path string, _perm fs.FileMode) error {
 // Inputs:
 //
 //	path string
-//	perm fs.FileMode
+//	perm os.FileMode
 //
 // Outputs:
 //
@@ -117,7 +117,7 @@ func (mr *MockWritableMockRecorder) RemoveAll(_paths interface{}) *gomock.Call {
 }
 
 // WriteFile mocks WriteFile on Writable.
-func (m *MockWritable) WriteFile(_filename string, _data string, _perm fs.FileMode) error {
+func (m *MockWritable) WriteFile(_filename string, _data string, _perm os.FileMode) error {
 	m.ctrl.T.Helper()
 	inputs := []interface{}{_filename, _data, _perm}
 	ret := m.ctrl.Call(m, "WriteFile", inputs...)
@@ -132,7 +132,7 @@ func (m *MockWritable) WriteFile(_filename string, _data string, _perm fs.FileMo
 //
 //	filename string
 //	data string
-//	perm fs.FileMode
+//	perm os.FileMode
 //
 // Outputs:
 //

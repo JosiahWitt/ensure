@@ -1,6 +1,7 @@
+version: "2"
+
 linters:
-  enable-all: true
-  fast: false
+  default: all
   disable:
     - prealloc
     - wsl
@@ -8,69 +9,78 @@ linters:
     - wrapcheck
     - godox
     - varnamelen
-    - gofumpt
     - exhaustruct
     - ireturn
     - depguard
-    # Deprecated:
-    - execinquery
-    - exportloopref
-    - gomnd
+    - perfsprint
     # We run staticcheck separately:
     - staticcheck
-    - stylecheck
 
-linters-settings:
-  lll:
-    line-length: 160
+  settings:
+    lll:
+      line-length: 160
 
-issues:
-  exclude-rules:
-    # Exclude some linters from tests
-    - path: _test\.go
-      linters:
-        - funlen
-        - lll
-        - goconst
-        - goerr113
-        - dupl
-        - paralleltest
-        - gocognit
-        - cyclop
-        - forcetypeassert
-        - ifshort
-        - thelper
-        - maintidx
-        - inamedparam
-        - err113
-        - nilnil
-        - mnd
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
 
-    - text: singleCaseSwitch
-      linters:
-        - gocritic
+    rules:
+      - path: _test\.go
+        linters:
+          - funlen
+          - lll
+          - goconst
+          - goerr113
+          - dupl
+          - paralleltest
+          - gocognit
+          - cyclop
+          - forcetypeassert
+          - ifshort
+          - thelper
+          - maintidx
+          - inamedparam
+          - err113
+          - nilnil
+          - mnd
 
-    # Exclude some linters from fixtures and scenarios
-    - path: .*(/fixtures/)|(/scenarios/).*
-      linters:
-        - gochecknoglobals
+      - text: singleCaseSwitch
+        linters:
+          - gocritic
 
-    - path: .*(/fixtures/)|(/scenarios/).*
-      text: "underscores? in package name"
-      linters:
-        - revive
-        - stylecheck
+      # Exclude some linters from fixtures and scenarios
+      - path: .*(/fixtures/)|(/scenarios/).*
+        linters:
+          - gochecknoglobals
 
-    - path: .*(/fixtures/)|(/scenarios/).*
-      linters:
-        - inamedparam
+      - path: .*(/fixtures/)|(/scenarios/).*
+        text: "underscores? in package name"
+        linters:
+          - revive
 
-    - path: /mock.*/
-      linters:
-        - mnd
+      - path: .*(/fixtures/)|(/scenarios/).*
+        linters:
+          - inamedparam
 
-    # Sometimes even unused parameter names can be helpful for documentation.
-    # We can reconsider enabling this on a case by case basis in the future.
-    - text: "unused-parameter: parameter '.*' seems to be unused"
-      linters:
-        - revive
+      - path: /mock.*/
+        linters:
+          - mnd
+
+      # Sometimes even unused parameter names can be helpful for documentation.
+      # We can reconsider enabling this on a case by case basis in the future.
+      - text: "unused-parameter: parameter '.*' seems to be unused"
+        linters:
+          - revive
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - goimports
+
+  exclusions:
+    generated: lax
