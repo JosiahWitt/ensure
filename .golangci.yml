@@ -5,6 +5,7 @@ linters:
   disable:
     - prealloc
     - wsl
+    - wsl_v5
     - nlreturn
     - wrapcheck
     - godox
@@ -13,6 +14,8 @@ linters:
     - ireturn
     - depguard
     - perfsprint
+    - noinlineerr
+    - embeddedstructfieldcheck
     # We run staticcheck separately:
     - staticcheck
 

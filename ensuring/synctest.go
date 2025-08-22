@@ -21,7 +21,7 @@ func (e E) RunSync(name string, fn func(ensure E)) {
 		t := ctx.T()
 		t.Helper()
 
-		syncable := ctx.(testctx.SyncableContext)
+		syncable := ctx.(testctx.SyncableContext) //nolint:forcetypeassert // In practice, this will always be true.
 		syncable.Sync(func(ctx testctx.Context) {
 			t := ctx.T()
 			t.Helper()
@@ -52,7 +52,7 @@ func (e E) RunTableByIndexSync(table interface{}, fn func(ensure E, i int)) {
 		t := ctx.T()
 		t.Helper()
 
-		syncable := ctx.(testctx.SyncableContext)
+		syncable := ctx.(testctx.SyncableContext) //nolint:forcetypeassert // In practice, this will always be true.
 		syncable.Sync(func(ctx testctx.Context) {
 			t := ctx.T()
 			t.Helper()

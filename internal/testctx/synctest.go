@@ -14,9 +14,10 @@ type syncable interface {
 type baseSync struct{}
 
 func (baseSync) sync(t T, fn func(t *testing.T)) {
-	synctest.Test(t.(*testing.T), fn)
+	synctest.Test(t.(*testing.T), fn) //nolint:forcetypeassert // In practice, this will always be true.
 }
 
+//nolint:gochecknoglobals // This is a non-exported global variable so it can be tested.
 var sync syncable = baseSync{}
 
 // Sync wraps the Go 1.25+ [synctest.Test] function, making it mockable.
