@@ -2,6 +2,7 @@
 package testctx
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -53,9 +54,12 @@ type SyncableContext interface {
 type baseContext struct {
 	t T
 
-	goMockController *gomock.Controller
-	wrapEnsure       WrapEnsure
-	ensure           interface{}
+	goMockController     *gomock.Controller
+	goMockControllerOnce sync.Once
+
+	wrapEnsure WrapEnsure
+	ensure     interface{}
+	ensureOnce sync.Once
 }
 
 var _ Context = &baseContext{}
@@ -86,10 +90,10 @@ func (ctx *baseContext) Run(name string, fn func(Context)) {
 func (ctx *baseContext) GoMockController() *gomock.Controller {
 	ctx.t.Helper()
 
-	if ctx.goMockController == nil {
+	ctx.goMockControllerOnce.Do(func() {
 		ctx.goMockController = gomock.NewController(ctx.t)
 		ctx.t.Cleanup(ctx.goMockController.Finish)
-	}
+	})
 
 	return ctx.goMockController
 }
@@ -100,9 +104,9 @@ func (ctx *baseContext) GoMockController() *gomock.Controller {
 func (ctx *baseContext) Ensure() interface{} {
 	ctx.t.Helper()
 
-	if ctx.ensure == nil {
+	ctx.ensureOnce.Do(func() {
 		ctx.ensure = ctx.wrapEnsure(ctx.t)
-	}
+	})
 
 	return ctx.ensure
 }
