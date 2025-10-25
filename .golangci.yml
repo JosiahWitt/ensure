@@ -65,6 +65,7 @@ formatters:
   enable:
     - gci
     - gofmt
+    - gofumpt
     - goimports
 
   exclusions:
