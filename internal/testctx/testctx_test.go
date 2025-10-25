@@ -3,6 +3,7 @@ package testctx_test
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
@@ -106,28 +107,106 @@ func TestGoMockController(t *testing.T) {
 		mockT.EXPECT().Errorf(gomock.Any(), gomock.Any()).MinTimes(1)
 		cleanupFn()
 	})
+
+	t.Run("concurrent access is thread-safe", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_testctx.NewMockT(ctrl)
+
+		mockT.EXPECT().Helper().AnyTimes()
+		mockT.EXPECT().Cleanup(gomock.Any()).Do(func(fn func()) { fn() }).Times(2) // Once for our cleanup, once for gomock
+
+		ctx := testctx.New(mockT, nil)
+
+		const numGoroutines = 10
+		controllers := make(chan *gomock.Controller, numGoroutines)
+
+		var wg sync.WaitGroup
+		for i := 0; i < numGoroutines; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				controllers <- ctx.GoMockController()
+			}()
+		}
+
+		wg.Wait()
+		close(controllers)
+
+		// Verify it was memoized across all goroutines
+		var first *gomock.Controller
+		for controller := range controllers {
+			if first == nil {
+				first = controller
+			} else {
+				eq(t, controller, first)
+			}
+		}
+	})
 }
 
 func TestEnsure(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mockT := mock_testctx.NewMockT(ctrl)
-	mockT.EXPECT().Helper().AnyTimes()
+	t.Run("ensure is memoized", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_testctx.NewMockT(ctrl)
+		mockT.EXPECT().Helper().AnyTimes()
 
-	wrappedT := MockT{T: mockT, unique: "hello"}
+		wrappedT := MockT{T: mockT, unique: "hello"}
 
-	callCount := 0
-	wrapEnsure := func(t testctx.T) interface{} {
-		callCount++
-		return t.(MockT).unique + " world"
-	}
+		callCount := 0
+		wrapEnsure := func(t testctx.T) interface{} {
+			callCount++
+			return t.(MockT).unique + " world"
+		}
 
-	ctx := testctx.New(wrappedT, wrapEnsure)
-	eq(t, ctx.Ensure(), "hello world")
+		ctx := testctx.New(wrappedT, wrapEnsure)
+		eq(t, ctx.Ensure(), "hello world")
 
-	// Show it's memoized
-	ctx.Ensure()
-	ctx.Ensure()
-	eq(t, callCount, 1)
+		// Show it's memoized
+		ctx.Ensure()
+		ctx.Ensure()
+		eq(t, callCount, 1)
+	})
+
+	t.Run("concurrent access is thread-safe", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockT := mock_testctx.NewMockT(ctrl)
+		mockT.EXPECT().Helper().AnyTimes()
+
+		wrappedT := MockT{T: mockT, unique: "hello"}
+		wrapEnsure := func(t testctx.T) interface{} {
+			return t.(MockT).unique + " world"
+		}
+
+		ctx := testctx.New(wrappedT, wrapEnsure)
+
+		const numGoroutines = 10
+		ensures := make(chan interface{}, numGoroutines)
+
+		var wg sync.WaitGroup
+		for i := 0; i < numGoroutines; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				ensures <- ctx.Ensure()
+			}()
+		}
+
+		wg.Wait()
+		close(ensures)
+
+		// Verify it was memoized across all goroutines
+		var first interface{}
+		for e := range ensures {
+			if first == nil {
+				first = e
+			} else {
+				eq(t, e, first)
+			}
+		}
+
+		// All should be "hello world"
+		eq(t, first, "hello world")
+	})
 }
 
 func eq(t *testing.T, a, b interface{}) {

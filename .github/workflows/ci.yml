@@ -34,7 +34,7 @@ jobs:
       - name: Test `${{ matrix.path }}`
         run: |
           export GODEBUG=${{ matrix.godebug }}
-          (cd ${{ matrix.path }}; go test -race -coverprofile=./coverage.txt -covermode=atomic ./...)
+          (cd ${{ matrix.path }}; go test -race -count=25 -coverprofile=./coverage.txt -covermode=atomic ./...)
 
       - name: Upload `${{ matrix.path }}` coverage to codecov
         uses: codecov/codecov-action@v2

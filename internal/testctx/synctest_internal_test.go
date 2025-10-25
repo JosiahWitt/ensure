@@ -8,20 +8,20 @@ import (
 )
 
 func TestBaseSync(t *testing.T) {
-	sync.sync(t, func(t *testing.T) {
+	syncer.sync(t, func(t *testing.T) {
 		// Shows synctest.Test was called, since Wait panics if it's not in a "bubble"
 		synctest.Wait()
 	})
 }
 
 func SetupMockSync(t *testing.T) *MockSync {
-	originalSync := sync
+	originalSync := syncer
 	t.Cleanup(func() {
-		sync = originalSync
+		syncer = originalSync
 	})
 
 	s := &MockSync{}
-	sync = s
+	syncer = s
 	return s
 }
 
