@@ -19,17 +19,21 @@ jobs:
           - go-version: "1.25"
             godebug: asynctimerchan=0
         exclude:
-          - path: cmd/ensure # CLI requires Go 1.21+
+          - path: cmd/ensure # CLI requires Go 1.23+
             go-version: "1.20"
+          - path: cmd/ensure # CLI requires Go 1.23+
+            go-version: "1.21"
+          - path: cmd/ensure # CLI requires Go 1.23+
+            go-version: "1.22"
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
 
       - name: Test `${{ matrix.path }}`
         run: |
@@ -37,7 +41,7 @@ jobs:
           (cd ${{ matrix.path }}; go test -race -count=25 -coverprofile=./coverage.txt -covermode=atomic ./...)
 
       - name: Upload `${{ matrix.path }}` coverage to codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ matrix.path }}/coverage.txt
@@ -52,22 +56,26 @@ jobs:
         go-version: ["1.20", "1.21", "1.22", "1.23", "1.24", "1.25"]
         path: [".", "cmd/ensure", "exp/entable"]
         exclude:
-          - path: cmd/ensure # CLI requires Go 1.21+
+          - path: cmd/ensure # CLI requires Go 1.23+
             go-version: "1.20"
+          - path: cmd/ensure # CLI requires Go 1.23+
+            go-version: "1.21"
+          - path: cmd/ensure # CLI requires Go 1.23+
+            go-version: "1.22"
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
 
       - name: Lint `${{ matrix.path }}`
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.4.0
+          version: v2.5.0
           working-directory: ${{ matrix.path }}
 
   staticcheck:
@@ -76,23 +84,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Staticcheck requires Go 1.21+
-        go-version: ["1.21", "1.22", "1.23", "1.24", "1.25"]
+        # Staticcheck requires Go 1.23+
+        go-version: ["1.23", "1.24", "1.25"]
         path: [".", "cmd/ensure", "exp/entable"]
-        exclude:
-          - path: cmd/ensure # Staticcheck isn't working for CLI on Go 1.21
-            go-version: "1.21"
-          - path: cmd/ensure # Staticcheck isn't working for CLI on Go 1.22
-            go-version: "1.22"
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
 
       - name: Staticcheck `${{ matrix.path }}`
         uses: dominikh/staticcheck-action@v1
@@ -107,17 +110,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # CLI requires Go 1.21+
-        go-version: ["1.21", "1.22", "1.23", "1.24", "1.25"]
+        # CLI requires Go 1.23+
+        go-version: ["1.23", "1.24", "1.25"]
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
 
       - name: Generate Package Mocks
         run: make generate-mocks
