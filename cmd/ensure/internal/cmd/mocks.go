@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/uniqpkg"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 func (a *App) mocksCmd() *cli.Command {
@@ -12,7 +14,7 @@ func (a *App) mocksCmd() *cli.Command {
 		Name:  "mocks",
 		Usage: "commands related to mocks",
 
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			a.mocksGenerateCmd(),
 			a.mocksTidyCmd(),
 		},
@@ -24,7 +26,7 @@ func (a *App) mocksGenerateCmd() *cli.Command {
 		Name:  "generate",
 		Usage: "generates GoMocks (https://github.com/golang/mock) for the packages and interfaces listed in .ensure.yml",
 
-		Action: func(c *cli.Context) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			pwd, err := a.Getwd()
 			if err != nil {
 				return err
@@ -72,7 +74,7 @@ func (a *App) mocksTidyCmd() *cli.Command {
 		Name:  "tidy",
 		Usage: "removes any files and directories that would not be generated for the packages and interfaces listed in .ensure.yml",
 
-		Action: func(c *cli.Context) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			pwd, err := a.Getwd()
 			if err != nil {
 				return err
