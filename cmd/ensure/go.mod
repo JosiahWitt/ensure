@@ -7,11 +7,11 @@ toolchain go1.24.4
 require (
 	github.com/JosiahWitt/ensure v0.5.0
 	github.com/JosiahWitt/erk v0.5.11
+	github.com/goccy/go-yaml v1.18.0
 	github.com/golang/mock v1.6.0
 	github.com/urfave/cli/v2 v2.27.7
 	golang.org/x/mod v0.25.0
 	golang.org/x/tools v0.34.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
