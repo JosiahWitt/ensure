@@ -5,7 +5,7 @@ import (
 
 	"github.com/JosiahWitt/ensure"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestNew(t *testing.T) {

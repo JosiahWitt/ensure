@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure/internal/testctx"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 //nolint:gochecknoglobals // This is stored as a variable so we can override it for tests in init_test.go.

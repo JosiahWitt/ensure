@@ -136,7 +136,7 @@ var ErrCannotFindGoModule = erk.New(ErkCannotLoadConfig{}, "Cannot find root go.
 
 ### Dependencies
 
-- `github.com/golang/mock/gomock`: Mock framework (ensure wraps this)
+- `go.uber.org/mock/gomock`: Mock framework (ensure wraps this)
 - `github.com/go-test/deep`: Generates readable diffs for `Equals()`
 - `github.com/JosiahWitt/erk`: Structured error handling
 - `golang.org/x/mod/modfile`: Parse go.mod files

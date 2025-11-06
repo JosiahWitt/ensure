@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestGoMockControllerConcurrency(t *testing.T) {

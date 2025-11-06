@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/golang/mock/gomock"
 	"github.com/kr/pretty"
 	"github.com/kr/text"
+	"go.uber.org/mock/gomock"
 )
 
 func TestChainIsTrue(t *testing.T) {

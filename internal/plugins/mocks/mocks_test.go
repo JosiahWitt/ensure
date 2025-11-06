@@ -11,7 +11,7 @@ import (
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/testhelper"
 	mocksplugin "github.com/JosiahWitt/ensure/internal/plugins/mocks"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestParseEntryType(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/testctx"
-	"github.com/golang/mock/gomock"
 	"github.com/kr/pretty"
+	"go.uber.org/mock/gomock"
 )
 
 func TestNew(t *testing.T) {

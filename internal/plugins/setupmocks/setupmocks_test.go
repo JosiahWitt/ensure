@@ -9,7 +9,7 @@ import (
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/plugins/setupmocks"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestParseEntryType(t *testing.T) {
