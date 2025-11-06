@@ -45,7 +45,7 @@ func (si *structIterator) process(prefix string, t reflect.Type) (*StructFieldsR
 	var allErrs []error
 	result := &StructFieldsResult{t: t}
 
-	for i := 0; i < t.NumField(); i++ {
+	for i := range t.NumField() {
 		field := t.Field(i)
 		fieldType := field.Type
 		fieldKind := fieldType.Kind()

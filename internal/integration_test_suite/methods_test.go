@@ -54,9 +54,7 @@ func TestRunParallel(t *testing.T) {
 	var mu sync.Mutex
 	callOrder := []int{}
 
-	for i := 0; i < 1000; i++ {
-		i := i // Pin range variable
-
+	for i := range 1000 {
 		ensure.RunParallel(fmt.Sprintf("parallel %d", i), func(ensure ensuring.E) {
 			mu.Lock()
 			defer mu.Unlock()

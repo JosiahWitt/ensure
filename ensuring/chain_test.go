@@ -889,8 +889,6 @@ func testEmptyChain(t *testing.T, run func(t *testing.T, valueLength int, value 
 	}
 
 	for _, entry := range table {
-		entry := entry // Pin range variable
-
 		t.Run(entry.Name, func(t *testing.T) {
 			run(t, entry.ValueLength, entry.Value)
 		})
@@ -1042,8 +1040,6 @@ func testContainsChain(t *testing.T, run func(t *testing.T, doesContain bool, ac
 	}
 
 	for _, entry := range table {
-		entry := entry // Pin range variable
-
 		t.Run(entry.Name, func(t *testing.T) {
 			run(t, entry.DoesContain, entry.Actual, entry.Expected, entry.FormattedActual, entry.FormattedExpected)
 		})

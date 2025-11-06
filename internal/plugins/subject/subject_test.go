@@ -1120,7 +1120,7 @@ func TestParseEntryValue(t *testing.T) {
 		ensure(err).IsNotError()
 
 		tableVal := reflect.ValueOf(entry.Table)
-		for i := 0; i < tableVal.Len(); i++ {
+		for i := range tableVal.Len() {
 			entryVal := tableVal.Index(i)
 
 			ensure(tableEntryHooks.BeforeEntry(nil, entryVal, i)).IsNotError()

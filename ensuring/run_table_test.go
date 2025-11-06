@@ -57,8 +57,6 @@ func (cfg runTableConfig) test(t *testing.T) {
 	}
 
 	for _, entry := range table {
-		entry := entry // Pin range variable
-
 		t.Run(entry.Name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			outerMockT := setupMockTWithCleanupCheck(t)
