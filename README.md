@@ -13,13 +13,19 @@ Only the last two minor versions of Go are officially supported.
 ## Install
 ### Library
 ```bash
-$ go get github.com/JosiahWitt/ensure
+go get github.com/JosiahWitt/ensure
 ```
 
 ### CLI
+#### Install as a binary
 ```bash
-# Requires Go 1.21+
-$ go install github.com/JosiahWitt/ensure/cmd/ensure@latest
+go install github.com/JosiahWitt/ensure/cmd/ensure@latest
+```
+
+#### Install as a [tool](https://go.dev/doc/modules/managing-dependencies#tools) (Go 1.24+)
+```bash
+go get -tool github.com/JosiahWitt/ensure/cmd/ensure@latest
+# Usage: go tool ensure mocks generate
 ```
 
 
