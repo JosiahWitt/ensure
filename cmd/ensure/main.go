@@ -17,7 +17,7 @@ import (
 // Should be tied to the release version.
 //
 //nolint:gochecknoglobals // Allows injecting the version
-var Version = "0.3.3"
+var Version = "0.4.3"
 
 func main() {
 	if err := run(); err != nil {
