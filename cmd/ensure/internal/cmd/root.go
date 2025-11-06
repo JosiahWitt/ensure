@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"log"
 
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockwrite"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 // App is the CLI application for ensure.
@@ -24,17 +25,15 @@ type App struct {
 
 // Run the application given the os.Args array.
 func (a *App) Run(args []string) error {
-	cliApp := &cli.App{
+	cliApp := &cli.Command{
 		Name:    "ensure",
 		Usage:   "A balanced test framework for Go 1.14+.",
 		Version: a.Version,
-
-		ExitErrHandler: func(context *cli.Context, err error) {}, // Bubble up error
 
 		Commands: []*cli.Command{
 			a.mocksCmd(),
 		},
 	}
 
-	return cliApp.Run(args)
+	return cliApp.Run(context.Background(), args)
 }
