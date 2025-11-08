@@ -6,7 +6,7 @@ package mock_ensurefile
 
 import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"reflect"
 )
 

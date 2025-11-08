@@ -1,10 +1,10 @@
 module github.com/JosiahWitt/ensure/exp/entable
 
-go 1.18
+go 1.23.0
 
 require (
-	github.com/JosiahWitt/ensure v0.4.2
-	github.com/golang/mock v1.5.0
+	github.com/JosiahWitt/ensure v0.6.0
+	go.uber.org/mock v0.6.0
 )
 
 require (

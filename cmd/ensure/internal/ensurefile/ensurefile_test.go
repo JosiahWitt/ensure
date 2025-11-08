@@ -9,7 +9,7 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mocks/io/mock_fs"
 	"github.com/JosiahWitt/ensure/ensuring"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 const (
