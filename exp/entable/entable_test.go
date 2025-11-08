@@ -7,7 +7,7 @@ import (
 	"github.com/JosiahWitt/ensure/ensuring"
 	"github.com/JosiahWitt/ensure/exp/entable"
 	"github.com/JosiahWitt/ensure/exp/entable/internal/mocks/github.com/JosiahWitt/ensure/mock_ensuring"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestNew(t *testing.T) {
