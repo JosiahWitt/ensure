@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestGoMockControllerConcurrency(t *testing.T) {
@@ -15,7 +15,7 @@ func TestGoMockControllerConcurrency(t *testing.T) {
 	controllers := make(chan *gomock.Controller, numGoroutines)
 
 	var wg sync.WaitGroup
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

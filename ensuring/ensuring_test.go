@@ -8,7 +8,7 @@ import (
 	"github.com/JosiahWitt/ensure/ensuring/internal/testhelper"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/testctx"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestGoVersion(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/mocks"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
 	"github.com/JosiahWitt/ensure/internal/testctx"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 //nolint:gochecknoglobals // This is only used internally for comparison.

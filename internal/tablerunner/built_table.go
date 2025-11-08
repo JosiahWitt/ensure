@@ -24,7 +24,7 @@ func (bt *BuiltTable) Run(ctx testctx.Context, runEntry func(ctx testctx.Context
 	t := ctx.T()
 	t.Helper()
 
-	for i := 0; i < bt.tableVal.Len(); i++ {
+	for i := range bt.tableVal.Len() {
 		fieldVal := bt.tableVal.Index(i)
 
 		if bt.isPointer {

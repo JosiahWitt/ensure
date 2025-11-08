@@ -6,7 +6,7 @@ package mock_testctx
 
 import (
 	"github.com/JosiahWitt/ensure/internal/testctx"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"reflect"
 	"testing"
 )

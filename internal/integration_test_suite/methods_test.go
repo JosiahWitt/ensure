@@ -11,7 +11,7 @@ import (
 	"github.com/JosiahWitt/ensure/ensuring"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/testctx"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestGoMockController(t *testing.T) {
@@ -54,9 +54,7 @@ func TestRunParallel(t *testing.T) {
 	var mu sync.Mutex
 	callOrder := []int{}
 
-	for i := 0; i < 1000; i++ {
-		i := i // Pin range variable
-
+	for i := range 1000 {
 		ensure.RunParallel(fmt.Sprintf("parallel %d", i), func(ensure ensuring.E) {
 			mu.Lock()
 			defer mu.Unlock()

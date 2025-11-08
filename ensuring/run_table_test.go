@@ -8,7 +8,7 @@ import (
 	"github.com/JosiahWitt/ensure/ensuring"
 	"github.com/JosiahWitt/ensure/ensuring/internal/testhelper"
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestERunTableByIndex(t *testing.T) {
@@ -57,8 +57,6 @@ func (cfg runTableConfig) test(t *testing.T) {
 	}
 
 	for _, entry := range table {
-		entry := entry // Pin range variable
-
 		t.Run(entry.Name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			outerMockT := setupMockTWithCleanupCheck(t)
@@ -68,7 +66,7 @@ func (cfg runTableConfig) test(t *testing.T) {
 			outerMockCtx.EXPECT().T().Return(outerMockT).AnyTimes()
 			testhelper.SetTestContext(t, outerMockT, outerMockCtx)
 
-			expectedRunCalls := []*gomock.Call{}
+			expectedRunCalls := []any{}
 			innerMockTs := []*mock_testctx.MockT{} //lint:ignore ST1003 mockTs not mockTS
 
 			actualFatalMessages := []string{}

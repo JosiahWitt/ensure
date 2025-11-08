@@ -8,8 +8,8 @@ import (
 
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/testctx"
-	"github.com/golang/mock/gomock"
 	"github.com/kr/pretty"
+	"go.uber.org/mock/gomock"
 )
 
 func TestNew(t *testing.T) {
@@ -121,7 +121,7 @@ func TestGoMockController(t *testing.T) {
 		controllers := make(chan *gomock.Controller, numGoroutines)
 
 		var wg sync.WaitGroup
-		for i := 0; i < numGoroutines; i++ {
+		for range numGoroutines {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -183,7 +183,7 @@ func TestEnsure(t *testing.T) {
 		ensures := make(chan interface{}, numGoroutines)
 
 		var wg sync.WaitGroup
-		for i := 0; i < numGoroutines; i++ {
+		for range numGoroutines {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()

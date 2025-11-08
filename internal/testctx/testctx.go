@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 // T is a minimal implementation of [testing.T] that may expand whenever a new method is needed.

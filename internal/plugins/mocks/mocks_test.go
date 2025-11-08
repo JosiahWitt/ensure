@@ -11,7 +11,7 @@ import (
 	"github.com/JosiahWitt/ensure/internal/plugins/internal/testhelper"
 	mocksplugin "github.com/JosiahWitt/ensure/internal/plugins/mocks"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestParseEntryType(t *testing.T) {
@@ -853,7 +853,7 @@ func TestParseEntryValue(t *testing.T) {
 		ensure(err).IsNotError()
 
 		tableVal := reflect.ValueOf(entry.Table)
-		for i := 0; i < tableVal.Len(); i++ {
+		for i := range tableVal.Len() {
 			entryVal := tableVal.Index(i)
 
 			ctx := mock_testctx.NewMockContext(ensure.GoMockController())

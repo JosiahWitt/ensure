@@ -31,7 +31,7 @@ go get -tool github.com/JosiahWitt/ensure/cmd/ensure@latest
 
 ## About
 Ensure supports Go 1.13+ error comparisons (using [`errors.Is`](https://pkg.go.dev/errors?tab=doc#Is)), and provides easy to read diffs (using [`deep.Equal`](https://pkg.go.dev/github.com/go-test/deep#Equal)).
-Ensure also [supports mocks](#table-driven-testing-with-mocks) using [GoMock](https://github.com/golang/mock).
+Ensure also [supports mocks](#table-driven-testing-with-mocks) using [GoMock](https://github.com/uber-go/mock).
 
 Ensure was partially inspired by the [`is`](https://github.com/matryer/is) testing mini-framework.
 

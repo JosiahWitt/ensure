@@ -270,7 +270,7 @@ func contains(items, value interface{}) (bool, error) {
 		return false, fmt.Errorf("Got type %T, expected string, array, or slice", value) //nolint:err113 // Only used internally
 	}
 
-	for i := 0; i < itemsReflectValue.Len(); i++ {
+	for i := range itemsReflectValue.Len() {
 		item := itemsReflectValue.Index(i)
 		if reflect.DeepEqual(item.Interface(), value) {
 			return true, nil

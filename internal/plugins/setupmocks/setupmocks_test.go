@@ -9,7 +9,7 @@ import (
 	"github.com/JosiahWitt/ensure/internal/mocks/mock_testctx"
 	"github.com/JosiahWitt/ensure/internal/plugins/setupmocks"
 	"github.com/JosiahWitt/ensure/internal/stringerr"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestParseEntryType(t *testing.T) {
@@ -403,7 +403,7 @@ func TestParseEntryValue(t *testing.T) {
 		ensure(err).IsNotError()
 
 		tableVal := reflect.ValueOf(entry.Table)
-		for i := 0; i < tableVal.Len(); i++ {
+		for i := range tableVal.Len() {
 			entryVal := tableVal.Index(i)
 
 			if mocksField := entryVal.FieldByName("Mocks"); mocksField.IsValid() {

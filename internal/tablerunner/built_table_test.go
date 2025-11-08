@@ -11,7 +11,7 @@ import (
 	"github.com/JosiahWitt/ensure/internal/plugins"
 	"github.com/JosiahWitt/ensure/internal/tablerunner"
 	"github.com/JosiahWitt/ensure/internal/testctx"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 type ExampleEntry struct {
