@@ -8,7 +8,7 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/uniqpkg"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"reflect"
 )
 

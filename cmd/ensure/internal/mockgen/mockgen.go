@@ -57,7 +57,7 @@ func (g *MockGen) GenerateMocks(pkgs []*ifacereader.Package, imports *uniqpkg.Un
 
 func (g *MockGen) generateMock(pkg *ifacereader.Package, importsPkg *uniqpkg.Package) (*PackageMock, error) {
 	reflectImport := importsPkg.AddImport("reflect", "reflect")
-	goMockImport := importsPkg.AddImport("github.com/golang/mock/gomock", "gomock")
+	goMockImport := importsPkg.AddImport("go.uber.org/mock/gomock", "gomock")
 
 	params := &templateParams{
 		Package: pkg,

@@ -6,7 +6,7 @@ package mock_ifacereader
 
 import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"reflect"
 )
 

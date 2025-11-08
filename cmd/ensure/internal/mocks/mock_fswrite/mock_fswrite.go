@@ -5,7 +5,7 @@
 package mock_fswrite
 
 import (
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"os"
 	"reflect"
 )

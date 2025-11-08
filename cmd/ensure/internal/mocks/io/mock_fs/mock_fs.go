@@ -5,7 +5,7 @@
 package mock_fs
 
 import (
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"io/fs"
 	"reflect"
 )
