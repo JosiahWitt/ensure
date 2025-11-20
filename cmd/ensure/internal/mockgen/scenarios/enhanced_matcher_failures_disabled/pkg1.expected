@@ -5,7 +5,6 @@
 package mock_pkg1
 
 import (
-	"github.com/kr/pretty"
 	"go.uber.org/mock/gomock"
 	"reflect"
 )
@@ -39,9 +38,12 @@ func (m *MockTransformable) EXPECT() *MockTransformableMockRecorder {
 }
 
 // TransformString mocks TransformString on Transformable.
-func (m *MockTransformable) TransformString(_arg0 string, _arg1 string) (string, error) {
+func (m *MockTransformable) TransformString(_prefix string, _strs ...string) (string, error) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_arg0, _arg1}
+	inputs := []interface{}{_prefix}
+	for _, variadicInput := range _strs {
+		inputs = append(inputs, variadicInput)
+	}
 	ret := m.ctrl.Call(m, "TransformString", inputs...)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
@@ -53,35 +55,18 @@ func (m *MockTransformable) TransformString(_arg0 string, _arg1 string) (string,
 //
 // Inputs:
 //
-//	string
-//	string
+//	prefix string
+//	strs ...string
 //
 // Outputs:
 //
 //	string
 //	error
-func (mr *MockTransformableMockRecorder) TransformString(_arg0 interface{}, _arg1 interface{}) *gomock.Call {
+func (mr *MockTransformableMockRecorder) TransformString(_prefix interface{}, _strs ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_arg0), wrapMatcher(_arg1)}
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockTransformable)(nil).TransformString), inputs...)
-}
-
-func wrapMatcher(input interface{}) gomock.Matcher {
-	if matcher, ok := input.(gomock.Matcher); ok {
-		return matcher
+	inputs := []interface{}{_prefix}
+	for _, variadicInput := range _strs {
+		inputs = append(inputs, variadicInput)
 	}
-
-	matcher := gomock.WantFormatter(
-		gomock.StringerFunc(func() string {
-			return pretty.Sprint(input)
-		}),
-		gomock.Eq(input),
-	)
-
-	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(got interface{}) string {
-			return pretty.Sprint(got)
-		}),
-		matcher,
-	)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockTransformable)(nil).TransformString), inputs...)
 }

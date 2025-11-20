@@ -26,6 +26,13 @@ func (a *App) mocksGenerateCmd() *cli.Command {
 		Name:  "generate",
 		Usage: "generates GoMocks (https://github.com/golang/mock) for the packages and interfaces listed in .ensure.yml",
 
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "disable-enhanced-matcher-failures",
+				Usage: "Disables the enhanced failure messages for generated mocks, reverting to standard gomock output",
+			},
+		},
+
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			pwd, err := a.Getwd()
 			if err != nil {
@@ -35,6 +42,10 @@ func (a *App) mocksGenerateCmd() *cli.Command {
 			config, err := a.EnsureFileLoader.LoadConfig(pwd)
 			if err != nil {
 				return err
+			}
+
+			if cmd.Bool("disable-enhanced-matcher-failures") {
+				config.Mocks.DisableEnhancedMatcherFailures = true
 			}
 
 			pkgList := buildPackageList(config.Mocks.Packages)
@@ -49,7 +60,7 @@ func (a *App) mocksGenerateCmd() *cli.Command {
 
 			a.Logger.Println("Generating mocks...")
 
-			mocks, err := a.MockGenerator.GenerateMocks(pkgs, packageImports)
+			mocks, err := a.MockGenerator.GenerateMocks(pkgs, packageImports, config.Mocks)
 			if err != nil {
 				return err
 			}

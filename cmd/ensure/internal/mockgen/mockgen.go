@@ -5,13 +5,14 @@ import (
 	"bytes"
 	"text/template"
 
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/uniqpkg"
 )
 
 // Generator generates mocks for the provided package interfaces.
 type Generator interface {
-	GenerateMocks(pkgs []*ifacereader.Package, imports *uniqpkg.UniquePackagePaths) ([]*PackageMock, error)
+	GenerateMocks(pkgs []*ifacereader.Package, imports *uniqpkg.UniquePackagePaths, config *ensurefile.MockConfig) ([]*PackageMock, error)
 }
 
 // MockGen generates mocks for the provided package interfaces.
@@ -40,11 +41,11 @@ func New() (*MockGen, error) {
 }
 
 // GenerateMocks generates mocks for the provided packages, using their respective imports.
-func (g *MockGen) GenerateMocks(pkgs []*ifacereader.Package, imports *uniqpkg.UniquePackagePaths) ([]*PackageMock, error) {
+func (g *MockGen) GenerateMocks(pkgs []*ifacereader.Package, imports *uniqpkg.UniquePackagePaths, config *ensurefile.MockConfig) ([]*PackageMock, error) {
 	mocks := make([]*PackageMock, 0, len(pkgs))
 
 	for _, pkg := range pkgs {
-		mock, err := g.generateMock(pkg, imports.ForPackage(pkg.Path))
+		mock, err := g.generateMock(pkg, imports.ForPackage(pkg.Path), config)
 		if err != nil {
 			return nil, err
 		}
@@ -55,9 +56,14 @@ func (g *MockGen) GenerateMocks(pkgs []*ifacereader.Package, imports *uniqpkg.Un
 	return mocks, nil
 }
 
-func (g *MockGen) generateMock(pkg *ifacereader.Package, importsPkg *uniqpkg.Package) (*PackageMock, error) {
+func (g *MockGen) generateMock(pkg *ifacereader.Package, importsPkg *uniqpkg.Package, config *ensurefile.MockConfig) (*PackageMock, error) {
 	reflectImport := importsPkg.AddImport("reflect", "reflect")
 	goMockImport := importsPkg.AddImport("go.uber.org/mock/gomock", "gomock")
+
+	var prettyImport *uniqpkg.ImportDetails
+	if !config.DisableEnhancedMatcherFailures {
+		prettyImport = importsPkg.AddImport("github.com/kr/pretty", "pretty")
+	}
 
 	params := &templateParams{
 		Package: pkg,
@@ -65,6 +71,12 @@ func (g *MockGen) generateMock(pkg *ifacereader.Package, importsPkg *uniqpkg.Pac
 
 		ReflectPackageName: reflectImport.Name,
 		GoMockPackageName:  goMockImport.Name,
+
+		EnableEnhancedMatcherFailures: !config.DisableEnhancedMatcherFailures,
+	}
+
+	if params.EnableEnhancedMatcherFailures {
+		params.PrettyPackageName = prettyImport.Name
 	}
 
 	var writer bytes.Buffer

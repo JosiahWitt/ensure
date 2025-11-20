@@ -69,6 +69,12 @@ mocks:
   # Optional, defaults to true.
   tidyAfterGenerate: true
 
+  # Disable enhanced matcher failure messages.
+  # By default, ensure wraps gomock matchers to provide pretty-printed diffs on failure.
+  # Set this to true to revert to standard gomock failure messages.
+  # Optional, defaults to false.
+  disableEnhancedMatcherFailures: false
+
   # Packages with interfaces for which to generate mocks
   packages:
     - path: github.com/my/app/some/pkg

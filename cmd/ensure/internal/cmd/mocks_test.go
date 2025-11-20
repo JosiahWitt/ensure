@@ -57,7 +57,7 @@ func TestMocksGenerate(t *testing.T) {
 					Return(buildIfaceReaderPackagesOutput(), nil)
 
 				m.MockGen.EXPECT().
-					GenerateMocks(buildIfaceReaderPackagesOutput(), pkgsImports).
+					GenerateMocks(buildIfaceReaderPackagesOutput(), pkgsImports, buildConfig(configNoop).Mocks).
 					Return(buildGeneratedMocks(), nil)
 
 				m.MockWriter.EXPECT().WriteMocks(buildConfig(configNoop), buildGeneratedMocks())
@@ -76,12 +76,32 @@ func TestMocksGenerate(t *testing.T) {
 					Return(buildIfaceReaderPackagesOutput(), nil)
 
 				m.MockGen.EXPECT().
-					GenerateMocks(buildIfaceReaderPackagesOutput(), pkgsImports).
+					GenerateMocks(buildIfaceReaderPackagesOutput(), pkgsImports, buildConfig(configTidyEnabled).Mocks).
 					Return(buildGeneratedMocks(), nil)
 
 				m.MockWriter.EXPECT().WriteMocks(buildConfig(configTidyEnabled), buildGeneratedMocks())
 
 				m.MockWriter.EXPECT().TidyMocks(buildConfig(configTidyEnabled), buildIfaceReaderPackagesOutput())
+			},
+		},
+		{
+			Name:  "with valid execution and enhanced matcher failures disabled",
+			Getwd: defaultWd,
+			Flags: []string{"--disable-enhanced-matcher-failures"},
+			SetupMocks: func(m *Mocks) {
+				m.EnsureFileLoader.EXPECT().LoadConfig("/test").Return(buildConfig(configNoop), nil)
+
+				pkgsImports := uniqpkg.New()
+
+				m.IfaceReader.EXPECT().
+					ReadPackages(buildIfaceReaderPackagesInput(), pkgsImports).
+					Return(buildIfaceReaderPackagesOutput(), nil)
+
+				m.MockGen.EXPECT().
+					GenerateMocks(buildIfaceReaderPackagesOutput(), pkgsImports, buildConfig(configDisableEnhancedMatcherFailures).Mocks).
+					Return(buildGeneratedMocks(), nil)
+
+				m.MockWriter.EXPECT().WriteMocks(buildConfig(configDisableEnhancedMatcherFailures), buildGeneratedMocks())
 			},
 		},
 		{
@@ -132,7 +152,7 @@ func TestMocksGenerate(t *testing.T) {
 					Return(buildIfaceReaderPackagesOutput(), nil)
 
 				m.MockGen.EXPECT().
-					GenerateMocks(buildIfaceReaderPackagesOutput(), pkgsImports).
+					GenerateMocks(buildIfaceReaderPackagesOutput(), pkgsImports, buildConfig(configTidyEnabled).Mocks).
 					Return(nil, exampleError)
 			},
 		},
@@ -152,7 +172,7 @@ func TestMocksGenerate(t *testing.T) {
 					Return(buildIfaceReaderPackagesOutput(), nil)
 
 				m.MockGen.EXPECT().
-					GenerateMocks(buildIfaceReaderPackagesOutput(), pkgsImports).
+					GenerateMocks(buildIfaceReaderPackagesOutput(), pkgsImports, buildConfig(configNoop).Mocks).
 					Return(buildGeneratedMocks(), nil)
 
 				m.MockWriter.EXPECT().WriteMocks(buildConfig(configNoop), buildGeneratedMocks()).Return(exampleError)
@@ -174,7 +194,7 @@ func TestMocksGenerate(t *testing.T) {
 					Return(buildIfaceReaderPackagesOutput(), nil)
 
 				m.MockGen.EXPECT().
-					GenerateMocks(buildIfaceReaderPackagesOutput(), pkgsImports).
+					GenerateMocks(buildIfaceReaderPackagesOutput(), pkgsImports, buildConfig(configTidyEnabled).Mocks).
 					Return(buildGeneratedMocks(), nil)
 
 				m.MockWriter.EXPECT().WriteMocks(buildConfig(configTidyEnabled), buildGeneratedMocks())
@@ -295,6 +315,9 @@ func TestMocksTidy(t *testing.T) {
 func configNoop(config *ensurefile.Config) {}
 func configTidyEnabled(config *ensurefile.Config) {
 	config.Mocks.TidyAfterGenerate = true
+}
+func configDisableEnhancedMatcherFailures(config *ensurefile.Config) {
+	config.Mocks.DisableEnhancedMatcherFailures = true
 }
 
 func buildConfig(modify func(config *ensurefile.Config)) *ensurefile.Config {

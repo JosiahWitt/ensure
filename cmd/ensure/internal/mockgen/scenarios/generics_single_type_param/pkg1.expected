@@ -5,6 +5,7 @@
 package mock_pkg1
 
 import (
+	"github.com/kr/pretty"
 	"go.uber.org/mock/gomock"
 	"reflect"
 )
@@ -58,6 +59,26 @@ func (m *MockIdentifier[T]) Identity(_in T) T {
 //	T
 func (mr *MockIdentifierMockRecorder[T]) Identity(_in interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_in}
+	inputs := []interface{}{wrapMatcher(_in)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Identity", reflect.TypeOf((*MockIdentifier[T])(nil).Identity), inputs...)
+}
+
+func wrapMatcher(input interface{}) gomock.Matcher {
+	if matcher, ok := input.(gomock.Matcher); ok {
+		return matcher
+	}
+
+	matcher := gomock.WantFormatter(
+		gomock.StringerFunc(func() string {
+			return pretty.Sprint(input)
+		}),
+		gomock.Eq(input),
+	)
+
+	return gomock.GotFormatterAdapter(
+		gomock.GotFormatterFunc(func(got interface{}) string {
+			return pretty.Sprint(got)
+		}),
+		matcher,
+	)
 }

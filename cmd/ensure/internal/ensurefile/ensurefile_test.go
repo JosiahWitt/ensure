@@ -66,7 +66,43 @@ func TestLoadConfig(t *testing.T) {
 				"my/app/.ensure.yml": ensurefile.ExampleFile,
 			}.setupMocks,
 		},
+		{
+			Name: "with valid config and enhanced matcher failures disabled",
+			PWD:  defaultRootPath,
+			ExpectedConfig: &ensurefile.Config{
+				RootPath:   defaultRootPath,
+				ModulePath: defaultModulePath,
+				Mocks: &ensurefile.MockConfig{
+					PrimaryDestination:             "internal/mocks",
+					InternalDestination:            "mocks",
+					RawTidyAfterGenerate:           boolPtr(true),
+					TidyAfterGenerate:              true,
+					DisableEnhancedMatcherFailures: true,
+					Packages: []*ensurefile.MockPackage{
+						{
+							Path: defaultModulePath + "/some/pkg",
+							Interfaces: []string{
+								"Iface1",
+								"Iface2",
+							},
+						},
+					},
+				},
+			},
 
+			SetupMocks: mapFS{
+				"my/app/go.mod": defaultGoModFile,
+				"my/app/.ensure.yml": `
+mocks:
+  disableEnhancedMatcherFailures: true
+  packages:
+    - path: github.com/my/app/some/pkg
+      interfaces:
+        - Iface1
+        - Iface2
+`,
+			}.setupMocks,
+		},
 		{
 			Name: "with valid config in parent directory",
 			PWD:  "/my/app/some/nested/pkg",

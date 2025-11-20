@@ -5,6 +5,7 @@
 package mock_fs
 
 import (
+	"github.com/kr/pretty"
 	"go.uber.org/mock/gomock"
 	"io/fs"
 	"reflect"
@@ -61,7 +62,7 @@ func (m *MockReadFileFS) Open(_name string) (fs.File, error) {
 //	error
 func (mr *MockReadFileFSMockRecorder) Open(_name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_name}
+	inputs := []interface{}{wrapMatcher(_name)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Open", reflect.TypeOf((*MockReadFileFS)(nil).Open), inputs...)
 }
 
@@ -88,6 +89,26 @@ func (m *MockReadFileFS) ReadFile(_name string) ([]byte, error) {
 //	error
 func (mr *MockReadFileFSMockRecorder) ReadFile(_name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_name}
+	inputs := []interface{}{wrapMatcher(_name)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadFile", reflect.TypeOf((*MockReadFileFS)(nil).ReadFile), inputs...)
+}
+
+func wrapMatcher(input interface{}) gomock.Matcher {
+	if matcher, ok := input.(gomock.Matcher); ok {
+		return matcher
+	}
+
+	matcher := gomock.WantFormatter(
+		gomock.StringerFunc(func() string {
+			return pretty.Sprint(input)
+		}),
+		gomock.Eq(input),
+	)
+
+	return gomock.GotFormatterAdapter(
+		gomock.GotFormatterFunc(func(got interface{}) string {
+			return pretty.Sprint(got)
+		}),
+		matcher,
+	)
 }

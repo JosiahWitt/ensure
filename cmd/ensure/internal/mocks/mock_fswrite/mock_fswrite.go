@@ -5,6 +5,7 @@
 package mock_fswrite
 
 import (
+	"github.com/kr/pretty"
 	"go.uber.org/mock/gomock"
 	"os"
 	"reflect"
@@ -61,7 +62,7 @@ func (m *MockWritable) ListRecursive(_dir string) ([]string, error) {
 //	error
 func (mr *MockWritableMockRecorder) ListRecursive(_dir interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_dir}
+	inputs := []interface{}{wrapMatcher(_dir)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRecursive", reflect.TypeOf((*MockWritable)(nil).ListRecursive), inputs...)
 }
 
@@ -87,7 +88,7 @@ func (m *MockWritable) MkdirAll(_path string, _perm os.FileMode) error {
 //	error
 func (mr *MockWritableMockRecorder) MkdirAll(_path interface{}, _perm interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_path, _perm}
+	inputs := []interface{}{wrapMatcher(_path), wrapMatcher(_perm)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MkdirAll", reflect.TypeOf((*MockWritable)(nil).MkdirAll), inputs...)
 }
 
@@ -112,7 +113,7 @@ func (m *MockWritable) RemoveAll(_paths string) error {
 //	error
 func (mr *MockWritableMockRecorder) RemoveAll(_paths interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_paths}
+	inputs := []interface{}{wrapMatcher(_paths)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAll", reflect.TypeOf((*MockWritable)(nil).RemoveAll), inputs...)
 }
 
@@ -139,6 +140,26 @@ func (m *MockWritable) WriteFile(_filename string, _data string, _perm os.FileMo
 //	error
 func (mr *MockWritableMockRecorder) WriteFile(_filename interface{}, _data interface{}, _perm interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_filename, _data, _perm}
+	inputs := []interface{}{wrapMatcher(_filename), wrapMatcher(_data), wrapMatcher(_perm)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteFile", reflect.TypeOf((*MockWritable)(nil).WriteFile), inputs...)
+}
+
+func wrapMatcher(input interface{}) gomock.Matcher {
+	if matcher, ok := input.(gomock.Matcher); ok {
+		return matcher
+	}
+
+	matcher := gomock.WantFormatter(
+		gomock.StringerFunc(func() string {
+			return pretty.Sprint(input)
+		}),
+		gomock.Eq(input),
+	)
+
+	return gomock.GotFormatterAdapter(
+		gomock.GotFormatterFunc(func(got interface{}) string {
+			return pretty.Sprint(got)
+		}),
+		matcher,
+	)
 }

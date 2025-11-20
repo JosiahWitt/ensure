@@ -6,6 +6,7 @@ package mock_ensurefile
 
 import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
+	"github.com/kr/pretty"
 	"go.uber.org/mock/gomock"
 	"reflect"
 )
@@ -61,6 +62,26 @@ func (m *MockLoaderIface) LoadConfig(_pwd string) (*ensurefile.Config, error) {
 //	error
 func (mr *MockLoaderIfaceMockRecorder) LoadConfig(_pwd interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_pwd}
+	inputs := []interface{}{wrapMatcher(_pwd)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadConfig", reflect.TypeOf((*MockLoaderIface)(nil).LoadConfig), inputs...)
+}
+
+func wrapMatcher(input interface{}) gomock.Matcher {
+	if matcher, ok := input.(gomock.Matcher); ok {
+		return matcher
+	}
+
+	matcher := gomock.WantFormatter(
+		gomock.StringerFunc(func() string {
+			return pretty.Sprint(input)
+		}),
+		gomock.Eq(input),
+	)
+
+	return gomock.GotFormatterAdapter(
+		gomock.GotFormatterFunc(func(got interface{}) string {
+			return pretty.Sprint(got)
+		}),
+		matcher,
+	)
 }

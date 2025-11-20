@@ -5,6 +5,7 @@
 package mock_pkg1
 
 import (
+	"github.com/kr/pretty"
 	"go.uber.org/mock/gomock"
 	"reflect"
 )
@@ -61,7 +62,7 @@ func (m *MockTransformable) TransformString(_prefix string, _str string) (string
 //	error
 func (mr *MockTransformableMockRecorder) TransformString(_prefix interface{}, _str interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_prefix, _str}
+	inputs := []interface{}{wrapMatcher(_prefix), wrapMatcher(_str)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockTransformable)(nil).TransformString), inputs...)
 }
 
@@ -86,6 +87,26 @@ func (m *MockTransformable) TransformFloat64(_f float64) float64 {
 //	float64
 func (mr *MockTransformableMockRecorder) TransformFloat64(_f interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_f}
+	inputs := []interface{}{wrapMatcher(_f)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformFloat64", reflect.TypeOf((*MockTransformable)(nil).TransformFloat64), inputs...)
+}
+
+func wrapMatcher(input interface{}) gomock.Matcher {
+	if matcher, ok := input.(gomock.Matcher); ok {
+		return matcher
+	}
+
+	matcher := gomock.WantFormatter(
+		gomock.StringerFunc(func() string {
+			return pretty.Sprint(input)
+		}),
+		gomock.Eq(input),
+	)
+
+	return gomock.GotFormatterAdapter(
+		gomock.GotFormatterFunc(func(got interface{}) string {
+			return pretty.Sprint(got)
+		}),
+		matcher,
+	)
 }
