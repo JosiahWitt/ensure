@@ -5,6 +5,7 @@
 package mock_pkg1
 
 import (
+	"github.com/kr/pretty"
 	"go.uber.org/mock/gomock"
 	"pkgs/external1"
 	"pkgs/external2"
@@ -61,6 +62,26 @@ func (m *MockTransformable) Transform(_user *external1.User, _message *external2
 //	external1.String
 func (mr *MockTransformableMockRecorder) Transform(_user interface{}, _message interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_user, _message}
+	inputs := []interface{}{wrapMatcher(_user), wrapMatcher(_message)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transform", reflect.TypeOf((*MockTransformable)(nil).Transform), inputs...)
+}
+
+func wrapMatcher(input interface{}) gomock.Matcher {
+	if matcher, ok := input.(gomock.Matcher); ok {
+		return matcher
+	}
+
+	matcher := gomock.WantFormatter(
+		gomock.StringerFunc(func() string {
+			return pretty.Sprint(input)
+		}),
+		gomock.Eq(input),
+	)
+
+	return gomock.GotFormatterAdapter(
+		gomock.GotFormatterFunc(func(got interface{}) string {
+			return pretty.Sprint(got)
+		}),
+		matcher,
+	)
 }

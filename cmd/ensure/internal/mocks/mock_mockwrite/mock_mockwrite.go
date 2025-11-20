@@ -8,6 +8,7 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen"
+	"github.com/kr/pretty"
 	"go.uber.org/mock/gomock"
 	"reflect"
 )
@@ -62,7 +63,7 @@ func (m *MockWritable) TidyMocks(_config *ensurefile.Config, _packages []*ifacer
 //	error
 func (mr *MockWritableMockRecorder) TidyMocks(_config interface{}, _packages interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_config, _packages}
+	inputs := []interface{}{wrapMatcher(_config), wrapMatcher(_packages)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TidyMocks", reflect.TypeOf((*MockWritable)(nil).TidyMocks), inputs...)
 }
 
@@ -88,6 +89,26 @@ func (m *MockWritable) WriteMocks(_config *ensurefile.Config, _mocks []*mockgen.
 //	error
 func (mr *MockWritableMockRecorder) WriteMocks(_config interface{}, _mocks interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_config, _mocks}
+	inputs := []interface{}{wrapMatcher(_config), wrapMatcher(_mocks)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteMocks", reflect.TypeOf((*MockWritable)(nil).WriteMocks), inputs...)
+}
+
+func wrapMatcher(input interface{}) gomock.Matcher {
+	if matcher, ok := input.(gomock.Matcher); ok {
+		return matcher
+	}
+
+	matcher := gomock.WantFormatter(
+		gomock.StringerFunc(func() string {
+			return pretty.Sprint(input)
+		}),
+		gomock.Eq(input),
+	)
+
+	return gomock.GotFormatterAdapter(
+		gomock.GotFormatterFunc(func(got interface{}) string {
+			return pretty.Sprint(got)
+		}),
+		matcher,
+	)
 }

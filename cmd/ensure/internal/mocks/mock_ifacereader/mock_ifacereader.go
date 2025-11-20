@@ -6,6 +6,7 @@ package mock_ifacereader
 
 import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
+	"github.com/kr/pretty"
 	"go.uber.org/mock/gomock"
 	"reflect"
 )
@@ -62,6 +63,26 @@ func (m *MockReadable) ReadPackages(_pkgDetails []*ifacereader.PackageDetails, _
 //	error
 func (mr *MockReadableMockRecorder) ReadPackages(_pkgDetails interface{}, _pkgNameGen interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_pkgDetails, _pkgNameGen}
+	inputs := []interface{}{wrapMatcher(_pkgDetails), wrapMatcher(_pkgNameGen)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadPackages", reflect.TypeOf((*MockReadable)(nil).ReadPackages), inputs...)
+}
+
+func wrapMatcher(input interface{}) gomock.Matcher {
+	if matcher, ok := input.(gomock.Matcher); ok {
+		return matcher
+	}
+
+	matcher := gomock.WantFormatter(
+		gomock.StringerFunc(func() string {
+			return pretty.Sprint(input)
+		}),
+		gomock.Eq(input),
+	)
+
+	return gomock.GotFormatterAdapter(
+		gomock.GotFormatterFunc(func(got interface{}) string {
+			return pretty.Sprint(got)
+		}),
+		matcher,
+	)
 }

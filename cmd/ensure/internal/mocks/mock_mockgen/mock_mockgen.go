@@ -5,9 +5,11 @@
 package mock_mockgen
 
 import (
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/uniqpkg"
+	"github.com/kr/pretty"
 	"go.uber.org/mock/gomock"
 	"reflect"
 )
@@ -41,9 +43,9 @@ func (m *MockGenerator) EXPECT() *MockGeneratorMockRecorder {
 }
 
 // GenerateMocks mocks GenerateMocks on Generator.
-func (m *MockGenerator) GenerateMocks(_pkgs []*ifacereader.Package, _imports *uniqpkg.UniquePackagePaths) ([]*mockgen.PackageMock, error) {
+func (m *MockGenerator) GenerateMocks(_pkgs []*ifacereader.Package, _imports *uniqpkg.UniquePackagePaths, _config *ensurefile.MockConfig) ([]*mockgen.PackageMock, error) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_pkgs, _imports}
+	inputs := []interface{}{_pkgs, _imports, _config}
 	ret := m.ctrl.Call(m, "GenerateMocks", inputs...)
 	ret0, _ := ret[0].([]*mockgen.PackageMock)
 	ret1, _ := ret[1].(error)
@@ -57,13 +59,34 @@ func (m *MockGenerator) GenerateMocks(_pkgs []*ifacereader.Package, _imports *un
 //
 //	pkgs []*ifacereader.Package
 //	imports *uniqpkg.UniquePackagePaths
+//	config *ensurefile.MockConfig
 //
 // Outputs:
 //
 //	[]*mockgen.PackageMock
 //	error
-func (mr *MockGeneratorMockRecorder) GenerateMocks(_pkgs interface{}, _imports interface{}) *gomock.Call {
+func (mr *MockGeneratorMockRecorder) GenerateMocks(_pkgs interface{}, _imports interface{}, _config interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_pkgs, _imports}
+	inputs := []interface{}{wrapMatcher(_pkgs), wrapMatcher(_imports), wrapMatcher(_config)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateMocks", reflect.TypeOf((*MockGenerator)(nil).GenerateMocks), inputs...)
+}
+
+func wrapMatcher(input interface{}) gomock.Matcher {
+	if matcher, ok := input.(gomock.Matcher); ok {
+		return matcher
+	}
+
+	matcher := gomock.WantFormatter(
+		gomock.StringerFunc(func() string {
+			return pretty.Sprint(input)
+		}),
+		gomock.Eq(input),
+	)
+
+	return gomock.GotFormatterAdapter(
+		gomock.GotFormatterFunc(func(got interface{}) string {
+			return pretty.Sprint(got)
+		}),
+		matcher,
+	)
 }

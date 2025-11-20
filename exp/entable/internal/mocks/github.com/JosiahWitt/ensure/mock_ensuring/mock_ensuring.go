@@ -5,6 +5,7 @@
 package mock_ensuring
 
 import (
+	"github.com/kr/pretty"
 	"go.uber.org/mock/gomock"
 	"reflect"
 	"testing"
@@ -59,7 +60,7 @@ func (m *MockT) Cleanup(_f func()) {
 //	none
 func (mr *MockTMockRecorder) Cleanup(_f interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_f}
+	inputs := []interface{}{wrapMatcher(_f)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockT)(nil).Cleanup), inputs...)
 }
 
@@ -88,9 +89,9 @@ func (m *MockT) Errorf(_format string, _args ...interface{}) {
 //	none
 func (mr *MockTMockRecorder) Errorf(_format interface{}, _args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_format}
+	inputs := []interface{}{wrapMatcher(_format)}
 	for _, variadicInput := range _args {
-		inputs = append(inputs, variadicInput)
+		inputs = append(inputs, wrapMatcher(variadicInput))
 	}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Errorf", reflect.TypeOf((*MockT)(nil).Errorf), inputs...)
 }
@@ -120,9 +121,9 @@ func (m *MockT) Fatalf(_format string, _args ...interface{}) {
 //	none
 func (mr *MockTMockRecorder) Fatalf(_format interface{}, _args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_format}
+	inputs := []interface{}{wrapMatcher(_format)}
 	for _, variadicInput := range _args {
-		inputs = append(inputs, variadicInput)
+		inputs = append(inputs, wrapMatcher(variadicInput))
 	}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatalf", reflect.TypeOf((*MockT)(nil).Fatalf), inputs...)
 }
@@ -177,9 +178,9 @@ func (m *MockT) Logf(_format string, _args ...interface{}) {
 //	none
 func (mr *MockTMockRecorder) Logf(_format interface{}, _args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_format}
+	inputs := []interface{}{wrapMatcher(_format)}
 	for _, variadicInput := range _args {
-		inputs = append(inputs, variadicInput)
+		inputs = append(inputs, wrapMatcher(variadicInput))
 	}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logf", reflect.TypeOf((*MockT)(nil).Logf), inputs...)
 }
@@ -231,6 +232,26 @@ func (m *MockT) Run(_name string, _f func(t *testing.T)) bool {
 //	bool
 func (mr *MockTMockRecorder) Run(_name interface{}, _f interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_name, _f}
+	inputs := []interface{}{wrapMatcher(_name), wrapMatcher(_f)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockT)(nil).Run), inputs...)
+}
+
+func wrapMatcher(input interface{}) gomock.Matcher {
+	if matcher, ok := input.(gomock.Matcher); ok {
+		return matcher
+	}
+
+	matcher := gomock.WantFormatter(
+		gomock.StringerFunc(func() string {
+			return pretty.Sprint(input)
+		}),
+		gomock.Eq(input),
+	)
+
+	return gomock.GotFormatterAdapter(
+		gomock.GotFormatterFunc(func(got interface{}) string {
+			return pretty.Sprint(got)
+		}),
+		matcher,
+	)
 }

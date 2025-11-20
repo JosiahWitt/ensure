@@ -1,13 +1,16 @@
 package mockgen_test
 
 import (
+	"cmp"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen"
+	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/enhanced_matcher_failures_disabled"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/generics_multiple_type_params"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/generics_single_type_param"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen/scenarios/multiple_interfaces"
@@ -33,6 +36,7 @@ func TestGenerateMocks(t *testing.T) {
 
 		InputPackages []*ifacereader.Package
 		Imports       *uniqpkg.UniquePackagePaths
+		Config        *ensurefile.MockConfig
 
 		ExpectedPackageMocks []*mockgen.PackageMock
 	}{
@@ -260,6 +264,24 @@ func TestGenerateMocks(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "with enhanced matcher failures disabled",
+
+			InputPackages: []*ifacereader.Package{
+				enhanced_matcher_failures_disabled.Package,
+			},
+			Config: &ensurefile.MockConfig{
+				DisableEnhancedMatcherFailures: true,
+			},
+
+			ExpectedPackageMocks: []*mockgen.PackageMock{
+				{
+					Package: enhanced_matcher_failures_disabled.Package,
+
+					FileContents: readExpectationFile("enhanced_matcher_failures_disabled", "pkg1"),
+				},
+			},
+		},
 	}
 
 	ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
@@ -268,12 +290,10 @@ func TestGenerateMocks(t *testing.T) {
 		g, err := mockgen.New()
 		ensure(err).IsNotError()
 
-		imports := entry.Imports
-		if imports == nil {
-			imports = &uniqpkg.UniquePackagePaths{}
-		}
+		imports := cmp.Or(entry.Imports, &uniqpkg.UniquePackagePaths{})
+		config := cmp.Or(entry.Config, &ensurefile.MockConfig{})
 
-		mocks, err := g.GenerateMocks(entry.InputPackages, imports)
+		mocks, err := g.GenerateMocks(entry.InputPackages, imports, config)
 		ensure(err).IsNotError()
 		ensure(mocks).Equals(entry.ExpectedPackageMocks)
 	})

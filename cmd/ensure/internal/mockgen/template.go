@@ -13,8 +13,10 @@ type templateParams struct {
 	Package *ifacereader.Package
 	Imports []*uniqpkg.ImportDetails
 
-	ReflectPackageName string
-	GoMockPackageName  string
+	ReflectPackageName            string
+	GoMockPackageName             string
+	PrettyPackageName             string
+	EnableEnhancedMatcherFailures bool
 }
 
 //nolint:gochecknoglobals // Only read internally
@@ -73,7 +75,7 @@ func (m *{{buildMockStructName $iface}}) EXPECT() *{{buildMockRecorderStructName
 // {{$method.Name}} mocks {{$method.Name}} on {{$iface.Name}}.
 func (m *{{buildMockStructName $iface}}) {{$method.Name}}({{buildInputSignature $method.Inputs}}){{buildOutputSignature $method.Outputs}} {
 	m.ctrl.T.Helper()
-	{{buildInputsSlice $method.Inputs}}
+	{{buildInputsSlice $params $method.Inputs false}}
 	ret := m.ctrl.Call(m, "{{$method.Name}}", inputs...)
 	{{buildMockReturns $method.Outputs}}
 }
@@ -90,10 +92,31 @@ func (m *{{buildMockStructName $iface}}) {{$method.Name}}({{buildInputSignature 
 //	{{buildParamsDoc $method.Outputs}}
 func (mr *{{buildMockRecorderStructName $iface}}) {{$method.Name}}({{buildMockInputSignature $method.Inputs}}) *{{$params.GoMockPackageName}}.Call {
 	mr.mock.ctrl.T.Helper()
-	{{buildInputsSlice $method.Inputs}}
+	{{buildInputsSlice $params $method.Inputs true}}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "{{$method.Name}}", {{$params.ReflectPackageName}}.TypeOf((*{{buildMockStructName $iface}})(nil).{{$method.Name}}), inputs...)
 }
 {{end -}}
+{{end -}}
+{{if $params.EnableEnhancedMatcherFailures}}
+func wrapMatcher(input interface{}) {{$params.GoMockPackageName}}.Matcher {
+	if matcher, ok := input.({{$params.GoMockPackageName}}.Matcher); ok {
+		return matcher
+	}
+
+	matcher := {{$params.GoMockPackageName}}.WantFormatter(
+		{{$params.GoMockPackageName}}.StringerFunc(func() string {
+			return {{$params.PrettyPackageName}}.Sprint(input)
+		}),
+		{{$params.GoMockPackageName}}.Eq(input),
+	)
+
+	return {{$params.GoMockPackageName}}.GotFormatterAdapter(
+		{{$params.GoMockPackageName}}.GotFormatterFunc(func(got interface{}) string {
+			return {{$params.PrettyPackageName}}.Sprint(got)
+		}),
+		matcher,
+	)
+}
 {{end}}`
 
 func (p *templateParams) InterfaceNames() string {
@@ -168,7 +191,7 @@ func templateFuncBuildMockInputSignature(inputs []*ifacereader.Tuple) string {
 	return strings.Join(builtInputs, ", ")
 }
 
-func templateFuncBuildInputsSlice(inputs []*ifacereader.Tuple) string {
+func templateFuncBuildInputsSlice(params *templateParams, inputs []*ifacereader.Tuple, canWrap bool) string {
 	nonVariadicVariables := make([]string, 0, len(inputs))
 	variadicVariable := ""
 
@@ -179,15 +202,17 @@ func templateFuncBuildInputsSlice(inputs []*ifacereader.Tuple) string {
 			continue
 		}
 
-		nonVariadicVariables = append(nonVariadicVariables, input.VariableName)
+		nonVariadicVariables = append(nonVariadicVariables, params.maybeWrapVariable(canWrap, input.VariableName))
 	}
 
-	builtInputs := "inputs := []interface{}{" + strings.Join(nonVariadicVariables, ", ") + "}"
+	builtInputs := fmt.Sprintf("inputs := []interface{}{%s}", strings.Join(nonVariadicVariables, ", "))
 
 	if variadicVariable != "" {
-		builtInputs += "\n\tfor _, variadicInput := range " + variadicVariable + " {\n" +
-			"\t\tinputs = append(inputs, variadicInput)\n" +
-			"\t}"
+		builtInputs += fmt.Sprintf(
+			"\n\tfor _, variadicInput := range %s {\n\t\tinputs = append(inputs, %s)\n\t}",
+			variadicVariable,
+			params.maybeWrapVariable(canWrap, "variadicInput"),
+		)
 	}
 
 	return builtInputs
@@ -290,4 +315,12 @@ func buildTypeParams(typeParams []*ifacereader.TypeParam, transform func(*ifacer
 	}
 
 	return "[" + strings.Join(builtTypeParams, ", ") + "]"
+}
+
+func (p *templateParams) maybeWrapVariable(canWrap bool, variable string) string {
+	if !canWrap || !p.EnableEnhancedMatcherFailures {
+		return variable
+	}
+
+	return fmt.Sprintf("wrapMatcher(%s)", variable)
 }

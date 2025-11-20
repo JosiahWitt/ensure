@@ -5,6 +5,7 @@
 package mock_pkg1
 
 import (
+	"github.com/kr/pretty"
 	gomock2 "go.uber.org/mock/gomock"
 	"pkgs/gomock"
 	"pkgs/reflect"
@@ -61,6 +62,26 @@ func (m *MockDoable) Do(_thing *reflect.Thing, _other *gomock.Other) {
 //	none
 func (mr *MockDoableMockRecorder) Do(_thing interface{}, _other interface{}) *gomock2.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_thing, _other}
+	inputs := []interface{}{wrapMatcher(_thing), wrapMatcher(_other)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect2.TypeOf((*MockDoable)(nil).Do), inputs...)
+}
+
+func wrapMatcher(input interface{}) gomock2.Matcher {
+	if matcher, ok := input.(gomock2.Matcher); ok {
+		return matcher
+	}
+
+	matcher := gomock2.WantFormatter(
+		gomock2.StringerFunc(func() string {
+			return pretty.Sprint(input)
+		}),
+		gomock2.Eq(input),
+	)
+
+	return gomock2.GotFormatterAdapter(
+		gomock2.GotFormatterFunc(func(got interface{}) string {
+			return pretty.Sprint(got)
+		}),
+		matcher,
+	)
 }
