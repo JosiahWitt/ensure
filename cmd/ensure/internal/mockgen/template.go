@@ -103,11 +103,18 @@ func wrapMatcher(input interface{}) {{$params.GoMockPackageName}}.Matcher {
 		return matcher
 	}
 
+	var assertionMatcher {{$params.GoMockPackageName}}.Matcher
+	if input == nil {
+		assertionMatcher = {{$params.GoMockPackageName}}.Nil()
+	} else {
+		assertionMatcher = {{$params.GoMockPackageName}}.Eq(input)
+	}
+
 	matcher := {{$params.GoMockPackageName}}.WantFormatter(
 		{{$params.GoMockPackageName}}.StringerFunc(func() string {
 			return {{$params.PrettyPackageName}}.Sprint(input)
 		}),
-		{{$params.GoMockPackageName}}.Eq(input),
+		assertionMatcher,
 	)
 
 	return {{$params.GoMockPackageName}}.GotFormatterAdapter(

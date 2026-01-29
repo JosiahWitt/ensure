@@ -241,11 +241,18 @@ func wrapMatcher(input interface{}) gomock.Matcher {
 		return matcher
 	}
 
+	var assertionMatcher gomock.Matcher
+	if input == nil {
+		assertionMatcher = gomock.Nil()
+	} else {
+		assertionMatcher = gomock.Eq(input)
+	}
+
 	matcher := gomock.WantFormatter(
 		gomock.StringerFunc(func() string {
 			return pretty.Sprint(input)
 		}),
-		gomock.Eq(input),
+		assertionMatcher,
 	)
 
 	return gomock.GotFormatterAdapter(
