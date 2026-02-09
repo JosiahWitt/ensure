@@ -639,8 +639,8 @@ func buildGenericTests() []entry {
 			},
 
 			ExpectedPackagePaths: []string{
-				"golang.org/x/exp/constraints", // TODO: remove this once they no longer are dependent on this package
-				"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures/generics/externalconstraints/constraints", // TODO: reference this directly once they aren't in a separate nested module
+				"golang.org/x/exp/constraints", // TODO: remove this once the fixture is no longer dependent on this package
+				"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures/generics/externalconstraints/constraints", // TODO: reference this directly once the fixture isn't in a separate nested module
 			},
 
 			ExpectedPackages: []*ifacereader.Package{
