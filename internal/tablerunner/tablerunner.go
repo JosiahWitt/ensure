@@ -9,7 +9,7 @@ import (
 )
 
 // BuildTable prepares the table to be run, surfacing any errors encountered while parsing the table.
-func BuildTable(rawTable interface{}, tablePlugins []plugins.TablePlugin) (*BuiltTable, error) {
+func BuildTable(rawTable any, tablePlugins []plugins.TablePlugin) (*BuiltTable, error) {
 	tableVal := reflect.ValueOf(rawTable)
 	if tableVal.Kind() != reflect.Array && tableVal.Kind() != reflect.Slice {
 		return nil, stringerr.Newf("Expected a slice or array for the table, got %T", rawTable)
@@ -56,7 +56,7 @@ func unpackStruct(tableType reflect.Type) (reflect.Type, bool, error) {
 		return tableTypeElem, false, nil
 	}
 
-	if tableTypeElem.Kind() == reflect.Ptr && tableTypeElem.Elem().Kind() == reflect.Struct {
+	if tableTypeElem.Kind() == reflect.Pointer && tableTypeElem.Elem().Kind() == reflect.Struct {
 		return tableTypeElem.Elem(), true, nil
 	}
 

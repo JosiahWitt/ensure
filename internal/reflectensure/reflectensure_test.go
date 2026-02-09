@@ -14,35 +14,34 @@ func TestIsEnsuringE(t *testing.T) {
 	ensure := ensure.New(t)
 
 	ensure.Run("when provided ensuring.E", func(ensure ensuring.E) {
-		t := reflect.TypeOf(ensuring.E(nil))
+		t := reflect.TypeFor[ensuring.E]()
 		ensure(reflectensure.IsEnsuringE(t)).IsTrue()
 	})
 
 	ensure.Run("when provided pointer to ensuring.E", func(ensure ensuring.E) {
-		e := ensuring.E(nil)
-		t := reflect.TypeOf(&e)
+		t := reflect.TypeFor[*ensuring.E]()
 		ensure(reflectensure.IsEnsuringE(t)).IsFalse()
 	})
 
 	ensure.Run("when provided ensurepkg.Ensure", func(ensure ensuring.E) {
-		t := reflect.TypeOf(ensurepkg.Ensure(nil)) //lint:ignore SA1019 To ensure compatibility
+		t := reflect.TypeFor[ensurepkg.Ensure]() //lint:ignore SA1019 To ensure compatibility
 		ensure(reflectensure.IsEnsuringE(t)).IsTrue()
 	})
 
 	ensure.Run("when provided another type implementing ensuring.E", func(ensure ensuring.E) {
 		type E ensuring.E
-		t := reflect.TypeOf(E(nil))
+		t := reflect.TypeFor[E]()
 		ensure(reflectensure.IsEnsuringE(t)).IsFalse()
 	})
 
 	ensure.Run("when provided another type named E", func(ensure ensuring.E) {
-		type E func(interface{}) *ensuring.Chain
-		t := reflect.TypeOf(E(nil))
+		type E func(any) *ensuring.Chain
+		t := reflect.TypeFor[E]()
 		ensure(reflectensure.IsEnsuringE(t)).IsFalse()
 	})
 
 	ensure.Run("when provided another type in ensuring", func(ensure ensuring.E) {
-		t := reflect.TypeOf(ensuring.Chain{})
+		t := reflect.TypeFor[ensuring.Chain]()
 		ensure(reflectensure.IsEnsuringE(t)).IsFalse()
 	})
 }

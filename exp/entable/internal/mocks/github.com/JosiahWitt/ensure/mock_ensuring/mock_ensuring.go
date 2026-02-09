@@ -42,7 +42,7 @@ func (m *MockT) EXPECT() *MockTMockRecorder {
 // Cleanup mocks Cleanup on T.
 func (m *MockT) Cleanup(_f func()) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_f}
+	inputs := []any{_f}
 	ret := m.ctrl.Call(m, "Cleanup", inputs...)
 	var _ = ret // Unused, since there are no returns
 	return
@@ -58,16 +58,16 @@ func (m *MockT) Cleanup(_f func()) {
 // Outputs:
 //
 //	none
-func (mr *MockTMockRecorder) Cleanup(_f interface{}) *gomock.Call {
+func (mr *MockTMockRecorder) Cleanup(_f any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_f)}
+	inputs := []any{wrapMatcher(_f)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockT)(nil).Cleanup), inputs...)
 }
 
 // Errorf mocks Errorf on T.
 func (m *MockT) Errorf(_format string, _args ...interface{}) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_format}
+	inputs := []any{_format}
 	for _, variadicInput := range _args {
 		inputs = append(inputs, variadicInput)
 	}
@@ -87,9 +87,9 @@ func (m *MockT) Errorf(_format string, _args ...interface{}) {
 // Outputs:
 //
 //	none
-func (mr *MockTMockRecorder) Errorf(_format interface{}, _args ...interface{}) *gomock.Call {
+func (mr *MockTMockRecorder) Errorf(_format any, _args ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_format)}
+	inputs := []any{wrapMatcher(_format)}
 	for _, variadicInput := range _args {
 		inputs = append(inputs, wrapMatcher(variadicInput))
 	}
@@ -99,7 +99,7 @@ func (mr *MockTMockRecorder) Errorf(_format interface{}, _args ...interface{}) *
 // Fatalf mocks Fatalf on T.
 func (m *MockT) Fatalf(_format string, _args ...interface{}) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_format}
+	inputs := []any{_format}
 	for _, variadicInput := range _args {
 		inputs = append(inputs, variadicInput)
 	}
@@ -119,9 +119,9 @@ func (m *MockT) Fatalf(_format string, _args ...interface{}) {
 // Outputs:
 //
 //	none
-func (mr *MockTMockRecorder) Fatalf(_format interface{}, _args ...interface{}) *gomock.Call {
+func (mr *MockTMockRecorder) Fatalf(_format any, _args ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_format)}
+	inputs := []any{wrapMatcher(_format)}
 	for _, variadicInput := range _args {
 		inputs = append(inputs, wrapMatcher(variadicInput))
 	}
@@ -131,7 +131,7 @@ func (mr *MockTMockRecorder) Fatalf(_format interface{}, _args ...interface{}) *
 // Helper mocks Helper on T.
 func (m *MockT) Helper() {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{}
+	inputs := []any{}
 	ret := m.ctrl.Call(m, "Helper", inputs...)
 	var _ = ret // Unused, since there are no returns
 	return
@@ -149,14 +149,14 @@ func (m *MockT) Helper() {
 //	none
 func (mr *MockTMockRecorder) Helper() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{}
+	inputs := []any{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Helper", reflect.TypeOf((*MockT)(nil).Helper), inputs...)
 }
 
 // Logf mocks Logf on T.
 func (m *MockT) Logf(_format string, _args ...interface{}) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_format}
+	inputs := []any{_format}
 	for _, variadicInput := range _args {
 		inputs = append(inputs, variadicInput)
 	}
@@ -176,9 +176,9 @@ func (m *MockT) Logf(_format string, _args ...interface{}) {
 // Outputs:
 //
 //	none
-func (mr *MockTMockRecorder) Logf(_format interface{}, _args ...interface{}) *gomock.Call {
+func (mr *MockTMockRecorder) Logf(_format any, _args ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_format)}
+	inputs := []any{wrapMatcher(_format)}
 	for _, variadicInput := range _args {
 		inputs = append(inputs, wrapMatcher(variadicInput))
 	}
@@ -188,7 +188,7 @@ func (mr *MockTMockRecorder) Logf(_format interface{}, _args ...interface{}) *go
 // Parallel mocks Parallel on T.
 func (m *MockT) Parallel() {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{}
+	inputs := []any{}
 	ret := m.ctrl.Call(m, "Parallel", inputs...)
 	var _ = ret // Unused, since there are no returns
 	return
@@ -206,14 +206,14 @@ func (m *MockT) Parallel() {
 //	none
 func (mr *MockTMockRecorder) Parallel() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{}
+	inputs := []any{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Parallel", reflect.TypeOf((*MockT)(nil).Parallel), inputs...)
 }
 
 // Run mocks Run on T.
 func (m *MockT) Run(_name string, _f func(t *testing.T)) bool {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_name, _f}
+	inputs := []any{_name, _f}
 	ret := m.ctrl.Call(m, "Run", inputs...)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -230,13 +230,13 @@ func (m *MockT) Run(_name string, _f func(t *testing.T)) bool {
 // Outputs:
 //
 //	bool
-func (mr *MockTMockRecorder) Run(_name interface{}, _f interface{}) *gomock.Call {
+func (mr *MockTMockRecorder) Run(_name any, _f any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_name), wrapMatcher(_f)}
+	inputs := []any{wrapMatcher(_name), wrapMatcher(_f)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockT)(nil).Run), inputs...)
 }
 
-func wrapMatcher(input interface{}) gomock.Matcher {
+func wrapMatcher(input any) gomock.Matcher {
 	if matcher, ok := input.(gomock.Matcher); ok {
 		return matcher
 	}
@@ -256,7 +256,7 @@ func wrapMatcher(input interface{}) gomock.Matcher {
 	)
 
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(got interface{}) string {
+		gomock.GotFormatterFunc(func(got any) string {
 			return pretty.Sprint(got)
 		}),
 		matcher,

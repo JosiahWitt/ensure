@@ -40,7 +40,7 @@ func (m *MockTransformable) EXPECT() *MockTransformableMockRecorder {
 // TransformString mocks TransformString on Transformable.
 func (m *MockTransformable) TransformString(_prefix string, _strs ...string) (string, error) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_prefix}
+	inputs := []any{_prefix}
 	for _, variadicInput := range _strs {
 		inputs = append(inputs, variadicInput)
 	}
@@ -62,9 +62,9 @@ func (m *MockTransformable) TransformString(_prefix string, _strs ...string) (st
 //
 //	string
 //	error
-func (mr *MockTransformableMockRecorder) TransformString(_prefix interface{}, _strs ...interface{}) *gomock.Call {
+func (mr *MockTransformableMockRecorder) TransformString(_prefix any, _strs ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{_prefix}
+	inputs := []any{_prefix}
 	for _, variadicInput := range _strs {
 		inputs = append(inputs, variadicInput)
 	}

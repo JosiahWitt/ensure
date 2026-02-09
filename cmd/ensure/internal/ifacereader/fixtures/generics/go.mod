@@ -1,4 +1,5 @@
-// TODO: Remove this once Go 1.18 is the lowest supported version
+// TODO: Consider refactoring the tests to no longer reference golang.org/x/exp/constraints
+// so we don't need to nest this in a separate module.
 
 module github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures/generics
 

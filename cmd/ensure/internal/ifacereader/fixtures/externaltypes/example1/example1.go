@@ -2,7 +2,7 @@ package example1
 
 import "reflect"
 
-var PackagePath = reflect.TypeOf(String("")).PkgPath()
+var PackagePath = reflect.TypeFor[String]().PkgPath()
 
 type String string
 

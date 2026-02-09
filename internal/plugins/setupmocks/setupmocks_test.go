@@ -18,7 +18,7 @@ func TestParseEntryType(t *testing.T) {
 	table := []struct {
 		Name string
 
-		Entry interface{}
+		Entry any
 
 		ExpectedError error
 	}{
@@ -209,10 +209,10 @@ func TestParseEntryValue(t *testing.T) {
 	table := []struct {
 		Name string
 
-		Table      interface{}
+		Table      any
 		SetupMockT func(m *mock_testctx.MockT, i int)
 
-		ExpectedTable interface{}
+		ExpectedTable any
 	}{
 		{
 			Name: "is a no-op when SetupMocks is not provided",
@@ -407,7 +407,7 @@ func TestParseEntryValue(t *testing.T) {
 			entryVal := tableVal.Index(i)
 
 			if mocksField := entryVal.FieldByName("Mocks"); mocksField.IsValid() {
-				mocksField.Set(reflect.New(reflect.TypeOf(Mocks{})))
+				mocksField.Set(reflect.New(reflect.TypeFor[Mocks]()))
 			}
 
 			mockT := mock_testctx.NewMockT(ensure.GoMockController())

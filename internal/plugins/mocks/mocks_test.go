@@ -21,7 +21,7 @@ func TestParseEntryType(t *testing.T) {
 		Name string
 
 		MocksInput *mocks.All
-		Entry      interface{}
+		Entry      any
 
 		ExpectedMocks *mocks.All
 		ExpectedError error
@@ -531,9 +531,9 @@ func TestParseEntryValue(t *testing.T) {
 		Name string
 
 		MocksInput *mocks.All
-		Table      interface{}
+		Table      any
 
-		ExpectedTable interface{}
+		ExpectedTable any
 		ExpectedMocks *mocks.All
 	}{
 		{
@@ -638,7 +638,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.M1",
 					Mock: &MockNoInsNEW{},
-					Values: []interface{}{
+					Values: []any{
 						expectedMockNoInsNEW(),
 						expectedMockNoInsNEW(),
 					},
@@ -646,7 +646,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.M2",
 					Mock: &MockGoMocksNEW{},
-					Values: []interface{}{
+					Values: []any{
 						expectedMockGoMocksNEW(0),
 						expectedMockGoMocksNEW(1),
 					},
@@ -699,7 +699,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.AllMocks.M1",
 					Mock: &MockNoInsNEW{},
-					Values: []interface{}{
+					Values: []any{
 						expectedMockNoInsNEW(),
 						expectedMockNoInsNEW(),
 					},
@@ -707,7 +707,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.AllMocks.M2",
 					Mock: &MockGoMocksNEW{},
-					Values: []interface{}{
+					Values: []any{
 						expectedMockGoMocksNEW(0),
 						expectedMockGoMocksNEW(1),
 					},
@@ -715,7 +715,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.M1",
 					Mock: &MockNoInsNEW{},
-					Values: []interface{}{
+					Values: []any{
 						expectedMockNoInsNEW(),
 						expectedMockNoInsNEW(),
 					},
@@ -723,7 +723,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.M2",
 					Mock: &MockGoMocksNEW{},
-					Values: []interface{}{
+					Values: []any{
 						expectedMockGoMocksNEW(0),
 						expectedMockGoMocksNEW(1),
 					},
@@ -768,7 +768,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.M1",
 					Mock: &MockNoInsNEW{},
-					Values: []interface{}{
+					Values: []any{
 						expectedMockNoInsNEW(),
 						expectedMockNoInsNEW(),
 					},
@@ -777,7 +777,7 @@ func TestParseEntryValue(t *testing.T) {
 					Path:     "Mocks.M2",
 					Mock:     &MockGoMocksNEW{},
 					Optional: true,
-					Values: []interface{}{
+					Values: []any{
 						expectedMockGoMocksNEW(0),
 						expectedMockGoMocksNEW(1),
 					},
@@ -785,7 +785,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.M3",
 					Mock: &MockNoInsNEW{},
-					Values: []interface{}{
+					Values: []any{
 						expectedMockNoInsNEW(),
 						expectedMockNoInsNEW(),
 					},
@@ -828,7 +828,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.M1",
 					Mock: &MockNoInsNEW{},
-					Values: []interface{}{
+					Values: []any{
 						expectedMockNoInsNEW(),
 						expectedMockNoInsNEW(),
 					},
@@ -836,7 +836,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.M3",
 					Mock: &MockGoMocksNEW{},
-					Values: []interface{}{
+					Values: []any{
 						expectedMockGoMocksNEW(0),
 						expectedMockGoMocksNEW(1),
 					},

@@ -26,7 +26,7 @@ func TestStructFields(t *testing.T) {
 	table := []struct {
 		Name string
 
-		Struct   interface{}
+		Struct   any
 		Iterator func(fieldPath string, field *reflect.StructField) []error
 
 		ExpectedFields []*Field
@@ -63,15 +63,15 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 			},
 		},
@@ -93,15 +93,15 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 			},
 		},
@@ -127,15 +127,15 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 			},
 
@@ -164,31 +164,31 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".Anonymous1.AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2.AnInt",
-					Type:      reflect.TypeOf(0),
+					Type:      reflect.TypeFor[int](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 			},
 		},
@@ -212,31 +212,31 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".Anonymous1.AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2.AnInt",
-					Type:      reflect.TypeOf(0),
+					Type:      reflect.TypeFor[int](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 			},
 		},
@@ -260,39 +260,39 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".Anonymous1Nested.AFloat",
-					Type:      reflect.TypeOf(0.0),
+					Type:      reflect.TypeFor[float64](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2Nested.ABool",
-					Type:      reflect.TypeOf(false),
+					Type:      reflect.TypeFor[bool](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2Nested.Anonymous2.AnInt",
-					Type:      reflect.TypeOf(0),
+					Type:      reflect.TypeFor[int](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 			},
 		},
@@ -317,35 +317,35 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{ Different bool }{}),
+					Type:      reflect.TypeFor[*struct{ Different bool }](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2.AnInt",
-					Type:      reflect.TypeOf(0),
+					Type:      reflect.TypeFor[int](),
 				},
 				{
 					FieldPath: prefix + ".AnInt",
-					Type:      reflect.TypeOf(0),
+					Type:      reflect.TypeFor[int](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 			},
 		},
@@ -369,35 +369,35 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AnonymousRecursiveNested.ABool",
-					Type:      reflect.TypeOf(false),
+					Type:      reflect.TypeFor[bool](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousRecursiveNested.ASlice",
-					Type:      reflect.TypeOf([]string{}),
+					Type:      reflect.TypeFor[[]string](),
 				},
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousDoubleRecursiveNested.AnInt",
-					Type:      reflect.TypeOf(0),
+					Type:      reflect.TypeFor[int](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousDoubleRecursiveNested.AnonymousRecursiveNested.ABool",
-					Type:      reflect.TypeOf(false),
+					Type:      reflect.TypeFor[bool](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousDoubleRecursiveNested.AnonymousRecursiveNested.ASlice",
-					Type:      reflect.TypeOf([]string{}),
+					Type:      reflect.TypeFor[[]string](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 			},
 		},
@@ -422,35 +422,35 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AnonymousInterface",
-					Type:      reflect.TypeOf((*AnonymousInterface)(nil)).Elem(),
+					Type:      reflect.TypeFor[AnonymousInterface](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousSlice",
-					Type:      reflect.TypeOf(AnonymousSlice{}),
+					Type:      reflect.TypeFor[AnonymousSlice](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousMap",
-					Type:      reflect.TypeOf(AnonymousMap{}),
+					Type:      reflect.TypeFor[AnonymousMap](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousChan",
-					Type:      reflect.TypeOf(AnonymousChan(nil)),
+					Type:      reflect.TypeFor[AnonymousChan](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousInt",
-					Type:      reflect.TypeOf(AnonymousInt(0)),
+					Type:      reflect.TypeFor[AnonymousInt](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousFunc",
-					Type:      reflect.TypeOf(AnonymousFunc(nil)),
+					Type:      reflect.TypeFor[AnonymousFunc](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousString",
-					Type:      reflect.TypeOf((*AnonymousString)(nil)),
+					Type:      reflect.TypeFor[*AnonymousString](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 			},
 		},
@@ -471,27 +471,27 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".Anonymous1.AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousInterface",
-					Type:      reflect.TypeOf((*AnonymousInterface)(nil)).Elem(),
+					Type:      reflect.TypeFor[AnonymousInterface](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousSlice",
-					Type:      reflect.TypeOf(AnonymousSlice{}),
+					Type:      reflect.TypeFor[AnonymousSlice](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 			},
 		},
@@ -513,11 +513,11 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AnonymousInterface",
-					Type:      reflect.TypeOf((*AnonymousInterface)(nil)).Elem(),
+					Type:      reflect.TypeFor[AnonymousInterface](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 			},
 
@@ -549,39 +549,39 @@ func TestStructFields(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".Anonymous1Nested.AFloat",
-					Type:      reflect.TypeOf(0.0),
+					Type:      reflect.TypeFor[float64](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2Nested.ABool",
-					Type:      reflect.TypeOf(false),
+					Type:      reflect.TypeFor[bool](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2Nested.Anonymous2.AnInt",
-					Type:      reflect.TypeOf(0),
+					Type:      reflect.TypeFor[int](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 			},
 
@@ -611,7 +611,7 @@ func TestStructFields(t *testing.T) {
 			ensure(recover()).Equals("StructFields must be provided a struct, got: string")
 		}()
 
-		iterate.StructFields("", reflect.TypeOf("not a struct"), nil)
+		iterate.StructFields("", reflect.TypeFor[string](), nil)
 	})
 }
 
@@ -630,10 +630,10 @@ func TestInitializeStruct(t *testing.T) {
 	table := []struct {
 		Name string
 
-		NestedStruct interface{}
+		NestedStruct any
 		Iterator     iterate.InitializeStructIterator
 
-		ExpectedInitializedStruct interface{}
+		ExpectedInitializedStruct any
 		ExpectedFields            []*Field
 	}{
 		{
@@ -685,15 +685,15 @@ func TestInitializeStruct(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 			},
 		},
@@ -729,31 +729,31 @@ func TestInitializeStruct(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2.AnInt",
-					Type:      reflect.TypeOf(1),
+					Type:      reflect.TypeFor[int](),
 				},
 			},
 		},
@@ -789,31 +789,31 @@ func TestInitializeStruct(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1.AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2.AnInt",
-					Type:      reflect.TypeOf(1),
+					Type:      reflect.TypeFor[int](),
 				},
 			},
 		},
@@ -853,39 +853,39 @@ func TestInitializeStruct(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{ Name string }{}),
+					Type:      reflect.TypeFor[*struct{ Name string }](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.AFloat",
-					Type:      reflect.TypeOf(1.0),
+					Type:      reflect.TypeFor[float64](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2Nested.ABool",
-					Type:      reflect.TypeOf(false),
+					Type:      reflect.TypeFor[bool](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2Nested.Anonymous2.AnInt",
-					Type:      reflect.TypeOf(1),
+					Type:      reflect.TypeFor[int](),
 				},
 			},
 		},
@@ -924,35 +924,35 @@ func TestInitializeStruct(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousRecursiveNested.ABool",
-					Type:      reflect.TypeOf(false),
+					Type:      reflect.TypeFor[bool](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousRecursiveNested.ASlice",
-					Type:      reflect.TypeOf([]string{}),
+					Type:      reflect.TypeFor[[]string](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousDoubleRecursiveNested.AnInt",
-					Type:      reflect.TypeOf(0),
+					Type:      reflect.TypeFor[int](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousDoubleRecursiveNested.AnonymousRecursiveNested.ABool",
-					Type:      reflect.TypeOf(false),
+					Type:      reflect.TypeFor[bool](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousDoubleRecursiveNested.AnonymousRecursiveNested.ASlice",
-					Type:      reflect.TypeOf([]string{}),
+					Type:      reflect.TypeFor[[]string](),
 				},
 			},
 		},
@@ -1027,63 +1027,63 @@ func TestInitializeStruct(t *testing.T) {
 			ExpectedFields: []*Field{
 				{
 					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{ Name string }{}),
+					Type:      reflect.TypeFor[*struct{ Name string }](),
 				},
 				{
 					FieldPath: prefix + ".AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".ASlice",
-					Type:      reflect.TypeOf([]string{}),
+					Type:      reflect.TypeFor[[]string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.AFloat",
-					Type:      reflect.TypeOf(1.0),
+					Type:      reflect.TypeFor[float64](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					Type:      reflect.TypeFor[*struct{}](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AString",
-					Type:      reflect.TypeOf(""),
+					Type:      reflect.TypeFor[string](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous1Nested.Anonymous1.AnInterface",
-					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+					Type:      reflect.TypeFor[interface{ B() int }](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2Nested.ABool",
-					Type:      reflect.TypeOf(false),
+					Type:      reflect.TypeFor[bool](),
 				},
 				{
 					FieldPath: prefix + ".Anonymous2Nested.Anonymous2.AnInt",
-					Type:      reflect.TypeOf(1),
+					Type:      reflect.TypeFor[int](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousRecursiveNested.ABool",
-					Type:      reflect.TypeOf(false),
+					Type:      reflect.TypeFor[bool](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousRecursiveNested.ASlice",
-					Type:      reflect.TypeOf([]string{}),
+					Type:      reflect.TypeFor[[]string](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousDoubleRecursiveNested.AnInt",
-					Type:      reflect.TypeOf(0),
+					Type:      reflect.TypeFor[int](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousDoubleRecursiveNested.AnonymousRecursiveNested.ABool",
-					Type:      reflect.TypeOf(false),
+					Type:      reflect.TypeFor[bool](),
 				},
 				{
 					FieldPath: prefix + ".AnonymousDoubleRecursiveNested.AnonymousRecursiveNested.ASlice",
-					Type:      reflect.TypeOf([]string{}),
+					Type:      reflect.TypeFor[[]string](),
 				},
 			},
 		},
@@ -1113,7 +1113,7 @@ func TestInitializeStruct(t *testing.T) {
 			ensure(recover()).Equals("InitializeStruct must be provided a pointer to a struct, got: struct {}")
 		}()
 
-		res, errs := iterate.StructFields(prefix, reflect.TypeOf(struct{}{}), noopStructFieldsIterator)
+		res, errs := iterate.StructFields(prefix, reflect.TypeFor[struct{}](), noopStructFieldsIterator)
 		ensure(errs).IsNotError()
 
 		res.InitializeStruct(reflect.ValueOf(struct{}{}), nil)
@@ -1124,7 +1124,7 @@ func TestInitializeStruct(t *testing.T) {
 			ensure(recover()).Equals("InitializeStruct must be provided a pointer to a struct, got: *string")
 		}()
 
-		res, errs := iterate.StructFields(prefix, reflect.TypeOf(struct{}{}), noopStructFieldsIterator)
+		res, errs := iterate.StructFields(prefix, reflect.TypeFor[struct{}](), noopStructFieldsIterator)
 		ensure(errs).IsNotError()
 
 		str := "not a struct"
@@ -1140,7 +1140,7 @@ func TestInitializeStruct(t *testing.T) {
 		type s1 struct{}
 		type s2 struct{}
 
-		res, errs := iterate.StructFields(prefix, reflect.TypeOf(s1{}), noopStructFieldsIterator)
+		res, errs := iterate.StructFields(prefix, reflect.TypeFor[s1](), noopStructFieldsIterator)
 		ensure(errs).IsNotError()
 
 		res.InitializeStruct(reflect.ValueOf(&s2{}), nil)
@@ -1153,7 +1153,7 @@ func TestInitializeStruct(t *testing.T) {
 
 		type s struct{}
 
-		res, errs := iterate.StructFields(prefix, reflect.TypeOf(s{}), noopStructFieldsIterator)
+		res, errs := iterate.StructFields(prefix, reflect.TypeFor[s](), noopStructFieldsIterator)
 		ensure(errs).IsNotError()
 
 		res.InitializeStruct(reflect.ValueOf(&s{}), nil)

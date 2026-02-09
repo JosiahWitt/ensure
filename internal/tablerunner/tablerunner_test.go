@@ -42,7 +42,7 @@ func TestBuildTable(t *testing.T) {
 	table := []*struct {
 		Name string
 
-		Table   interface{}
+		Table   any
 		Plugins []plugins.TablePlugin
 
 		ReturnsBuiltTable bool
@@ -118,12 +118,12 @@ func TestBuildTable(t *testing.T) {
 
 		{
 			Name:          "when provided a slice of interfaces",
-			Table:         []interface{}{"Hello", "World"},
+			Table:         []any{"Hello", "World"},
 			ExpectedError: errors.New("Expected entry in table to be a struct or a pointer to a struct, got interface {}"),
 		},
 		{
 			Name:          "when provided an array of interfaces",
-			Table:         [2]interface{}{"Hello", "World"},
+			Table:         [2]any{"Hello", "World"},
 			ExpectedError: errors.New("Expected entry in table to be a struct or a pointer to a struct, got interface {}"),
 		},
 

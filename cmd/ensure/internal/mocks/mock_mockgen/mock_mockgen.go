@@ -45,7 +45,7 @@ func (m *MockGenerator) EXPECT() *MockGeneratorMockRecorder {
 // GenerateMocks mocks GenerateMocks on Generator.
 func (m *MockGenerator) GenerateMocks(_pkgs []*ifacereader.Package, _imports *uniqpkg.UniquePackagePaths, _config *ensurefile.MockConfig) ([]*mockgen.PackageMock, error) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_pkgs, _imports, _config}
+	inputs := []any{_pkgs, _imports, _config}
 	ret := m.ctrl.Call(m, "GenerateMocks", inputs...)
 	ret0, _ := ret[0].([]*mockgen.PackageMock)
 	ret1, _ := ret[1].(error)
@@ -65,13 +65,13 @@ func (m *MockGenerator) GenerateMocks(_pkgs []*ifacereader.Package, _imports *un
 //
 //	[]*mockgen.PackageMock
 //	error
-func (mr *MockGeneratorMockRecorder) GenerateMocks(_pkgs interface{}, _imports interface{}, _config interface{}) *gomock.Call {
+func (mr *MockGeneratorMockRecorder) GenerateMocks(_pkgs any, _imports any, _config any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_pkgs), wrapMatcher(_imports), wrapMatcher(_config)}
+	inputs := []any{wrapMatcher(_pkgs), wrapMatcher(_imports), wrapMatcher(_config)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateMocks", reflect.TypeOf((*MockGenerator)(nil).GenerateMocks), inputs...)
 }
 
-func wrapMatcher(input interface{}) gomock.Matcher {
+func wrapMatcher(input any) gomock.Matcher {
 	if matcher, ok := input.(gomock.Matcher); ok {
 		return matcher
 	}
@@ -91,7 +91,7 @@ func wrapMatcher(input interface{}) gomock.Matcher {
 	)
 
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(got interface{}) string {
+		gomock.GotFormatterFunc(func(got any) string {
 			return pretty.Sprint(got)
 		}),
 		matcher,

@@ -41,7 +41,7 @@ func (m *MockTransformable) EXPECT() *MockTransformableMockRecorder {
 // TransformString mocks TransformString on Transformable.
 func (m *MockTransformable) TransformString(_arg0 string, _arg1 string) (string, error) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_arg0, _arg1}
+	inputs := []any{_arg0, _arg1}
 	ret := m.ctrl.Call(m, "TransformString", inputs...)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
@@ -60,13 +60,13 @@ func (m *MockTransformable) TransformString(_arg0 string, _arg1 string) (string,
 //
 //	string
 //	error
-func (mr *MockTransformableMockRecorder) TransformString(_arg0 interface{}, _arg1 interface{}) *gomock.Call {
+func (mr *MockTransformableMockRecorder) TransformString(_arg0 any, _arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_arg0), wrapMatcher(_arg1)}
+	inputs := []any{wrapMatcher(_arg0), wrapMatcher(_arg1)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TransformString", reflect.TypeOf((*MockTransformable)(nil).TransformString), inputs...)
 }
 
-func wrapMatcher(input interface{}) gomock.Matcher {
+func wrapMatcher(input any) gomock.Matcher {
 	if matcher, ok := input.(gomock.Matcher); ok {
 		return matcher
 	}
@@ -86,7 +86,7 @@ func wrapMatcher(input interface{}) gomock.Matcher {
 	)
 
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(got interface{}) string {
+		gomock.GotFormatterFunc(func(got any) string {
 			return pretty.Sprint(got)
 		}),
 		matcher,

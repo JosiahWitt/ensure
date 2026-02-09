@@ -44,7 +44,7 @@ func (m *MockWritable) EXPECT() *MockWritableMockRecorder {
 // TidyMocks mocks TidyMocks on Writable.
 func (m *MockWritable) TidyMocks(_config *ensurefile.Config, _packages []*ifacereader.Package) error {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_config, _packages}
+	inputs := []any{_config, _packages}
 	ret := m.ctrl.Call(m, "TidyMocks", inputs...)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -61,16 +61,16 @@ func (m *MockWritable) TidyMocks(_config *ensurefile.Config, _packages []*ifacer
 // Outputs:
 //
 //	error
-func (mr *MockWritableMockRecorder) TidyMocks(_config interface{}, _packages interface{}) *gomock.Call {
+func (mr *MockWritableMockRecorder) TidyMocks(_config any, _packages any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_config), wrapMatcher(_packages)}
+	inputs := []any{wrapMatcher(_config), wrapMatcher(_packages)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TidyMocks", reflect.TypeOf((*MockWritable)(nil).TidyMocks), inputs...)
 }
 
 // WriteMocks mocks WriteMocks on Writable.
 func (m *MockWritable) WriteMocks(_config *ensurefile.Config, _mocks []*mockgen.PackageMock) error {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_config, _mocks}
+	inputs := []any{_config, _mocks}
 	ret := m.ctrl.Call(m, "WriteMocks", inputs...)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -87,13 +87,13 @@ func (m *MockWritable) WriteMocks(_config *ensurefile.Config, _mocks []*mockgen.
 // Outputs:
 //
 //	error
-func (mr *MockWritableMockRecorder) WriteMocks(_config interface{}, _mocks interface{}) *gomock.Call {
+func (mr *MockWritableMockRecorder) WriteMocks(_config any, _mocks any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_config), wrapMatcher(_mocks)}
+	inputs := []any{wrapMatcher(_config), wrapMatcher(_mocks)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteMocks", reflect.TypeOf((*MockWritable)(nil).WriteMocks), inputs...)
 }
 
-func wrapMatcher(input interface{}) gomock.Matcher {
+func wrapMatcher(input any) gomock.Matcher {
 	if matcher, ok := input.(gomock.Matcher); ok {
 		return matcher
 	}
@@ -113,7 +113,7 @@ func wrapMatcher(input interface{}) gomock.Matcher {
 	)
 
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(got interface{}) string {
+		gomock.GotFormatterFunc(func(got any) string {
 			return pretty.Sprint(got)
 		}),
 		matcher,
