@@ -3,16 +3,18 @@ package iterate
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/JosiahWitt/ensure/internal/stringerr"
 )
 
 // StructFieldsIterator is called by [StructFields] for every exported field.
 // The fieldPath is also provided to [InitializeStructIterator].
 type StructFieldsIterator func(fieldPath string, field *reflect.StructField) []error
 
-// StructFields supports looping through all the exported fields in a struct, including embedded structs. All errors, including those
-// from [iterator], are collected into a slice of errors.
+// StructFields supports looping through all the exported fields in a struct, including embedded structs.
+// For embedded types:
+//   - Embedded structs and pointers to structs are recursed into for their promoted fields
+//   - All other embedded types (interfaces, slices, maps, basic types, etc.) are treated as regular fields
+//
+// All errors, including those from [iterator], are collected into a slice of errors.
 //
 // If keeping track of fields iterated over, use the path provided as the fieldPath parameter to [StructFieldsIterator], since that's
 // safe for shadowed fields in embedded structs. The path names will be identically provided when iterating in [InitializeStruct].
@@ -35,7 +37,7 @@ type structIterator struct {
 	visitedAnonymousTypes map[reflect.Type]struct{}
 }
 
-//nolint:funlen,cyclop // It seems clearer as one larger method
+//nolint:cyclop,nestif // It seems clearer as one larger method
 func (si *structIterator) process(prefix string, t reflect.Type) (*StructFieldsResult, []error) {
 	t = indirectType(t)
 	if t.Kind() != reflect.Struct {
@@ -58,38 +60,38 @@ func (si *structIterator) process(prefix string, t reflect.Type) (*StructFieldsR
 			continue
 		}
 
-		// Support embedded structs
+		// Support embedded types (anonymous fields)
 		if field.Anonymous {
-			// To prevent infinitely looping through recursive anonymous fields, we only iterate through the first level.
-			if _, ok := si.visitedAnonymousTypes[fieldType]; ok {
-				continue
-			}
-
 			isPointer := fieldKind == reflect.Ptr
 			isPointerToStruct := isPointer && fieldType.Elem().Kind() == reflect.Struct
 
-			if fieldKind != reflect.Struct && !isPointerToStruct {
-				err := stringerr.Newf("expected %s to be an embedded struct, got: %v", fieldPath, fieldType)
-				allErrs = append(allErrs, err)
+			// Embedded structs and pointers to structs are recursed into for their promoted fields
+			if fieldKind == reflect.Struct || isPointerToStruct {
+				// To prevent infinitely looping through recursive anonymous fields, we only iterate through the first level.
+				if _, ok := si.visitedAnonymousTypes[fieldType]; ok {
+					continue
+				}
+
+				si.visitedAnonymousTypes[fieldType] = struct{}{}
+
+				nestedResult, errs := si.process(fieldPath, fieldType)
+				if len(errs) != 0 {
+					allErrs = append(allErrs, errs...)
+					continue
+				}
+
+				// If the anonymous field type appears separately, we want to include it again, thus it's safe to delete here.
+				delete(si.visitedAnonymousTypes, fieldType)
+
+				nestedResult.fieldName = fieldName
+				nestedResult.isPointer = isPointer
+				result.anonymousFields = append(result.anonymousFields, nestedResult)
+
 				continue
 			}
 
-			si.visitedAnonymousTypes[fieldType] = struct{}{}
-
-			nestedResult, errs := si.process(fieldPath, fieldType)
-			if len(errs) != 0 {
-				allErrs = append(allErrs, errs...)
-				continue
-			}
-
-			// If the anonymous field type appears separately, we want to include it again, thus it's safe to delete here.
-			delete(si.visitedAnonymousTypes, fieldType)
-
-			nestedResult.fieldName = fieldName
-			nestedResult.isPointer = isPointer
-			result.anonymousFields = append(result.anonymousFields, nestedResult)
-
-			continue
+			// All other embedded types (interfaces, slices, maps, basic types, etc.)
+			// fall through and are treated as regular fields
 		}
 
 		result.fields = append(result.fields, &structField{
