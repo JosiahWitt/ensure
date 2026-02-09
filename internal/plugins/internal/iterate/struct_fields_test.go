@@ -402,16 +402,17 @@ func TestStructFields(t *testing.T) {
 			},
 		},
 		{
-			Name: "returns errors when provided a struct with invalid anonymous fields",
+			Name: "treats all embedded non-struct types as regular fields",
 
 			Struct: struct {
-				AnonymousInvalid1
-				AStruct     *struct{}
-				notExported string
-				AString     string
-				*AnonymousInvalid2
-				notVisible  interface{ A() int }
-				AnInterface interface{ B() int }
+				AnonymousInterface // Embedded interface
+				AnonymousSlice     // Embedded slice type
+				AnonymousMap       // Embedded map type
+				AnonymousChan      // Embedded chan type
+				AnonymousInt       // Embedded basic type
+				AnonymousFunc      // Embedded func type
+				*AnonymousString   // Embedded pointer to basic type alias
+				AString            string
 			}{},
 
 			Iterator: func(fieldPath string, field *reflect.StructField) []error {
@@ -420,22 +421,108 @@ func TestStructFields(t *testing.T) {
 
 			ExpectedFields: []*Field{
 				{
-					FieldPath: prefix + ".AStruct",
-					Type:      reflect.TypeOf(&struct{}{}),
+					FieldPath: prefix + ".AnonymousInterface",
+					Type:      reflect.TypeOf((*AnonymousInterface)(nil)).Elem(),
+				},
+				{
+					FieldPath: prefix + ".AnonymousSlice",
+					Type:      reflect.TypeOf(AnonymousSlice{}),
+				},
+				{
+					FieldPath: prefix + ".AnonymousMap",
+					Type:      reflect.TypeOf(AnonymousMap{}),
+				},
+				{
+					FieldPath: prefix + ".AnonymousChan",
+					Type:      reflect.TypeOf(AnonymousChan(nil)),
+				},
+				{
+					FieldPath: prefix + ".AnonymousInt",
+					Type:      reflect.TypeOf(AnonymousInt(0)),
+				},
+				{
+					FieldPath: prefix + ".AnonymousFunc",
+					Type:      reflect.TypeOf(AnonymousFunc(nil)),
+				},
+				{
+					FieldPath: prefix + ".AnonymousString",
+					Type:      reflect.TypeOf((*AnonymousString)(nil)),
 				},
 				{
 					FieldPath: prefix + ".AString",
 					Type:      reflect.TypeOf(""),
 				},
+			},
+		},
+		{
+			Name: "handles mixed embedded types: struct, interface, and other types together",
+
+			Struct: struct {
+				Anonymous1         // Embedded struct - recursed into
+				AnonymousInterface // Embedded interface - regular field
+				AnonymousSlice     // Embedded slice - regular field
+				AString            string
+			}{},
+
+			Iterator: func(fieldPath string, field *reflect.StructField) []error {
+				return nil
+			},
+
+			ExpectedFields: []*Field{
 				{
-					FieldPath: prefix + ".AnInterface",
+					FieldPath: prefix + ".Anonymous1.AStruct",
+					Type:      reflect.TypeOf(&struct{}{}),
+				},
+				{
+					FieldPath: prefix + ".Anonymous1.AString",
+					Type:      reflect.TypeOf(""),
+				},
+				{
+					FieldPath: prefix + ".Anonymous1.AnInterface",
 					Type:      reflect.TypeOf((*interface{ B() int })(nil)).Elem(),
+				},
+				{
+					FieldPath: prefix + ".AnonymousInterface",
+					Type:      reflect.TypeOf((*AnonymousInterface)(nil)).Elem(),
+				},
+				{
+					FieldPath: prefix + ".AnonymousSlice",
+					Type:      reflect.TypeOf(AnonymousSlice{}),
+				},
+				{
+					FieldPath: prefix + ".AString",
+					Type:      reflect.TypeOf(""),
+				},
+			},
+		},
+		{
+			Name: "iterator receives embedded interface fields and can return errors",
+
+			Struct: struct {
+				AnonymousInterface // Embedded interface - treated as regular field
+				AString            string
+			}{},
+
+			Iterator: func(fieldPath string, field *reflect.StructField) []error {
+				if field.Type.Kind() == reflect.Interface {
+					return []error{stringerr.Newf("iterator error for interface field: %s", fieldPath)}
+				}
+				return nil
+			},
+
+			ExpectedFields: []*Field{
+				{
+					FieldPath: prefix + ".AnonymousInterface",
+					Type:      reflect.TypeOf((*AnonymousInterface)(nil)).Elem(),
+				},
+				{
+					FieldPath: prefix + ".AString",
+					Type:      reflect.TypeOf(""),
 				},
 			},
 
 			ExpectedErrors: []error{
-				stringerr.Newf("expected %s.AnonymousInvalid1 to be an embedded struct, got: iterate_test.AnonymousInvalid1", prefix),
-				stringerr.Newf("expected %s.AnonymousInvalid2 to be an embedded struct, got: *iterate_test.AnonymousInvalid2", prefix),
+				stringerr.Newf("iterator error for interface field: %s.AnonymousInterface", prefix),
 			},
 		},
 		{
@@ -1119,8 +1206,13 @@ type (
 		*AnonymousDoubleRecursiveNested
 	}
 
-	AnonymousInvalid1 interface{ C() int }
-	AnonymousInvalid2 string
+	AnonymousInterface interface{ C() int }
+	AnonymousString    string
+	AnonymousSlice     []string
+	AnonymousMap       map[string]int
+	AnonymousChan      chan int
+	AnonymousInt       int
+	AnonymousFunc      func() error
 )
 
 type errorContainer []error //nolint:errname
