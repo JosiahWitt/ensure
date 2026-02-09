@@ -12,7 +12,7 @@ const levelIndentation = "   "
 type stringError string
 
 // Newf creates a formatted string error.
-func Newf(format string, args ...interface{}) error {
+func Newf(format string, args ...any) error {
 	return stringError(fmt.Sprintf(format, args...))
 }
 

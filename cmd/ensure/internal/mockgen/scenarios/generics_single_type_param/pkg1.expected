@@ -41,7 +41,7 @@ func (m *MockIdentifier[T]) EXPECT() *MockIdentifierMockRecorder[T] {
 // Identity mocks Identity on Identifier.
 func (m *MockIdentifier[T]) Identity(_in T) T {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_in}
+	inputs := []any{_in}
 	ret := m.ctrl.Call(m, "Identity", inputs...)
 	ret0, _ := ret[0].(T)
 	return ret0
@@ -57,13 +57,13 @@ func (m *MockIdentifier[T]) Identity(_in T) T {
 // Outputs:
 //
 //	T
-func (mr *MockIdentifierMockRecorder[T]) Identity(_in interface{}) *gomock.Call {
+func (mr *MockIdentifierMockRecorder[T]) Identity(_in any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_in)}
+	inputs := []any{wrapMatcher(_in)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Identity", reflect.TypeOf((*MockIdentifier[T])(nil).Identity), inputs...)
 }
 
-func wrapMatcher(input interface{}) gomock.Matcher {
+func wrapMatcher(input any) gomock.Matcher {
 	if matcher, ok := input.(gomock.Matcher); ok {
 		return matcher
 	}
@@ -83,7 +83,7 @@ func wrapMatcher(input interface{}) gomock.Matcher {
 	)
 
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(got interface{}) string {
+		gomock.GotFormatterFunc(func(got any) string {
 			return pretty.Sprint(got)
 		}),
 		matcher,

@@ -785,7 +785,7 @@ func TestChainEquals(t *testing.T) {
 }
 
 func TestChainIsEmpty(t *testing.T) {
-	testEmptyChain(t, func(t *testing.T, valueLength int, value interface{}) {
+	testEmptyChain(t, func(t *testing.T, valueLength int, value any) {
 		mockT := setupMockTWithCleanupCheck(t)
 
 		if valueLength == 0 {
@@ -813,7 +813,7 @@ func TestChainIsEmpty(t *testing.T) {
 }
 
 func TestChainIsNotEmpty(t *testing.T) {
-	testEmptyChain(t, func(t *testing.T, valueLength int, value interface{}) {
+	testEmptyChain(t, func(t *testing.T, valueLength int, value any) {
 		mockT := setupMockTWithCleanupCheck(t)
 
 		if valueLength == 0 {
@@ -840,11 +840,11 @@ func TestChainIsNotEmpty(t *testing.T) {
 	})
 }
 
-func testEmptyChain(t *testing.T, run func(t *testing.T, valueLength int, value interface{})) {
+func testEmptyChain(t *testing.T, run func(t *testing.T, valueLength int, value any)) {
 	table := []struct {
 		Name        string
 		ValueLength int
-		Value       interface{}
+		Value       any
 	}{
 		{
 			Name:        "when empty: array",
@@ -896,7 +896,7 @@ func testEmptyChain(t *testing.T, run func(t *testing.T, valueLength int, value 
 }
 
 func TestChainContains(t *testing.T) {
-	testContainsChain(t, func(t *testing.T, doesContain bool, actual, expected interface{}, formattedActual, formattedExpected string) {
+	testContainsChain(t, func(t *testing.T, doesContain bool, actual, expected any, formattedActual, formattedExpected string) {
 		mockT := setupMockTWithCleanupCheck(t)
 
 		if doesContain {
@@ -935,7 +935,7 @@ func TestChainContains(t *testing.T) {
 }
 
 func TestChainDoesNotContain(t *testing.T) {
-	testContainsChain(t, func(t *testing.T, doesContain bool, actual, expected interface{}, formattedActual, formattedExpected string) {
+	testContainsChain(t, func(t *testing.T, doesContain bool, actual, expected any, formattedActual, formattedExpected string) {
 		mockT := setupMockTWithCleanupCheck(t)
 
 		if doesContain {
@@ -973,11 +973,11 @@ func TestChainDoesNotContain(t *testing.T) {
 	})
 }
 
-func testContainsChain(t *testing.T, run func(t *testing.T, doesContain bool, actual, expected interface{}, formattedActual, formattedExpected string)) {
+func testContainsChain(t *testing.T, run func(t *testing.T, doesContain bool, actual, expected any, formattedActual, formattedExpected string)) {
 	table := []struct {
 		Name        string
-		Actual      interface{}
-		Expected    interface{}
+		Actual      any
+		Expected    any
 		DoesContain bool
 
 		FormattedActual   string

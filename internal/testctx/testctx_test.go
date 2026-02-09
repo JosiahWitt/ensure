@@ -18,7 +18,7 @@ func TestNew(t *testing.T) {
 	mockT.EXPECT().Helper().AnyTimes()
 
 	wrappedT := MockT{T: mockT, unique: "hello"}
-	wrapEnsure := func(t testctx.T) interface{} { return t.(MockT).unique + " world" }
+	wrapEnsure := func(t testctx.T) any { return t.(MockT).unique + " world" }
 
 	ctx := testctx.New(wrappedT, wrapEnsure)
 	eq(t, ctx.T().(MockT).unique, "hello")
@@ -41,7 +41,7 @@ func TestRun(t *testing.T) {
 		fn(&testing.T{})
 	})
 
-	wrapEnsure := func(t testctx.T) interface{} { return fmt.Sprintf("%T", t) }
+	wrapEnsure := func(t testctx.T) any { return fmt.Sprintf("%T", t) }
 	ctx := testctx.New(outerT, wrapEnsure)
 
 	var called bool
@@ -153,7 +153,7 @@ func TestEnsure(t *testing.T) {
 		wrappedT := MockT{T: mockT, unique: "hello"}
 
 		callCount := 0
-		wrapEnsure := func(t testctx.T) interface{} {
+		wrapEnsure := func(t testctx.T) any {
 			callCount++
 			return t.(MockT).unique + " world"
 		}
@@ -173,14 +173,14 @@ func TestEnsure(t *testing.T) {
 		mockT.EXPECT().Helper().AnyTimes()
 
 		wrappedT := MockT{T: mockT, unique: "hello"}
-		wrapEnsure := func(t testctx.T) interface{} {
+		wrapEnsure := func(t testctx.T) any {
 			return t.(MockT).unique + " world"
 		}
 
 		ctx := testctx.New(wrappedT, wrapEnsure)
 
 		const numGoroutines = 10
-		ensures := make(chan interface{}, numGoroutines)
+		ensures := make(chan any, numGoroutines)
 
 		var wg sync.WaitGroup
 		for range numGoroutines {
@@ -195,7 +195,7 @@ func TestEnsure(t *testing.T) {
 		close(ensures)
 
 		// Verify it was memoized across all goroutines
-		var first interface{}
+		var first any
 		for e := range ensures {
 			if first == nil {
 				first = e
@@ -209,14 +209,14 @@ func TestEnsure(t *testing.T) {
 	})
 }
 
-func eq(t *testing.T, a, b interface{}) {
+func eq(t *testing.T, a, b any) {
 	t.Helper()
 	if !reflect.DeepEqual(a, b) {
 		t.Fatal(pretty.Sprintf("% #v should equal % #v", a, b))
 	}
 }
 
-func neq(t *testing.T, a, b interface{}) {
+func neq(t *testing.T, a, b any) {
 	t.Helper()
 	if reflect.DeepEqual(a, b) {
 		t.Fatal(pretty.Sprintf("% #v should not equal % #v", a, b))

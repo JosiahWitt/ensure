@@ -69,12 +69,12 @@ func TestRunParallel(t *testing.T) {
 }
 
 func TestRunTableByIndex(t *testing.T) {
-	sharedEnsureRunTableByIndexTests(t, func(ensure ensuring.E) func(table interface{}, fn func(ensure ensuring.E, i int)) {
+	sharedEnsureRunTableByIndexTests(t, func(ensure ensuring.E) func(table any, fn func(ensure ensuring.E, i int)) {
 		return ensure.RunTableByIndex
 	})
 }
 
-func sharedEnsureRunTableByIndexTests(t *testing.T, prepare func(ensure ensuring.E) func(table interface{}, fn func(ensure ensuring.E, i int))) {
+func sharedEnsureRunTableByIndexTests(t *testing.T, prepare func(ensure ensuring.E) func(table any, fn func(ensure ensuring.E, i int))) {
 	t.Run("entries are executed in nested scope when entries are not pointers", func(t *testing.T) {
 		namePrefix := t.Name()
 		ensure := ensure.New(t)
@@ -164,7 +164,7 @@ func sharedEnsureRunTableByIndexTests(t *testing.T, prepare func(ensure ensuring
 				Location: "world",
 
 				SetupMocks: func(m *Mocks) {
-					m.T.EXPECT().Logf("hello world").Do(func(format string, args ...interface{}) {
+					m.T.EXPECT().Logf("hello world").Do(func(format string, args ...any) {
 						loggedMessages = append(loggedMessages, format)
 					})
 				},
@@ -175,7 +175,7 @@ func sharedEnsureRunTableByIndexTests(t *testing.T, prepare func(ensure ensuring
 				Location: "universe",
 
 				SetupMocks: func(m *Mocks) {
-					m.T.EXPECT().Logf("hello universe").Do(func(format string, args ...interface{}) {
+					m.T.EXPECT().Logf("hello universe").Do(func(format string, args ...any) {
 						loggedMessages = append(loggedMessages, format)
 					})
 				},
@@ -198,7 +198,7 @@ func TestT(t *testing.T) {
 	assertEq(t, ensure.T(), t)
 }
 
-func assertEq(t *testing.T, actual, expected interface{}) {
+func assertEq(t *testing.T, actual, expected any) {
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("%+v != %+v", actual, expected)
 	}

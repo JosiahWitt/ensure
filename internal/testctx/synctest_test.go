@@ -18,7 +18,7 @@ func TestSync(t *testing.T) {
 	outerT := mock_testctx.NewMockT(ctrl)
 	outerT.EXPECT().Helper()
 
-	wrapEnsure := func(t testctx.T) interface{} { return fmt.Sprintf("%T", t) }
+	wrapEnsure := func(t testctx.T) any { return fmt.Sprintf("%T", t) }
 	ctx := testctx.New(outerT, wrapEnsure)
 
 	var called bool

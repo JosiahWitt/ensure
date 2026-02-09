@@ -1,12 +1,13 @@
 package ifacereader_test
 
 import (
+	"cmp"
 	"fmt"
 	"go/types"
 	"os"
 	"path/filepath"
 	"reflect"
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/JosiahWitt/ensure"
@@ -505,8 +506,8 @@ func buildTypeTests() []entry {
 		// Go parses interface methods sorted by name, so we sort them to match
 		expectedMethods := make([]*ifacereader.Method, len(fixture.ExpectedMethods))
 		copy(expectedMethods, fixture.ExpectedMethods)
-		sort.Slice(expectedMethods, func(i, j int) bool {
-			return expectedMethods[i].Name < expectedMethods[j].Name
+		slices.SortFunc(expectedMethods, func(a, b *ifacereader.Method) int {
+			return cmp.Compare(a.Name, b.Name)
 		})
 
 		entries = append(entries, entry{
@@ -638,8 +639,8 @@ func buildGenericTests() []entry {
 			},
 
 			ExpectedPackagePaths: []string{
-				"golang.org/x/exp/constraints",
-				"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures/generics/externalconstraints/constraints", // TODO: reference this directly once Go 1.18 is the lowest supported version
+				"golang.org/x/exp/constraints", // TODO: remove this once they no longer are dependent on this package
+				"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures/generics/externalconstraints/constraints", // TODO: reference this directly once they aren't in a separate nested module
 			},
 
 			ExpectedPackages: []*ifacereader.Package{
@@ -691,9 +692,10 @@ func buildGenericTests() []entry {
 			},
 
 			ExpectedPackagePaths: []string{
-				"golang.org/x/exp/constraints",
+				// Note: cmp and externaltype are pulled in but not tracked as separate imports since they're used implicitly
 				"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures/generics/complexconstraints",              // TODO: reference this directly once Go 1.18 is the lowest supported version
 				"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures/generics/complexconstraints/externaltype", // TODO: reference this directly once Go 1.18 is the lowest supported version
+				"golang.org/x/exp/constraints", // TODO: reference this directly once Go 1.18 is the lowest supported version
 			},
 
 			ExpectedPackages: []*ifacereader.Package{

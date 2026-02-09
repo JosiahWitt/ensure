@@ -596,7 +596,7 @@ func TestBuiltTableRun(t *testing.T) {
 	})
 }
 
-func (entry *RunEntry) runTable(ensure ensuring.E, state *[]string, table interface{}) {
+func (entry *RunEntry) runTable(ensure ensuring.E, state *[]string, table any) {
 	*state = []string{}
 
 	builtTable, err := tablerunner.BuildTable(table, entry.Plugins)
@@ -621,7 +621,7 @@ func (entry *RunEntry) runTable(ensure ensuring.E, state *[]string, table interf
 			ctx, innerT := buildTestContext(ensure.GoMockController(), i)
 			innerT.EXPECT().Helper()
 			innerT.EXPECT().Fatalf(gomock.Any(), gomock.Any()).
-				Do(func(msg string, args ...interface{}) {
+				Do(func(msg string, args ...any) {
 					fatals[i] = fmt.Sprintf(msg, args...)
 				}).MaxTimes(1)
 

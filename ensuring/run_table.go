@@ -38,7 +38,7 @@ import (
 //
 // Support for mocks is also included.
 // Please see the README for an example.
-func (e E) RunTableByIndex(table interface{}, fn func(ensure E, i int)) {
+func (e E) RunTableByIndex(table any, fn func(ensure E, i int)) {
 	c := e(nil)
 	c.t.Helper()
 	c.markRun()

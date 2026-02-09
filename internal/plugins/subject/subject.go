@@ -54,7 +54,7 @@ func (t *TablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableEntry
 func validateSubjectFieldType(subjectStruct *reflect.StructField) error {
 	t := subjectStruct.Type
 
-	if t.Kind() != reflect.Ptr || t.Elem().Kind() != reflect.Struct {
+	if t.Kind() != reflect.Pointer || t.Elem().Kind() != reflect.Struct {
 		return stringerr.Newf("expected %s field to be a pointer to a struct, got %s", id.Subject, t)
 	}
 

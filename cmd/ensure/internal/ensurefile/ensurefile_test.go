@@ -218,7 +218,7 @@ func TestPackageString(t *testing.T) {
 	ensure(pkg.String()).Equals("github.com/my/pkg:Iface1,Iface2")
 }
 
-type mapFS map[string]interface{}
+type mapFS map[string]any
 
 func (mapFS mapFS) setupMocks(m *mocks) {
 	m.FS.EXPECT().ReadFile(gomock.Any()).AnyTimes().

@@ -2,9 +2,10 @@
 package uniqpkg
 
 import (
+	"cmp"
 	"fmt"
 	"go/types"
-	"sort"
+	"slices"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -102,8 +103,8 @@ func (pkg *Package) Imports() []*ImportDetails {
 		imports = append(imports, details)
 	}
 
-	sort.Slice(imports, func(i, j int) bool {
-		return imports[i].Path < imports[j].Path
+	slices.SortFunc(imports, func(a, b *ImportDetails) int {
+		return cmp.Compare(a.Path, b.Path)
 	})
 
 	return imports
