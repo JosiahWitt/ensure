@@ -42,7 +42,7 @@ func (m *MockReadable) EXPECT() *MockReadableMockRecorder {
 // ReadPackages mocks ReadPackages on Readable.
 func (m *MockReadable) ReadPackages(_pkgDetails []*ifacereader.PackageDetails, _pkgNameGen ifacereader.PackageNameGenerator) ([]*ifacereader.Package, error) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_pkgDetails, _pkgNameGen}
+	inputs := []any{_pkgDetails, _pkgNameGen}
 	ret := m.ctrl.Call(m, "ReadPackages", inputs...)
 	ret0, _ := ret[0].([]*ifacereader.Package)
 	ret1, _ := ret[1].(error)
@@ -61,13 +61,13 @@ func (m *MockReadable) ReadPackages(_pkgDetails []*ifacereader.PackageDetails, _
 //
 //	[]*ifacereader.Package
 //	error
-func (mr *MockReadableMockRecorder) ReadPackages(_pkgDetails interface{}, _pkgNameGen interface{}) *gomock.Call {
+func (mr *MockReadableMockRecorder) ReadPackages(_pkgDetails any, _pkgNameGen any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_pkgDetails), wrapMatcher(_pkgNameGen)}
+	inputs := []any{wrapMatcher(_pkgDetails), wrapMatcher(_pkgNameGen)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadPackages", reflect.TypeOf((*MockReadable)(nil).ReadPackages), inputs...)
 }
 
-func wrapMatcher(input interface{}) gomock.Matcher {
+func wrapMatcher(input any) gomock.Matcher {
 	if matcher, ok := input.(gomock.Matcher); ok {
 		return matcher
 	}
@@ -87,7 +87,7 @@ func wrapMatcher(input interface{}) gomock.Matcher {
 	)
 
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(got interface{}) string {
+		gomock.GotFormatterFunc(func(got any) string {
 			return pretty.Sprint(got)
 		}),
 		matcher,
