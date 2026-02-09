@@ -692,10 +692,9 @@ func buildGenericTests() []entry {
 			},
 
 			ExpectedPackagePaths: []string{
-				// Note: cmp and externaltype are pulled in but not tracked as separate imports since they're used implicitly
-				"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures/generics/complexconstraints",              // TODO: reference this directly once Go 1.18 is the lowest supported version
-				"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures/generics/complexconstraints/externaltype", // TODO: reference this directly once Go 1.18 is the lowest supported version
-				"golang.org/x/exp/constraints", // TODO: reference this directly once Go 1.18 is the lowest supported version
+				"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures/generics/complexconstraints",              // TODO: reference this directly once the fixture isn't in a separate nested module
+				"github.com/JosiahWitt/ensure/cmd/ensure/internal/ifacereader/fixtures/generics/complexconstraints/externaltype", // TODO: reference this directly once the fixture isn't in a separate nested module
+				"golang.org/x/exp/constraints", // TODO: reference this directly once the fixture isn't in a separate nested module
 			},
 
 			ExpectedPackages: []*ifacereader.Package{
