@@ -80,7 +80,7 @@ func (c *Chain) IsNotNil() {
 
 // Equals ensures the actual value equals the expected value.
 // Equals uses deep.Equal to print easy to read diffs.
-func (c *Chain) Equals(expected interface{}) {
+func (c *Chain) Equals(expected any) {
 	c.t.Helper()
 	c.markRun()
 
@@ -141,7 +141,7 @@ func (c *Chain) IsNotEmpty() {
 //
 //	ensure([]string{"abc", "xyz"}).Contains("xyz") // Succeeds
 //	ensure([]string{"abc", "xyz"}).Contains("y") // Fails
-func (c *Chain) Contains(expected interface{}) {
+func (c *Chain) Contains(expected any) {
 	c.t.Helper()
 	c.markRun()
 
@@ -171,7 +171,7 @@ func (c *Chain) Contains(expected interface{}) {
 //
 //	ensure([]string{"abc", "xyz"}).DoesNotContain("xyz") // Fails
 //	ensure([]string{"abc", "xyz"}).DoesNotContain("y") // Succeeds
-func (c *Chain) DoesNotContain(expected interface{}) {
+func (c *Chain) DoesNotContain(expected any) {
 	c.t.Helper()
 	c.markRun()
 
@@ -227,21 +227,21 @@ func (c *Chain) markRun() {
 	c.wasRun = true
 }
 
-func isNil(value interface{}) bool {
+func isNil(value any) bool {
 	if value == nil {
 		return true
 	}
 
 	//nolint:exhaustive // We don't want to be exhaustive here
 	switch val := reflect.ValueOf(value); val.Kind() {
-	case reflect.Ptr, reflect.Slice, reflect.Map, reflect.Func, reflect.Chan:
+	case reflect.Pointer, reflect.Slice, reflect.Map, reflect.Func, reflect.Chan:
 		return val.IsNil()
 	default:
 		return false
 	}
 }
 
-func lengthOf(value interface{}) (int, error) {
+func lengthOf(value any) (int, error) {
 	reflectValue := reflect.ValueOf(value)
 	reflectKind := reflectValue.Kind()
 	if reflectKind != reflect.Array && reflectKind != reflect.Slice && reflectKind != reflect.String && reflectKind != reflect.Map {
@@ -252,7 +252,7 @@ func lengthOf(value interface{}) (int, error) {
 	return reflectValue.Len(), nil
 }
 
-func contains(items, value interface{}) (bool, error) {
+func contains(items, value any) (bool, error) {
 	if str, strOk := items.(string); strOk {
 		substr, substrOk := value.(string)
 		if !substrOk {
@@ -280,13 +280,13 @@ func contains(items, value interface{}) (bool, error) {
 	return false, nil
 }
 
-func formatInequalityMessage(diff []string, actual, expected interface{}) (string, []interface{}) {
+func formatInequalityMessage(diff []string, actual, expected any) (string, []any) {
 	const actualVsExpected = "ACTUAL:\n%s\n\nEXPECTED:\n%s"
 
 	actualStr, actualType, actualIsStr := isStringLike(actual)
 	expectedStr, expectedType, expectedIsStr := isStringLike(expected)
 	if actualIsStr && expectedIsStr {
-		args := []interface{}{
+		args := []any{
 			actualType,
 			expectedType,
 			indent + prettyFormatString(actualStr, actualType),
@@ -300,23 +300,25 @@ func formatInequalityMessage(diff []string, actual, expected interface{}) (strin
 		return "\nActual %s does not equal expected %s:\n\n" + actualVsExpected, args
 	}
 
-	errors := "Actual does not equal expected:"
+	var errBuf strings.Builder
+	errBuf.WriteString("Actual does not equal expected:")
 	for _, result := range diff {
-		errors += "\n - " + result
+		errBuf.WriteString("\n - ")
+		errBuf.WriteString(result)
 	}
 
-	return "\n%s\n\n" + actualVsExpected, []interface{}{
-		errors,
+	return "\n%s\n\n" + actualVsExpected, []any{
+		errBuf.String(),
 		prettyFormat(actual),
 		prettyFormat(expected),
 	}
 }
 
-func prettyFormat(value interface{}) string {
+func prettyFormat(value any) string {
 	return text.Indent(prettyFormatValue(value), indent)
 }
 
-func prettyFormatValue(value interface{}) string {
+func prettyFormatValue(value any) string {
 	if str, ok := value.(string); ok {
 		return prettyFormatString(str, typeString)
 	}
@@ -337,7 +339,7 @@ func prettyFormatString(str string, valType string) string {
 	return quotedString
 }
 
-func checkEquality(actual, expected interface{}) []string {
+func checkEquality(actual, expected any) []string {
 	// Since deep only supports global settings, we wrap setting them
 	// and the equality check in a mutex for concurrency safety.
 
@@ -351,7 +353,7 @@ func checkEquality(actual, expected interface{}) []string {
 	return deep.Equal(actual, expected)
 }
 
-func isStringLike(value interface{}) (string, string, bool) {
+func isStringLike(value any) (string, string, bool) {
 	if str, ok := value.(string); ok {
 		return str, typeString, true
 	}

@@ -20,7 +20,7 @@ func TestERunSync(t *testing.T) {
 func TestERunTableByIndexSync(t *testing.T) {
 	runTableConfig{
 		isSync: true,
-		prepare: func(ensure ensuring.E) func(table interface{}, fn func(ensure ensuring.E, i int)) {
+		prepare: func(ensure ensuring.E) func(table any, fn func(ensure ensuring.E, i int)) {
 			return ensure.RunTableByIndexSync
 		},
 	}.test(t)

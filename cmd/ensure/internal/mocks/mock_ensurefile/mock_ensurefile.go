@@ -42,7 +42,7 @@ func (m *MockLoaderIface) EXPECT() *MockLoaderIfaceMockRecorder {
 // LoadConfig mocks LoadConfig on LoaderIface.
 func (m *MockLoaderIface) LoadConfig(_pwd string) (*ensurefile.Config, error) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_pwd}
+	inputs := []any{_pwd}
 	ret := m.ctrl.Call(m, "LoadConfig", inputs...)
 	ret0, _ := ret[0].(*ensurefile.Config)
 	ret1, _ := ret[1].(error)
@@ -60,13 +60,13 @@ func (m *MockLoaderIface) LoadConfig(_pwd string) (*ensurefile.Config, error) {
 //
 //	*ensurefile.Config
 //	error
-func (mr *MockLoaderIfaceMockRecorder) LoadConfig(_pwd interface{}) *gomock.Call {
+func (mr *MockLoaderIfaceMockRecorder) LoadConfig(_pwd any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_pwd)}
+	inputs := []any{wrapMatcher(_pwd)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadConfig", reflect.TypeOf((*MockLoaderIface)(nil).LoadConfig), inputs...)
 }
 
-func wrapMatcher(input interface{}) gomock.Matcher {
+func wrapMatcher(input any) gomock.Matcher {
 	if matcher, ok := input.(gomock.Matcher); ok {
 		return matcher
 	}
@@ -86,7 +86,7 @@ func wrapMatcher(input interface{}) gomock.Matcher {
 	)
 
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(got interface{}) string {
+		gomock.GotFormatterFunc(func(got any) string {
 			return pretty.Sprint(got)
 		}),
 		matcher,

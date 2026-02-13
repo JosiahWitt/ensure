@@ -56,7 +56,7 @@ func TestRunTableByIndexSync(t *testing.T) {
 		assertShorterThan(t, time.Since(start), 10*time.Second)
 	})
 
-	sharedEnsureRunTableByIndexTests(t, func(ensure ensuring.E) func(table interface{}, fn func(ensure ensuring.E, i int)) {
+	sharedEnsureRunTableByIndexTests(t, func(ensure ensuring.E) func(table any, fn func(ensure ensuring.E, i int)) {
 		return ensure.RunTableByIndexSync
 	})
 }

@@ -43,7 +43,7 @@ func (m *MockDoable) EXPECT() *MockDoableMockRecorder {
 // Do mocks Do on Doable.
 func (m *MockDoable) Do(_thing *reflect.Thing, _other *gomock.Other) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_thing, _other}
+	inputs := []any{_thing, _other}
 	ret := m.ctrl.Call(m, "Do", inputs...)
 	var _ = ret // Unused, since there are no returns
 	return
@@ -60,13 +60,13 @@ func (m *MockDoable) Do(_thing *reflect.Thing, _other *gomock.Other) {
 // Outputs:
 //
 //	none
-func (mr *MockDoableMockRecorder) Do(_thing interface{}, _other interface{}) *gomock2.Call {
+func (mr *MockDoableMockRecorder) Do(_thing any, _other any) *gomock2.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_thing), wrapMatcher(_other)}
+	inputs := []any{wrapMatcher(_thing), wrapMatcher(_other)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect2.TypeOf((*MockDoable)(nil).Do), inputs...)
 }
 
-func wrapMatcher(input interface{}) gomock2.Matcher {
+func wrapMatcher(input any) gomock2.Matcher {
 	if matcher, ok := input.(gomock2.Matcher); ok {
 		return matcher
 	}
@@ -86,7 +86,7 @@ func wrapMatcher(input interface{}) gomock2.Matcher {
 	)
 
 	return gomock2.GotFormatterAdapter(
-		gomock2.GotFormatterFunc(func(got interface{}) string {
+		gomock2.GotFormatterFunc(func(got any) string {
 			return pretty.Sprint(got)
 		}),
 		matcher,

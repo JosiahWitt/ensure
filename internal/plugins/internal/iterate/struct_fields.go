@@ -55,14 +55,13 @@ func (si *structIterator) process(prefix string, t reflect.Type) (*StructFieldsR
 		fieldPath := prefix + "." + fieldName
 
 		// Skip unexported fields
-		// TODO: Swap to use the IsExported method once Go 1.17 is the minimum supported version
-		if field.PkgPath != "" {
+		if !field.IsExported() {
 			continue
 		}
 
 		// Support embedded types (anonymous fields)
 		if field.Anonymous {
-			isPointer := fieldKind == reflect.Ptr
+			isPointer := fieldKind == reflect.Pointer
 			isPointerToStruct := isPointer && fieldType.Elem().Kind() == reflect.Struct
 
 			// Embedded structs and pointers to structs are recursed into for their promoted fields
@@ -140,7 +139,7 @@ func (r *StructFieldsResult) InitializeStruct(v reflect.Value, iterator Initiali
 func (r *StructFieldsResult) initialize(v reflect.Value) {
 	t := v.Type()
 
-	if t.Kind() != reflect.Ptr || t.Elem().Kind() != reflect.Struct {
+	if t.Kind() != reflect.Pointer || t.Elem().Kind() != reflect.Struct {
 		panicf("InitializeStruct must be provided a pointer to a struct, got: %v", t)
 	}
 
@@ -184,13 +183,13 @@ func (r *StructFieldsResult) iterate(v reflect.Value, iterator func(fieldPath st
 }
 
 func indirectType(t reflect.Type) reflect.Type {
-	if t.Kind() != reflect.Ptr {
+	if t.Kind() != reflect.Pointer {
 		return t
 	}
 
 	return indirectType(t.Elem())
 }
 
-func panicf(format string, a ...interface{}) {
+func panicf(format string, a ...any) {
 	panic(fmt.Sprintf(format, a...))
 }

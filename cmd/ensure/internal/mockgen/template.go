@@ -98,7 +98,7 @@ func (mr *{{buildMockRecorderStructName $iface}}) {{$method.Name}}({{buildMockIn
 {{end -}}
 {{end -}}
 {{if $params.EnableEnhancedMatcherFailures}}
-func wrapMatcher(input interface{}) {{$params.GoMockPackageName}}.Matcher {
+func wrapMatcher(input any) {{$params.GoMockPackageName}}.Matcher {
 	if matcher, ok := input.({{$params.GoMockPackageName}}.Matcher); ok {
 		return matcher
 	}
@@ -118,7 +118,7 @@ func wrapMatcher(input interface{}) {{$params.GoMockPackageName}}.Matcher {
 	)
 
 	return {{$params.GoMockPackageName}}.GotFormatterAdapter(
-		{{$params.GoMockPackageName}}.GotFormatterFunc(func(got interface{}) string {
+		{{$params.GoMockPackageName}}.GotFormatterFunc(func(got any) string {
 			return {{$params.PrettyPackageName}}.Sprint(got)
 		}),
 		matcher,
@@ -187,9 +187,9 @@ func templateFuncBuildMockInputSignature(inputs []*ifacereader.Tuple) string {
 
 	builtInputs := make([]string, 0, len(inputs))
 	for _, input := range preprocessParams(inputs, false) {
-		inputType := "interface{}"
+		inputType := "any"
 		if input.Variadic {
-			inputType = "...interface{}"
+			inputType = "...any"
 		}
 
 		builtInputs = append(builtInputs, input.VariableName+" "+inputType)
@@ -212,7 +212,7 @@ func templateFuncBuildInputsSlice(params *templateParams, inputs []*ifacereader.
 		nonVariadicVariables = append(nonVariadicVariables, params.maybeWrapVariable(canWrap, input.VariableName))
 	}
 
-	builtInputs := fmt.Sprintf("inputs := []interface{}{%s}", strings.Join(nonVariadicVariables, ", "))
+	builtInputs := fmt.Sprintf("inputs := []any{%s}", strings.Join(nonVariadicVariables, ", "))
 
 	if variadicVariable != "" {
 		builtInputs += fmt.Sprintf(

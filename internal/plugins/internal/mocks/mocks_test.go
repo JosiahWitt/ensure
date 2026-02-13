@@ -15,8 +15,8 @@ func TestAllAddMock(t *testing.T) {
 
 	ensure.Run("adds mock", func(ensure ensuring.E) {
 		m := mocks.All{}
-		m1 := m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
-		m2 := m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
+		m1 := m.AddMock("a", true, reflect.TypeFor[*ExampleGreeterMock]())
+		m2 := m.AddMock("b", false, reflect.TypeFor[*ExampleOtherMock]())
 
 		ensure(m1.Path).Equals("a")
 		ensure(m1.Optional).Equals(true)
@@ -37,9 +37,9 @@ func TestAllAddMock(t *testing.T) {
 		}()
 
 		m := mocks.All{}
-		m.AddMock("a", true, reflect.TypeOf(""))
-		m.AddMock("b", true, reflect.TypeOf(1))
-		m.AddMock("a", true, reflect.TypeOf(false))
+		m.AddMock("a", true, reflect.TypeFor[string]())
+		m.AddMock("b", true, reflect.TypeFor[int]())
+		m.AddMock("a", true, reflect.TypeFor[bool]())
 	})
 }
 
@@ -53,8 +53,8 @@ func TestAllSlice(t *testing.T) {
 
 	ensure.Run("when many items", func(ensure ensuring.E) {
 		m := mocks.All{}
-		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
-		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
+		m.AddMock("a", true, reflect.TypeFor[*ExampleGreeterMock]())
+		m.AddMock("b", false, reflect.TypeFor[*ExampleOtherMock]())
 
 		ensure(m.Slice()[0].Path).Equals("a")
 		ensure(m.Slice()[0].Optional).IsTrue()
@@ -76,8 +76,8 @@ func TestAllPathSet(t *testing.T) {
 
 	ensure.Run("when many items", func(ensure ensuring.E) {
 		m := mocks.All{}
-		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
-		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
+		m.AddMock("a", true, reflect.TypeFor[*ExampleGreeterMock]())
+		m.AddMock("b", false, reflect.TypeFor[*ExampleOtherMock]())
 
 		ensure(m.PathSet()).Equals(mocks.PathSet{"a": struct{}{}, "b": struct{}{}})
 	})
@@ -88,14 +88,14 @@ func TestMockImplements(t *testing.T) {
 
 	ensure.Run("when interface is provided", func(ensure ensuring.E) {
 		m := mocks.All{}
-		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
-		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
+		m.AddMock("a", true, reflect.TypeFor[*ExampleGreeterMock]())
+		m.AddMock("b", false, reflect.TypeFor[*ExampleOtherMock]())
 
 		type Greeter interface{ Hello(string) string }
 		type Bingo interface{ Bingo(string) bool }
 
-		greeter := reflect.TypeOf((*Greeter)(nil)).Elem()
-		bingo := reflect.TypeOf((*Bingo)(nil)).Elem()
+		greeter := reflect.TypeFor[Greeter]()
+		bingo := reflect.TypeFor[Bingo]()
 
 		ensure(m.Slice()[0].Implements(greeter)).IsTrue()
 		ensure(m.Slice()[0].Implements(bingo)).IsFalse()
@@ -109,8 +109,8 @@ func TestMockImplements(t *testing.T) {
 		}()
 
 		m := mocks.All{}
-		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
-		m.Slice()[0].Implements(reflect.TypeOf("not interface"))
+		m.AddMock("a", true, reflect.TypeFor[*ExampleGreeterMock]())
+		m.Slice()[0].Implements(reflect.TypeFor[string]())
 	})
 }
 
@@ -119,8 +119,8 @@ func TestMockSetValueByEntryIndex(t *testing.T) {
 
 	ensure.Run("sets values correctly", func(ensure ensuring.E) {
 		m := mocks.All{}
-		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
-		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
+		m.AddMock("a", true, reflect.TypeFor[*ExampleGreeterMock]())
+		m.AddMock("b", false, reflect.TypeFor[*ExampleOtherMock]())
 
 		m.Slice()[0].SetValueByEntryIndex(5, reflect.ValueOf(&ExampleGreeterMock{"hey"}))
 		m.Slice()[1].SetValueByEntryIndex(1, reflect.ValueOf(&ExampleOtherMock{"over"}))
@@ -136,8 +136,8 @@ func TestMockSetValueByEntryIndex(t *testing.T) {
 		}()
 
 		m := mocks.All{}
-		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
-		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
+		m.AddMock("a", true, reflect.TypeFor[*ExampleGreeterMock]())
+		m.AddMock("b", false, reflect.TypeFor[*ExampleOtherMock]())
 
 		m.Slice()[0].SetValueByEntryIndex(5, reflect.ValueOf("hey"))
 	})
@@ -148,8 +148,8 @@ func TestMockSetValueByEntryIndex(t *testing.T) {
 		}()
 
 		m := mocks.All{}
-		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
-		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
+		m.AddMock("a", true, reflect.TypeFor[*ExampleGreeterMock]())
+		m.AddMock("b", false, reflect.TypeFor[*ExampleOtherMock]())
 
 		m.Slice()[0].SetValueByEntryIndex(5, reflect.ValueOf(&ExampleGreeterMock{"hey"}))
 		m.Slice()[0].SetValueByEntryIndex(5, reflect.ValueOf(&ExampleGreeterMock{"there"}))
@@ -161,8 +161,8 @@ func TestMockValueByEntryIndex(t *testing.T) {
 
 	ensure.Run("gets values correctly", func(ensure ensuring.E) {
 		m := mocks.All{}
-		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
-		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
+		m.AddMock("a", true, reflect.TypeFor[*ExampleGreeterMock]())
+		m.AddMock("b", false, reflect.TypeFor[*ExampleOtherMock]())
 
 		m.Slice()[0].SetValueByEntryIndex(5, reflect.ValueOf(&ExampleGreeterMock{"hey"}))
 		m.Slice()[1].SetValueByEntryIndex(1, reflect.ValueOf(&ExampleOtherMock{"over"}))
@@ -178,8 +178,8 @@ func TestMockValueByEntryIndex(t *testing.T) {
 		}()
 
 		m := mocks.All{}
-		m.AddMock("a", true, reflect.TypeOf(&ExampleGreeterMock{}))
-		m.AddMock("b", false, reflect.TypeOf(&ExampleOtherMock{}))
+		m.AddMock("a", true, reflect.TypeFor[*ExampleGreeterMock]())
+		m.AddMock("b", false, reflect.TypeFor[*ExampleOtherMock]())
 
 		ensure(m.Slice()[0].ValueByEntryIndex(5).Interface()).Equals(&ExampleGreeterMock{"there"})
 	})

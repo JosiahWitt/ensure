@@ -42,7 +42,7 @@ func (m *MockWritable) EXPECT() *MockWritableMockRecorder {
 // ListRecursive mocks ListRecursive on Writable.
 func (m *MockWritable) ListRecursive(_dir string) ([]string, error) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_dir}
+	inputs := []any{_dir}
 	ret := m.ctrl.Call(m, "ListRecursive", inputs...)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
@@ -60,16 +60,16 @@ func (m *MockWritable) ListRecursive(_dir string) ([]string, error) {
 //
 //	[]string
 //	error
-func (mr *MockWritableMockRecorder) ListRecursive(_dir interface{}) *gomock.Call {
+func (mr *MockWritableMockRecorder) ListRecursive(_dir any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_dir)}
+	inputs := []any{wrapMatcher(_dir)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRecursive", reflect.TypeOf((*MockWritable)(nil).ListRecursive), inputs...)
 }
 
 // MkdirAll mocks MkdirAll on Writable.
 func (m *MockWritable) MkdirAll(_path string, _perm os.FileMode) error {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_path, _perm}
+	inputs := []any{_path, _perm}
 	ret := m.ctrl.Call(m, "MkdirAll", inputs...)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -86,16 +86,16 @@ func (m *MockWritable) MkdirAll(_path string, _perm os.FileMode) error {
 // Outputs:
 //
 //	error
-func (mr *MockWritableMockRecorder) MkdirAll(_path interface{}, _perm interface{}) *gomock.Call {
+func (mr *MockWritableMockRecorder) MkdirAll(_path any, _perm any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_path), wrapMatcher(_perm)}
+	inputs := []any{wrapMatcher(_path), wrapMatcher(_perm)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MkdirAll", reflect.TypeOf((*MockWritable)(nil).MkdirAll), inputs...)
 }
 
 // RemoveAll mocks RemoveAll on Writable.
 func (m *MockWritable) RemoveAll(_paths string) error {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_paths}
+	inputs := []any{_paths}
 	ret := m.ctrl.Call(m, "RemoveAll", inputs...)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -111,16 +111,16 @@ func (m *MockWritable) RemoveAll(_paths string) error {
 // Outputs:
 //
 //	error
-func (mr *MockWritableMockRecorder) RemoveAll(_paths interface{}) *gomock.Call {
+func (mr *MockWritableMockRecorder) RemoveAll(_paths any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_paths)}
+	inputs := []any{wrapMatcher(_paths)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAll", reflect.TypeOf((*MockWritable)(nil).RemoveAll), inputs...)
 }
 
 // WriteFile mocks WriteFile on Writable.
 func (m *MockWritable) WriteFile(_filename string, _data string, _perm os.FileMode) error {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_filename, _data, _perm}
+	inputs := []any{_filename, _data, _perm}
 	ret := m.ctrl.Call(m, "WriteFile", inputs...)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -138,13 +138,13 @@ func (m *MockWritable) WriteFile(_filename string, _data string, _perm os.FileMo
 // Outputs:
 //
 //	error
-func (mr *MockWritableMockRecorder) WriteFile(_filename interface{}, _data interface{}, _perm interface{}) *gomock.Call {
+func (mr *MockWritableMockRecorder) WriteFile(_filename any, _data any, _perm any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_filename), wrapMatcher(_data), wrapMatcher(_perm)}
+	inputs := []any{wrapMatcher(_filename), wrapMatcher(_data), wrapMatcher(_perm)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteFile", reflect.TypeOf((*MockWritable)(nil).WriteFile), inputs...)
 }
 
-func wrapMatcher(input interface{}) gomock.Matcher {
+func wrapMatcher(input any) gomock.Matcher {
 	if matcher, ok := input.(gomock.Matcher); ok {
 		return matcher
 	}
@@ -164,7 +164,7 @@ func wrapMatcher(input interface{}) gomock.Matcher {
 	)
 
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(got interface{}) string {
+		gomock.GotFormatterFunc(func(got any) string {
 			return pretty.Sprint(got)
 		}),
 		matcher,

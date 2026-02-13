@@ -13,7 +13,7 @@ import (
 
 func TestERunTableByIndex(t *testing.T) {
 	runTableConfig{
-		prepare: func(ensure ensuring.E) func(table interface{}, fn func(ensure ensuring.E, i int)) {
+		prepare: func(ensure ensuring.E) func(table any, fn func(ensure ensuring.E, i int)) {
 			return ensure.RunTableByIndex
 		},
 	}.test(t)
@@ -29,13 +29,13 @@ type runTableTestEntry struct {
 	ExpectedNames        []string
 	ExpectedTableSize    int // Defaults to the length of ExpectedNames
 	FatalMessagesContain []string
-	Table                interface{}
-	CheckEntry           func(t *testing.T, rawEntry interface{})
+	Table                any
+	CheckEntry           func(t *testing.T, rawEntry any)
 }
 
 type runTableConfig struct {
 	isSync  bool
-	prepare func(ensure ensuring.E) func(table interface{}, fn func(ensure ensuring.E, i int))
+	prepare func(ensure ensuring.E) func(table any, fn func(ensure ensuring.E, i int))
 }
 
 func (cfg runTableConfig) test(t *testing.T) {
@@ -70,7 +70,7 @@ func (cfg runTableConfig) test(t *testing.T) {
 			innerMockTs := []*mock_testctx.MockT{} //lint:ignore ST1003 mockTs not mockTS
 
 			actualFatalMessages := []string{}
-			fatalMessagesRecorder := func(msg string, args ...interface{}) {
+			fatalMessagesRecorder := func(msg string, args ...any) {
 				actualFatalMessages = append(actualFatalMessages, msg)
 			}
 
@@ -123,7 +123,7 @@ func (cfg runTableConfig) test(t *testing.T) {
 			// Run calls should be in order
 			gomock.InOrder(expectedRunCalls...)
 
-			outerMockT.EXPECT().Fatalf(gomock.Any()).Do(func(msg string, args ...interface{}) {
+			outerMockT.EXPECT().Fatalf(gomock.Any()).Do(func(msg string, args ...any) {
 				actualFatalMessages = append(actualFatalMessages, msg)
 			}).AnyTimes()
 
@@ -498,7 +498,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name  string
 						Mocks *TwoValidMocks
@@ -525,7 +525,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name  string
 						Mocks *TwoValidMocksWithUnexported
@@ -552,7 +552,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name  string
 						Mocks *TwoValidMocksWithEmbedded
@@ -579,7 +579,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name  string
 						Mocks *OneMockNEWMethodZeroParams
@@ -607,7 +607,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name  string
 						Mocks *TwoValidMocksWithEmbeddedPtr
@@ -778,7 +778,7 @@ func (runTableTests) mocksField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name  string
 						Mocks *DuplicateMocks
@@ -820,7 +820,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name       string
 						Mocks      *TwoValidMocks
@@ -858,7 +858,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name       string
 						Mocks      *TwoValidMocks
@@ -891,7 +891,7 @@ func (runTableTests) setupMocksField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name       string
 						Mocks      *TwoValidMocks
@@ -1048,7 +1048,7 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name    string
 						Mocks   *OneValidMock
@@ -1077,7 +1077,7 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name    string
 						Subject *MultiInterfaceSubject
@@ -1105,7 +1105,7 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name    string
 						Mocks   *OneValidMock
@@ -1172,7 +1172,7 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name    string
 						Mocks   *OneValidMock
@@ -1204,7 +1204,7 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name    string
 						Mocks   *OneValidMock
@@ -1270,7 +1270,7 @@ func (runTableTests) subjectField() runTableTestEntryGroup {
 					},
 				},
 
-				CheckEntry: func(t *testing.T, rawTable interface{}) {
+				CheckEntry: func(t *testing.T, rawTable any) {
 					table := rawTable.([]struct {
 						Name    string
 						Mocks   *TwoValidMocksWithIgnoreUnusedTag

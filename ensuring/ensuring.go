@@ -22,13 +22,13 @@ type T = testctx.T
 
 // E ensures the actual value is correct using [Chain].
 // E also has methods that can be called directly.
-type E func(actual interface{}) *Chain
+type E func(actual any) *Chain
 
 // Chain chains assertions to the ensure function call.
 type Chain struct {
 	t      testctx.T
 	ctx    testctx.Context
-	actual interface{}
+	actual any
 	wasRun bool
 }
 
@@ -61,7 +61,7 @@ func (e E) New(t T) E {
 
 // Failf fails the test immediately with a formatted message.
 // The formatted message follows the same format as the fmt package.
-func (e E) Failf(format string, args ...interface{}) {
+func (e E) Failf(format string, args ...any) {
 	c := e(nil)
 	c.t.Helper()
 	c.markRun()
@@ -107,7 +107,7 @@ func wrap(t T) E {
 	// Created outside the callback, so the same context is used across ensure calls
 	ctx := newTestContext(t)
 
-	return func(actual interface{}) *Chain {
+	return func(actual any) *Chain {
 		c := &Chain{
 			t:      t,
 			ctx:    ctx,
@@ -130,5 +130,5 @@ func wrap(t T) E {
 }
 
 func newTestContext(t T) testctx.Context {
-	return newTestContextFunc(t, func(t testctx.T) interface{} { return wrap(t) })
+	return newTestContextFunc(t, func(t testctx.T) any { return wrap(t) })
 }

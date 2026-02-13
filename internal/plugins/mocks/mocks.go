@@ -15,7 +15,7 @@ import (
 )
 
 //nolint:gochecknoglobals // This is only used internally for comparison.
-var goMockControllerType = reflect.TypeOf(&gomock.Controller{})
+var goMockControllerType = reflect.TypeFor[*gomock.Controller]()
 
 // New uses the collection of mocks, initializing and populating it for each test entry.
 func New(m *mocks.All) *TablePlugin {
@@ -57,7 +57,7 @@ func (t *TablePlugin) ParseEntryType(entryType reflect.Type) (plugins.TableEntry
 func validateMocksFieldType(mocksStruct *reflect.StructField) error {
 	t := mocksStruct.Type
 
-	if t.Kind() != reflect.Ptr || t.Elem().Kind() != reflect.Struct {
+	if t.Kind() != reflect.Pointer || t.Elem().Kind() != reflect.Struct {
 		return stringerr.Newf("expected %s field to be a pointer to a struct, got %s", id.Mocks, t)
 	}
 
@@ -78,7 +78,7 @@ func (t *TablePlugin) parseMocks(mocksStruct *reflect.StructField) (map[string]*
 			return nil
 		}
 
-		if mocksField.Type.Kind() != reflect.Ptr || mocksField.Type.Elem().Kind() != reflect.Struct {
+		if mocksField.Type.Kind() != reflect.Pointer || mocksField.Type.Elem().Kind() != reflect.Struct {
 			return []error{stringerr.Newf(
 				"%s is expected to be a pointer to a struct, got: %v. To ignore %[1]s, add the %[4]s tag.",
 				mocksFieldPath,

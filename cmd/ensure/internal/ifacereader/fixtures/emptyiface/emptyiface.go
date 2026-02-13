@@ -1,3 +1,3 @@
 package emptyiface
 
-type Empty interface{}
+type Empty any

@@ -10,9 +10,9 @@ import (
 
 // T is a minimal implementation of [testing.T] that may expand whenever a new method is needed.
 type T interface {
-	Logf(format string, args ...interface{})
-	Errorf(format string, args ...interface{})
-	Fatalf(format string, args ...interface{})
+	Logf(format string, args ...any)
+	Errorf(format string, args ...any)
+	Fatalf(format string, args ...any)
 	Run(name string, f func(t *testing.T)) bool
 	Helper()
 	Cleanup(f func())
@@ -23,7 +23,7 @@ var _ T = &testing.T{}
 
 // WrapEnsure is a function that returns the [ensuring.E] for the provided [T].
 // It returns an interface instead of the concrete type to avoid an import cycle.
-type WrapEnsure func(T) interface{}
+type WrapEnsure func(T) any
 
 // Context contains scoped test helpers.
 type Context interface {
@@ -40,7 +40,7 @@ type Context interface {
 	// Ensure returns the [ensuring.E] relating to the in-scope [T].
 	// It returns an interface instead of the concrete type to avoid an import cycle.
 	// It memoizes the value for subsequent calls.
-	Ensure() interface{}
+	Ensure() any
 }
 
 // SyncableContext extends [Context] with the ability to use [synctest.Test] in Go 1.25+.
@@ -58,7 +58,7 @@ type baseContext struct {
 	goMockControllerOnce sync.Once
 
 	wrapEnsure WrapEnsure
-	ensure     interface{}
+	ensure     any
 	ensureOnce sync.Once
 }
 
@@ -101,7 +101,7 @@ func (ctx *baseContext) GoMockController() *gomock.Controller {
 // Ensure returns the [ensuring.E] relating to the in-scope [T].
 // It returns an interface instead of the concrete type to avoid an import cycle.
 // It memoizes the value for subsequent calls.
-func (ctx *baseContext) Ensure() interface{} {
+func (ctx *baseContext) Ensure() any {
 	ctx.t.Helper()
 
 	ctx.ensureOnce.Do(func() {
