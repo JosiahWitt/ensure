@@ -300,13 +300,15 @@ func formatInequalityMessage(diff []string, actual, expected any) (string, []any
 		return "\nActual %s does not equal expected %s:\n\n" + actualVsExpected, args
 	}
 
-	errors := "Actual does not equal expected:"
+	var errBuf strings.Builder
+	errBuf.WriteString("Actual does not equal expected:")
 	for _, result := range diff {
-		errors += "\n - " + result
+		errBuf.WriteString("\n - ")
+		errBuf.WriteString(result)
 	}
 
 	return "\n%s\n\n" + actualVsExpected, []any{
-		errors,
+		errBuf.String(),
 		prettyFormat(actual),
 		prettyFormat(expected),
 	}
