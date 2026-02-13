@@ -68,7 +68,7 @@ func (c *Chain) MatchesAllErrors(expectedErrors ...error) {
 			status = "❌"
 		}
 
-		failureDetails += fmt.Sprintf("\n\t  %s %s", status, buildExpectedErrorOutput(expected))
+		failureDetails += fmt.Sprintf("\n\t  %s %s", status, buildExpectedErrorOutput(expected)) //nolint:modernize // Clarity in test output.
 	}
 
 	if failed {
