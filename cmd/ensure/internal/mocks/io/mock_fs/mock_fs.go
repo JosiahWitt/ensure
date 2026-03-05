@@ -42,7 +42,7 @@ func (m *MockReadFileFS) EXPECT() *MockReadFileFSMockRecorder {
 // Open mocks Open on ReadFileFS.
 func (m *MockReadFileFS) Open(_name string) (fs.File, error) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_name}
+	inputs := []any{_name}
 	ret := m.ctrl.Call(m, "Open", inputs...)
 	ret0, _ := ret[0].(fs.File)
 	ret1, _ := ret[1].(error)
@@ -60,16 +60,16 @@ func (m *MockReadFileFS) Open(_name string) (fs.File, error) {
 //
 //	fs.File
 //	error
-func (mr *MockReadFileFSMockRecorder) Open(_name interface{}) *gomock.Call {
+func (mr *MockReadFileFSMockRecorder) Open(_name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_name)}
+	inputs := []any{wrapMatcher(_name)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Open", reflect.TypeOf((*MockReadFileFS)(nil).Open), inputs...)
 }
 
 // ReadFile mocks ReadFile on ReadFileFS.
 func (m *MockReadFileFS) ReadFile(_name string) ([]byte, error) {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{_name}
+	inputs := []any{_name}
 	ret := m.ctrl.Call(m, "ReadFile", inputs...)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
@@ -87,13 +87,13 @@ func (m *MockReadFileFS) ReadFile(_name string) ([]byte, error) {
 //
 //	[]byte
 //	error
-func (mr *MockReadFileFSMockRecorder) ReadFile(_name interface{}) *gomock.Call {
+func (mr *MockReadFileFSMockRecorder) ReadFile(_name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{wrapMatcher(_name)}
+	inputs := []any{wrapMatcher(_name)}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadFile", reflect.TypeOf((*MockReadFileFS)(nil).ReadFile), inputs...)
 }
 
-func wrapMatcher(input interface{}) gomock.Matcher {
+func wrapMatcher(input any) gomock.Matcher {
 	if matcher, ok := input.(gomock.Matcher); ok {
 		return matcher
 	}
@@ -113,7 +113,7 @@ func wrapMatcher(input interface{}) gomock.Matcher {
 	)
 
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(got interface{}) string {
+		gomock.GotFormatterFunc(func(got any) string {
 			return pretty.Sprint(got)
 		}),
 		matcher,

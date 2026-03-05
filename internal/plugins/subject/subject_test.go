@@ -19,7 +19,7 @@ func TestParseEntryType(t *testing.T) {
 		Name string
 
 		MocksInput *mocks.All
-		Entry      interface{}
+		Entry      any
 
 		ExpectedError error
 	}{
@@ -537,9 +537,9 @@ func TestParseEntryValue(t *testing.T) {
 		Name string
 
 		MocksInput *mocks.All
-		Table      interface{}
+		Table      any
 
-		ExpectedTable interface{}
+		ExpectedTable any
 	}{
 		{
 			Name: "makes no changes when subject is not provided",
@@ -642,7 +642,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Bingo",
 					Mock: &ExampleBingo{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleBingo{"bingo1"},
 						&ExampleBingo{"bingo2"},
 					},
@@ -682,7 +682,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Bingo",
 					Mock: &ExampleBingo{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleBingo{"bingo1"},
 						&ExampleBingo{"bingo2"},
 					},
@@ -726,7 +726,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Bingo",
 					Mock: &ExampleBingo{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleBingo{"bingo1"},
 						&ExampleBingo{"bingo2"},
 					},
@@ -770,7 +770,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Bingo",
 					Mock: &ExampleBingo{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleBingo{"bingo1"},
 						&ExampleBingo{"bingo2"},
 					},
@@ -778,7 +778,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Hello",
 					Mock: &ExampleHello{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleHello{"hello1"},
 						&ExampleHello{"hello2"},
 					},
@@ -826,7 +826,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Bingo",
 					Mock: &ExampleBingo{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleBingo{"bingo1"},
 						&ExampleBingo{"bingo2"},
 					},
@@ -834,7 +834,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Hello",
 					Mock: &ExampleHello{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleHello{"hello1"},
 						&ExampleHello{"hello2"},
 					},
@@ -876,7 +876,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Composite",
 					Mock: &ExampleComposite{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleComposite{unique: "composite1"},
 						&ExampleComposite{unique: "composite2"},
 					},
@@ -923,7 +923,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Bingo",
 					Mock: &ExampleBingo{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleBingo{"bingo1"},
 						&ExampleBingo{"bingo2"},
 					},
@@ -931,7 +931,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Hello",
 					Mock: &ExampleHello{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleHello{"hello1"},
 						&ExampleHello{"hello2"},
 					},
@@ -973,7 +973,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Composite",
 					Mock: &ExampleComposite{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleComposite{unique: "composite1"},
 						&ExampleComposite{unique: "composite2"},
 					},
@@ -1030,7 +1030,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Bingo",
 					Mock: &ExampleBingo{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleBingo{"bingo1"},
 						&ExampleBingo{"bingo2"},
 					},
@@ -1038,7 +1038,7 @@ func TestParseEntryValue(t *testing.T) {
 				{
 					Path: "Mocks.Hello",
 					Mock: &ExampleHello{},
-					Values: []interface{}{
+					Values: []any{
 						&ExampleHello{"hello1"},
 						&ExampleHello{"hello2"},
 					},

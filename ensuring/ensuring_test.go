@@ -252,6 +252,6 @@ func setupMockTWithCleanupCheck(t *testing.T) *mock_testctx.MockT {
 	return mockT
 }
 
-func wrapEnsure(t testctx.T) interface{} {
+func wrapEnsure(t testctx.T) any {
 	return ensure.New(t)
 }

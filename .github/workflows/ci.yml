@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ["1.23", "1.24", "1.25"]
+        go-version: ["1.23", "1.24", "1.25", "1.26"]
         path: [".", "cmd/ensure", "exp/entable"]
         include:
           - path: "."
@@ -46,7 +46,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ["1.23", "1.24", "1.25"]
+        go-version: ["1.23", "1.24", "1.25", "1.26"]
         path: [".", "cmd/ensure", "exp/entable"]
 
     steps:
@@ -61,7 +61,7 @@ jobs:
       - name: Lint `${{ matrix.path }}`
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.5.0
+          version: v2.9.0
           working-directory: ${{ matrix.path }}
 
   staticcheck:
@@ -70,7 +70,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ["1.23", "1.24", "1.25"]
+        go-version: ["1.23", "1.24", "1.25", "1.26"]
         path: [".", "cmd/ensure", "exp/entable"]
 
     steps:
@@ -95,7 +95,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ["1.23", "1.24", "1.25"]
+        go-version: ["1.23", "1.24", "1.25", "1.26"]
 
     steps:
       - name: Set up Go ${{ matrix.go-version }}

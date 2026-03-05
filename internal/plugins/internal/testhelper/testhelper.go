@@ -12,8 +12,8 @@ type MockData struct {
 	Path     string
 	Optional bool
 
-	Mock   interface{}
-	Values []interface{}
+	Mock   any
+	Values []any
 }
 
 // BuildMocks builds all the provided mocks into [mocks.All].

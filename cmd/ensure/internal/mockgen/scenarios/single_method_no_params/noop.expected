@@ -41,7 +41,7 @@ func (m *MockNoopable) EXPECT() *MockNoopableMockRecorder {
 // Noop mocks Noop on Noopable.
 func (m *MockNoopable) Noop() {
 	m.ctrl.T.Helper()
-	inputs := []interface{}{}
+	inputs := []any{}
 	ret := m.ctrl.Call(m, "Noop", inputs...)
 	var _ = ret // Unused, since there are no returns
 	return
@@ -59,11 +59,11 @@ func (m *MockNoopable) Noop() {
 //	none
 func (mr *MockNoopableMockRecorder) Noop() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	inputs := []interface{}{}
+	inputs := []any{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Noop", reflect.TypeOf((*MockNoopable)(nil).Noop), inputs...)
 }
 
-func wrapMatcher(input interface{}) gomock.Matcher {
+func wrapMatcher(input any) gomock.Matcher {
 	if matcher, ok := input.(gomock.Matcher); ok {
 		return matcher
 	}
@@ -83,7 +83,7 @@ func wrapMatcher(input interface{}) gomock.Matcher {
 	)
 
 	return gomock.GotFormatterAdapter(
-		gomock.GotFormatterFunc(func(got interface{}) string {
+		gomock.GotFormatterFunc(func(got any) string {
 			return pretty.Sprint(got)
 		}),
 		matcher,

@@ -37,7 +37,7 @@ func (e E) RunSync(name string, fn func(ensure E)) {
 // code that uses [time.Sleep]. See the [synctest] docs for more info.
 //
 // See [E.RunTableByIndex] for more info on table driven testing.
-func (e E) RunTableByIndexSync(table interface{}, fn func(ensure E, i int)) {
+func (e E) RunTableByIndexSync(table any, fn func(ensure E, i int)) {
 	c := e(nil)
 	c.t.Helper()
 	c.markRun()

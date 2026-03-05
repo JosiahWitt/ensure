@@ -11,7 +11,7 @@ type Fixture interface {
 	Int(a int) int
 	Float64(a float64) float64
 
-	EmptyInterface(a interface{}) interface{}
+	EmptyInterface(a any) any
 }
 
 var FixtureDetails = &base.ScenarioDetails{
@@ -58,10 +58,10 @@ var FixtureDetails = &base.ScenarioDetails{
 		{
 			Name: "EmptyInterface",
 			Inputs: []*ifacereader.Tuple{
-				{VariableName: "a", Type: "interface{}"},
+				{VariableName: "a", Type: "any"},
 			},
 			Outputs: []*ifacereader.Tuple{
-				{VariableName: "", Type: "interface{}"},
+				{VariableName: "", Type: "any"},
 			},
 		},
 	},
