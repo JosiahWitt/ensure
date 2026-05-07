@@ -59,7 +59,7 @@ ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
 
 **Mock Struct Tags**:
 
-- `` `ensure:"ignore"` ``: Skip field during mock initialization
+- `` `ensure:"-"` ``: Skip field during mock initialization
 - `` `ensure:"ignoreunused"` ``: Mark mock optional for subject wiring (prevents "unused mock" errors)
 
 **Mock Generation**: Uses reflection-based template system (`cmd/ensure/internal/mockgen/template.go`). Generates mocks with `NEW(*gomock.Controller)` method automatically.
