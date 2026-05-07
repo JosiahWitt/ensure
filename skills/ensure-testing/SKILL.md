@@ -91,7 +91,7 @@ Mocks must be pointers to structs that MUST have a `NEW(*gomock.Controller) *T` 
 - `` `ensure:"ignoreunused"` ``: Prevents "unused mock" errors if the `Subject` doesn't use this mock.
 
 ### Example
-The following layout and groupings are conventional. You should use this as a template for most table-driven tests.
+The following naming, casing, layout, and groupings are conventional. You MUST use this as a template for most table-driven tests, unless explicitly instructed not to.
 
 ```go
 type Mocks struct {
