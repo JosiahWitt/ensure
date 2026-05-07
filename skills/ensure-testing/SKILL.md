@@ -8,6 +8,10 @@ description: Comprehensive guide for using the `ensure` Go testing framework. Al
 
 > **IMPORTANT:** If you are implementing **Table-Driven Tests** or **Mocks**, you MUST follow the structural requirements exactly. Failure to do so will cause tests to panic or fail to initialize.
 
+## Packages
+- `github.com/JosiahWitt/ensure`
+- `github.com/JosiahWitt/ensure/ensuring`
+
 ## Quick Start: Basic Assertions
 `ensure` uses a fluent API for assertions.
 
