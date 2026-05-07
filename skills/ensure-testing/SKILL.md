@@ -9,8 +9,8 @@ description: Comprehensive guide for using the `ensure` Go testing framework. Al
 > **IMPORTANT:** If you are implementing **Table-Driven Tests** or **Mocks**, you MUST follow the structural requirements exactly. Failure to do so will cause tests to panic or fail to initialize.
 
 ## Packages
-- `github.com/JosiahWitt/ensure`
-- `github.com/JosiahWitt/ensure/ensuring`
+- `github.com/JosiahWitt/ensure`: Only used for `ensure := ensure.New(t)`, since the `ensure` namespace will be shadowed.
+- `github.com/JosiahWitt/ensure/ensuring`: Used for all the other types (eg. `ensuring.E`, stored in the `ensure` variable) and methods.
 
 ## Quick Start: Basic Assertions
 `ensure` uses a fluent API for assertions.
