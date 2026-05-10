@@ -33,6 +33,9 @@ description: Comprehensive guide for using the `ensure` Go testing framework. Al
 ### Mandatory Shadowing
 **NEVER** name the `ensure.New(t)` result or the `Run*` callback parameter anything other than `ensure`. This shadowing is required for the library's fluent API to work as intended.
 
+### Bypassing `ensure`
+Always set up `ensure := ensure.New(t)` at the top level. If you are writing subtests, use the `ensure` methods; do NOT use `t.Run`.
+
 ### Subject Wiring
 For table-driven tests, the `Subject` is auto-wired by matching mock interfaces in the `Mocks` struct to fields in the `Subject` struct. If they don't match, the subject will not be initialized correctly. NEVER initialize the subject directly.
 
@@ -113,11 +116,11 @@ table := []struct {
 }{
   {
     Name: "success case",
-  
+
     InputVal: "id",
-    
+
     ExpectedResult: "some data",
-    
+
     SetupMocks: func(m *Mocks) {
       m.DB.EXPECT().Get("id").Return(data, nil)
     },
@@ -126,7 +129,7 @@ table := []struct {
 
 ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
   entry := table[i]
-  
+
   res, err := entry.Subject.DoWork(entry.InputVal)
   ensure(err).IsError(entry.ExpectedError)
   ensure(res).Equals(entry.ExpectedResult)
@@ -134,11 +137,11 @@ ensure.RunTableByIndex(table, func(ensure ensuring.E, i int) {
 ```
 
 ## Sync Tests
-`ensure.RunTableByIndexSync` and `ensure.RunSync` provide equivalent variants that automatically wrap their blocks with `synctest.Test` from the Go stdlib. 
+`ensure.RunTableByIndexSync` and `ensure.RunSync` provide equivalent variants that automatically wrap their blocks with `synctest.Test` from the Go stdlib.
 
 The `*Sync` variants are useful for testing concurrent code in isolated "bubbles". It is also useful for testing code that leverages `time.Now()`, since time is frozen and only incremented via sleeping, which happens instantly in realtime.
 
-For example, if using the `*Sync` variants with something like: 
+For example, if using the `*Sync` variants with something like:
 ```go
 start := time.Now()
 time.Sleep(10*time.Minute)
