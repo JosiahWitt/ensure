@@ -87,7 +87,7 @@ func appendValidationEntriesToLoadConfigEntries(table []loadConfigEntry) []loadC
 				Mocks: &ensurefile.MockConfig{
 					PrimaryDestination:   "primary",
 					InternalDestination:  "int",
-					RawTidyAfterGenerate: boolPtr(false),
+					RawTidyAfterGenerate: new(false),
 					TidyAfterGenerate:    false,
 
 					Packages: []*ensurefile.MockPackage{
@@ -127,7 +127,7 @@ func appendValidationEntriesToLoadConfigEntries(table []loadConfigEntry) []loadC
 				Mocks: &ensurefile.MockConfig{
 					PrimaryDestination:   "internal/mocks",
 					InternalDestination:  "int",
-					RawTidyAfterGenerate: boolPtr(false),
+					RawTidyAfterGenerate: new(false),
 					TidyAfterGenerate:    false,
 
 					Packages: []*ensurefile.MockPackage{
@@ -159,7 +159,7 @@ func appendValidationEntriesToLoadConfigEntries(table []loadConfigEntry) []loadC
 				Mocks: &ensurefile.MockConfig{
 					PrimaryDestination:   "primary",
 					InternalDestination:  "mocks",
-					RawTidyAfterGenerate: boolPtr(false),
+					RawTidyAfterGenerate: new(false),
 					TidyAfterGenerate:    false,
 
 					Packages: []*ensurefile.MockPackage{
@@ -191,7 +191,7 @@ func appendValidationEntriesToLoadConfigEntries(table []loadConfigEntry) []loadC
 				Mocks: &ensurefile.MockConfig{
 					PrimaryDestination:   "primary",
 					InternalDestination:  "int",
-					RawTidyAfterGenerate: boolPtr(true),
+					RawTidyAfterGenerate: new(true),
 					TidyAfterGenerate:    true,
 
 					Packages: []*ensurefile.MockPackage{
@@ -223,7 +223,7 @@ func appendValidationEntriesToLoadConfigEntries(table []loadConfigEntry) []loadC
 				Mocks: &ensurefile.MockConfig{
 					PrimaryDestination:   "primary",
 					InternalDestination:  "int",
-					RawTidyAfterGenerate: boolPtr(false),
+					RawTidyAfterGenerate: new(false),
 					TidyAfterGenerate:    false,
 
 					Packages: []*ensurefile.MockPackage{
@@ -255,7 +255,7 @@ func appendValidationEntriesToLoadConfigEntries(table []loadConfigEntry) []loadC
 				Mocks: &ensurefile.MockConfig{
 					PrimaryDestination:   "primary",
 					InternalDestination:  "int",
-					RawTidyAfterGenerate: boolPtr(true),
+					RawTidyAfterGenerate: new(true),
 					TidyAfterGenerate:    true,
 
 					Packages: []*ensurefile.MockPackage{

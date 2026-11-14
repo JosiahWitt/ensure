@@ -17,12 +17,14 @@ go get github.com/JosiahWitt/ensure
 ```
 
 ### CLI
+Requires Go 1.26+.
+
 #### Install as a binary
 ```bash
 go install github.com/JosiahWitt/ensure/cmd/ensure@latest
 ```
 
-#### Install as a [tool](https://go.dev/doc/modules/managing-dependencies#tools) (Go 1.24+)
+#### Install as a [tool](https://go.dev/doc/modules/managing-dependencies#tools)
 ```bash
 go get -tool github.com/JosiahWitt/ensure/cmd/ensure@latest
 # Usage: go tool ensure mocks generate

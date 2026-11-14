@@ -3,6 +3,7 @@ package mockwrite
 import (
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
@@ -109,11 +110,7 @@ func (dests mockDestinations) byFullMockDir() map[string]mockDestinations {
 }
 
 func (dests mockDestinations) hasFullPathPrefix(prefix string) bool {
-	for _, dest := range dests {
-		if strings.HasPrefix(dest.fullPath(), prefix) {
-			return true
-		}
-	}
-
-	return false
+	return slices.ContainsFunc(dests, func(dest *mockDestination) bool {
+		return strings.HasPrefix(dest.fullPath(), prefix)
+	})
 }

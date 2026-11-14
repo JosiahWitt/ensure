@@ -5,6 +5,7 @@ import (
 	"cmp"
 	"fmt"
 	"go/types"
+	"maps"
 	"slices"
 
 	"golang.org/x/tools/go/packages"
@@ -97,15 +98,7 @@ func (pkg *Package) AddImport(packagePath, packageName string) *ImportDetails {
 
 // Imports returns the list of imports for the Package in sorted order.
 func (pkg *Package) Imports() []*ImportDetails {
-	imports := make([]*ImportDetails, 0, len(pkg.byPath))
-
-	for _, details := range pkg.byPath {
-		imports = append(imports, details)
-	}
-
-	slices.SortFunc(imports, func(a, b *ImportDetails) int {
+	return slices.SortedFunc(maps.Values(pkg.byPath), func(a, b *ImportDetails) int {
 		return cmp.Compare(a.Path, b.Path)
 	})
-
-	return imports
 }

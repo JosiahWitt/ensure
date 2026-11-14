@@ -47,7 +47,7 @@ func TestLoadConfig(t *testing.T) {
 				Mocks: &ensurefile.MockConfig{
 					PrimaryDestination:   "internal/mocks",
 					InternalDestination:  "mocks",
-					RawTidyAfterGenerate: boolPtr(true),
+					RawTidyAfterGenerate: new(true),
 					TidyAfterGenerate:    true,
 					Packages: []*ensurefile.MockPackage{
 						{
@@ -75,7 +75,7 @@ func TestLoadConfig(t *testing.T) {
 				Mocks: &ensurefile.MockConfig{
 					PrimaryDestination:             "internal/mocks",
 					InternalDestination:            "mocks",
-					RawTidyAfterGenerate:           boolPtr(true),
+					RawTidyAfterGenerate:           new(true),
 					TidyAfterGenerate:              true,
 					DisableEnhancedMatcherFailures: true,
 					Packages: []*ensurefile.MockPackage{
@@ -112,7 +112,7 @@ mocks:
 				Mocks: &ensurefile.MockConfig{
 					PrimaryDestination:   "internal/mocks",
 					InternalDestination:  "mocks",
-					RawTidyAfterGenerate: boolPtr(true),
+					RawTidyAfterGenerate: new(true),
 					TidyAfterGenerate:    true,
 					Packages: []*ensurefile.MockPackage{
 						{
@@ -237,8 +237,4 @@ func (mapFS mapFS) setupMocks(m *mocks) {
 				return nil, errors.New("unknown type")
 			}
 		})
-}
-
-func boolPtr(b bool) *bool {
-	return &b
 }
