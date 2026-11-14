@@ -33,8 +33,7 @@ func (c *Config) validateAndSetDefaults() error {
 	}
 
 	if c.Mocks.RawTidyAfterGenerate == nil {
-		tidyAfterGenerate := true
-		c.Mocks.RawTidyAfterGenerate = &tidyAfterGenerate
+		c.Mocks.RawTidyAfterGenerate = new(true)
 	}
 	c.Mocks.TidyAfterGenerate = *c.Mocks.RawTidyAfterGenerate
 

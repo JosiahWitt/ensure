@@ -11,6 +11,7 @@ linters:
     - godox
     - varnamelen
     - exhaustruct
+    - exhaustruct_v5
     - ireturn
     - depguard
     - perfsprint
@@ -22,6 +23,8 @@ linters:
   settings:
     lll:
       line-length: 160
+    goconst:
+      ignore-map-keys: true
 
   exclusions:
     generated: lax
@@ -51,6 +54,11 @@ linters:
           - nilnil
           - mnd
 
+      - path: _test\.go
+        text: "G101:"
+        linters:
+          - gosec
+
       - text: singleCaseSwitch
         linters:
           - gocritic
@@ -59,6 +67,7 @@ linters:
       - path: .*(/fixtures/)|(/scenarios/).*
         linters:
           - gochecknoglobals
+          - goconst
 
       - path: .*(/fixtures/)|(/scenarios/).*
         text: "underscores? in package name"

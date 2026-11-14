@@ -207,8 +207,8 @@ func (r *internalPackageReader) buildPackage(pkgDetail *PackageDetails, pkg *pac
 func (r *internalPackageReader) buildIface(ifaceName string, iface *types.Interface) (*Interface, error) {
 	methods := make([]*Method, 0, iface.NumMethods())
 
-	for i := range iface.NumMethods() {
-		builtMethod, err := r.buildMethod(iface.Method(i))
+	for method := range iface.Methods() {
+		builtMethod, err := r.buildMethod(method)
 		if err != nil {
 			return nil, err
 		}
@@ -229,14 +229,12 @@ func (r *internalPackageReader) buildMethod(method *types.Func) (*Method, error)
 	}
 
 	inputs := make([]*Tuple, 0, signature.Params().Len())
-	for i := range signature.Params().Len() {
-		param := signature.Params().At(i)
+	for param := range signature.Params().Variables() {
 		inputs = append(inputs, r.buildTuple(param.Name(), param.Type()))
 	}
 
 	outputs := make([]*Tuple, 0, signature.Results().Len())
-	for i := range signature.Results().Len() {
-		result := signature.Results().At(i)
+	for result := range signature.Results().Variables() {
 		outputs = append(outputs, r.buildTuple(result.Name(), result.Type()))
 	}
 
@@ -271,9 +269,7 @@ func (r *internalPackageReader) parseTypeParams(namedType interface{ TypeParams(
 	}
 
 	typeParams := make([]*TypeParam, 0, typeParamCount)
-	for i := range typeParamCount {
-		typeParam := typeParamList.At(i)
-
+	for typeParam := range typeParamList.TypeParams() {
 		typeParams = append(typeParams, &TypeParam{
 			Name: typeParam.Obj().Name(),
 			Type: types.TypeString(typeParam.Constraint(), func(p *types.Package) string {

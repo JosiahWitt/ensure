@@ -11,6 +11,7 @@ linters:
     - godox
     - varnamelen
     - exhaustruct
+    - exhaustruct_v5
     - ireturn
     - depguard
     - perfsprint
@@ -22,6 +23,8 @@ linters:
   settings:
     lll:
       line-length: 160
+    goconst:
+      ignore-map-keys: true
 
   exclusions:
     generated: lax
@@ -50,6 +53,11 @@ linters:
           - err113
           - nilnil
           - mnd
+
+      - path: _test\.go
+        text: "G101:"
+        linters:
+          - gosec
 
       - text: singleCaseSwitch
         linters:

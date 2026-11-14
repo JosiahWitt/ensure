@@ -43,8 +43,7 @@ func TestListRecursive(t *testing.T) {
 		ensure := ensure.New(t)
 		dirName := t.TempDir()
 
-		//nolint:noctx // TODO: Pass in t.Context() to exec.CommandContext once the minimum Go version is 1.24.
-		cmd := exec.Command("sh", "-c", "mkdir -p abc/xyz qwerty; touch hi.txt abc/hello.txt abc/hello2.txt abc/xyz/here.txt qwerty/ytrewq.txt")
+		cmd := exec.CommandContext(t.Context(), "sh", "-c", "mkdir -p abc/xyz qwerty; touch hi.txt abc/hello.txt abc/hello2.txt abc/xyz/here.txt qwerty/ytrewq.txt")
 		cmd.Dir = dirName
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
@@ -82,8 +81,7 @@ func TestRemoveAll(t *testing.T) {
 	ensure := ensure.New(t)
 	dirName := t.TempDir()
 
-	//nolint:noctx // TODO: Pass in t.Context() to exec.CommandContext once the minimum Go version is 1.24.
-	cmd := exec.Command("sh", "-c", "mkdir -p abc/xyz; touch abc/hello.txt abc/hello2.txt abc/xyz/here.txt")
+	cmd := exec.CommandContext(t.Context(), "sh", "-c", "mkdir -p abc/xyz; touch abc/hello.txt abc/hello2.txt abc/xyz/here.txt")
 	cmd.Dir = dirName
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
