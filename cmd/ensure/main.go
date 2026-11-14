@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime/debug"
+	"strings"
 
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/cmd"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/ensurefile"
@@ -12,12 +14,6 @@ import (
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockgen"
 	"github.com/JosiahWitt/ensure/cmd/ensure/internal/mockwrite"
 )
-
-// Version of the CLI.
-// Should be tied to the release version.
-//
-//nolint:gochecknoglobals // Allows injecting the version
-var Version = "0.6.0"
 
 func main() {
 	if err := run(); err != nil {
@@ -35,7 +31,7 @@ func run() error {
 	}
 
 	app := cmd.App{
-		Version: Version,
+		Version: getVersion(),
 
 		Logger:           logger,
 		Getwd:            os.Getwd,
@@ -49,4 +45,13 @@ func run() error {
 	}
 
 	return app.Run(os.Args)
+}
+
+func getVersion() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok || info.Main.Version == "" {
+		return "unknown"
+	}
+
+	return strings.TrimPrefix(info.Main.Version, "v")
 }
